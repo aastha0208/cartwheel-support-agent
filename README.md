@@ -1,5 +1,8 @@
 # Cartwheel course repository
 
+> [!IMPORTANT]
+> [Watch this video](https://www.loom.com/share/de1cac47e1a44a79a05f8658157968ae) before beginning
+
 The repository contains the Cartwheel support agent and the student work for all five modules of "Evaluating and Improving AI Agents." Cartwheel is a fictional commerce platform that hosts independent stores. Students begin by completing the agent, then use the same repository for trace analysis, automated evaluation, continuous integration, adversarial evaluation, and improvement experiments.
 
 Begin with the [homework index](homework/README.md). Each assignment names the code and records required for the corresponding module.
@@ -99,5 +102,6 @@ enough to implement from, and has a matching test in
 `tests/test_hw_holes.py` that is xfail until you implement it. Run them
 with `uv run pytest tests/test_hw_holes.py`.
 
-The Module 1 handouts are in `homework/module-1/`. The [homework index](homework/README.md) lists all released assignments. A [video walkthrough](https://youtu.be/qO98jDayTHo?si=gLN5FZ3FDiAIs_gG) of how to attempt Homework 1 is also available.
+> [!IMPORTANT]
+> The Module 1 handouts are in `homework/module-1/`. The [homework index](homework/README.md) lists all released assignments. A [video walkthrough](https://youtu.be/qO98jDayTHo?si=gLN5FZ3FDiAIs_gG) of how to attempt Homework 1 is also available.
 
