@@ -1,6 +1,6 @@
 # Homework 2, implementing the traced agent endpoint
 
-Homework 2 asks you to expose the support agent through an authenticated HTTP endpoint and record its execution using OpenTelemetry GenAI semantic conventions. You will inspect model inputs and outputs, then verify which identity reached the tools and where a permission denial occurred.
+Homework 2 asks you to expose the support agent through an authenticated HTTP endpoint and record its execution using OpenTelemetry GenAI semantic conventions. You will inspect model inputs, outputs, and tool results, then verify which authenticated identity reached the tools.
 
 ## Expected work
 
@@ -153,12 +153,12 @@ Copy the returned session identifier and token into a message request:
 curl -s -X POST http://localhost:8010/sessions/SESSION_ID/messages \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer TOKEN' \
-  -d '{"message":"Show me order 4127."}'
+  -d '{"message":"Show my recent orders."}'
 ```
 
-Submit at least five requests drawn from `hw1-session.jsonl`. Create a separate merchant session with `{"user_id":9002,"role":"merchant"}` for the request concerning order `4127`; a token from the shopper session cannot represent the merchant. Ask the agent to look up order `4127`, then confirm that the trace contains a `get_order` tool span whose `cartwheel.permission_denied` attribute is `true`. A prose refusal without the structured tool result does not satisfy the requirement; repeat the request with explicit lookup wording if the model refuses before calling the tool.
+Submit at least five requests drawn from `hw1-session.jsonl`. For each request, use a session for the corresponding authenticated user and inspect the resulting trace in Langfuse.
 
-In Langfuse, open the root span and tool spans and check the attributes listed in Parts A and C. Confirm that the response contains the session identifier, final reply, and prompt version. For an allowed tool call, confirm `cartwheel.permission_denied = false` with no denial reason. For a denied tool call, confirm `cartwheel.permission_denied = true` and the recorded reason.
+In Langfuse, open the root span and tool spans and check the attributes listed in Parts A and C. Confirm that the response contains the session identifier, final reply, and prompt version. For an allowed tool call, confirm `cartwheel.permission_denied = false` with no denial reason. If a tool call returns a permission denial, confirm `cartwheel.permission_denied = true` and the recorded reason. You do not need to produce a permission denial or use a prescribed request.
 
 ## Part F, compare two prompt versions
 
