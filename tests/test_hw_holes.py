@@ -1,22 +1,17 @@
-"""One contract test per homework hole.
+"""Contract tests for homework implementations.
 
 Each test is marked xfail(raises=NotImplementedError): it "fails as
 expected" while the hole is unimplemented, and flips to passing (XPASS)
 once you implement the function correctly. If your implementation is wrong,
-the test fails loudly with an assertion error instead. Acceptance for each
-homework is that its tests here pass.
+the test fails loudly with an assertion error instead. Run the tests alongside the inspection steps in each homework.
 """
 
 from __future__ import annotations
 
-import asyncio
 import sqlite3
 from pathlib import Path
 
 import pytest
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from agent import db, tools
 from agent.auth import AuthContext
@@ -164,59 +159,6 @@ def test_hw1_find_order(world: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
-@hw(2, "record_tool_result")
-def test_hw2_tool_result_span_attributes() -> None:
-    from observability import instrument
-
-    exporter = InMemorySpanExporter()
-    provider = TracerProvider()
-    provider.add_span_processor(SimpleSpanProcessor(exporter))
-    tracer = provider.get_tracer("test")
-    original_tracer = instrument._tracer
-    instrument._tracer = tracer
-    try:
-        instrument.record_tool_result(
-            MERCHANT_STORE_1,
-            "get_order",
-            {"ok": False, "error": "permission_denied", "reason": "outside store"},
-        )
-    finally:
-        instrument._tracer = original_tracer
-
-    spans = exporter.get_finished_spans()
-    assert len(spans) == 1
-    attrs = spans[0].attributes
-    assert spans[0].name == "cartwheel.tool_result"
-    assert attrs["gen_ai.tool.name"] == "get_order"
-    assert attrs["cartwheel.user_role"] == "merchant"
-    assert attrs["cartwheel.user_id"] == "9001"
-    assert attrs["cartwheel.store_id"] == 1
-    assert attrs["cartwheel.permission_denied"] is True
-    assert attrs["cartwheel.permission_denied.reason"] == "outside store"
-
-
-@hw(2, "_set_permission_denied_attributes")
-def test_hw2_permission_denied_attribute() -> None:
-    from observability.instrument import _set_permission_denied_attributes
-
-    exporter = InMemorySpanExporter()
-    provider = TracerProvider()
-    provider.add_span_processor(SimpleSpanProcessor(exporter))
-    tracer = provider.get_tracer("test")
-
-    denied = {"ok": False, "error": "permission_denied", "reason": "not your order"}
-    allowed = {"ok": True, "order": {}}
-    with tracer.start_as_current_span("denied-span") as span:
-        _set_permission_denied_attributes(span, denied)
-    with tracer.start_as_current_span("allowed-span") as span:
-        _set_permission_denied_attributes(span, allowed)
-
-    spans = {s.name: s.attributes for s in exporter.get_finished_spans()}
-    assert spans["denied-span"]["cartwheel.permission_denied"] is True
-    assert spans["denied-span"]["cartwheel.permission_denied.reason"] == "not your order"
-    assert spans["allowed-span"]["cartwheel.permission_denied"] is False
-
-
 @hw(2, "create_session")
 def test_hw2_create_session_binds_verified_identity(world: dict) -> None:
     from server import app as server_app
@@ -233,47 +175,6 @@ def test_hw2_create_session_binds_verified_identity(world: dict) -> None:
     assert payload["user_id"] == 9002
     assert payload["role"] == "merchant"
     assert payload["store_id"] == 2
-
-
-@hw(2, "post_message")
-def test_hw2_message_endpoint_records_root_span(world: dict, monkeypatch) -> None:
-    from server import app as server_app
-
-    class FakeResult:
-        final_output = "A traced answer."
-
-    async def fake_run(*args, **kwargs):
-        return FakeResult()
-
-    exporter = InMemorySpanExporter()
-    provider = TracerProvider()
-    provider.add_span_processor(SimpleSpanProcessor(exporter))
-    tracer = provider.get_tracer("test")
-    monkeypatch.setattr(server_app, "_tracer", tracer)
-    monkeypatch.setattr(server_app, "build_agent", lambda *args, **kwargs: object())
-    monkeypatch.setattr(server_app.Runner, "run", fake_run)
-
-    server_app._SESSIONS.clear()
-    created = server_app.create_session(
-        server_app.SessionCreate(user_id=1, role="shopper")
-    )
-    response = asyncio.run(
-        server_app.post_message(
-            created["session_id"],
-            server_app.MessageIn(message="Where is my order?", scenario_id="manual-1"),
-            authorization=f"Bearer {created['token']}",
-        )
-    )
-
-    spans = exporter.get_finished_spans()
-    assert len(spans) == 1
-    attrs = spans[0].attributes
-    assert spans[0].name == "cartwheel.session_message"
-    assert attrs["cartwheel.user_role"] == "shopper"
-    assert attrs["cartwheel.user_id"] == "1"
-    assert attrs["cartwheel.scenario_id"] == "manual-1"
-    assert attrs["cartwheel.prompt_version"] == response["prompt_version"]
-    assert response["reply"] == "A traced answer."
 
 
 @pytest.mark.xfail(

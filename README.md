@@ -97,11 +97,7 @@ tests/                    offline, no API keys; homework tests are xfail until d
 | HW2 | `observability/instrument.py` | `record_tool_result`, `_set_permission_denied_attributes` |
 | HW2 | `server/app.py` | `create_session`, `post_message` |
 
-Every required homework hole is marked `### YOUR CODE HERE (HWn)`, has a docstring precise
-enough to implement from, and has a matching test in
-`tests/test_hw_holes.py` that is xfail until you implement it. Run them
-with `uv run pytest tests/test_hw_holes.py`.
+Every required homework hole is marked `### YOUR CODE HERE (HWn)` and has a docstring describing the expected behavior. The supplied contract tests in `tests/test_hw_holes.py` are xfail until their corresponding functions are implemented. Run them with `uv run pytest tests/test_hw_holes.py`. Homework 2 also asks you to write authentication tests and verify exported spans in Langfuse.
 
 > [!IMPORTANT]
 > The Module 1 handouts are in `homework/module-1/`. The [homework index](homework/README.md) lists all released assignments. A [video walkthrough](https://youtu.be/qO98jDayTHo?si=gLN5FZ3FDiAIs_gG) of how to attempt Homework 1 is also available.
-

@@ -2,10 +2,10 @@
 
 `setup_tracing()` is the whole course stack: the Langfuse client reads
 LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_HOST from the
-environment and registers an OpenTelemetry tracer provider, and the
-OpenInference instrumentor makes the Agents SDK emit spans through it. That
-is the promised ~3 lines. Everything else in this file is the one seam
-students hand-roll: auth context and permission-denied events as span
+environment and registers an OpenTelemetry tracer provider.
+OpenLLMetry's OpenAI Agents integration records agent, model, and tool spans
+using OTel GenAI attributes. Students add request spans,
+auth context and permission-denied results as span
 attributes (the `cartwheel.*` namespace from the Module 1 outline,
 Artifact G).
 """
@@ -26,6 +26,22 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 log = logging.getLogger("cartwheel.instrument")
 
 _tracer = trace.get_tracer("cartwheel")
+_genai_instrumented = False
+
+
+def instrument_genai(tracer_provider: Any) -> None:
+    """Install GenAI recording once, using the supplied OTel provider."""
+    global _genai_instrumented
+    if _genai_instrumented:
+        return
+    from opentelemetry.instrumentation.openai_agents import OpenAIAgentsInstrumentor
+
+    os.environ.setdefault("TRACELOOP_TRACE_CONTENT", "false")
+    # Export only through Langfuse, not the SDK's separate hosted tracing path.
+    OpenAIAgentsInstrumentor(replace_existing_processors=True).instrument(
+        tracer_provider=tracer_provider
+    )
+    _genai_instrumented = True
 
 
 def load_env(path: Path | None = None) -> None:
@@ -57,12 +73,10 @@ def setup_tracing() -> None:
             "copy .env.example to .env."
         )
         return
-    # The course setup, as promised: about three lines.
     from langfuse import get_client
-    from openinference.instrumentation.openai_agents import OpenAIAgentsInstrumentor
 
     get_client()  # registers the OTel tracer provider from LANGFUSE_* env vars
-    OpenAIAgentsInstrumentor().instrument()
+    instrument_genai(trace.get_tracer_provider())
     log.info("tracing enabled; spans go to %s", os.environ.get("LANGFUSE_HOST"))
 
 
@@ -75,6 +89,8 @@ def record_tool_result(
     It emits one small child span (named "cartwheel.tool_result") under the
     current trace carrying the `cartwheel.*` attributes, so Module 2 can
     query who the caller was and Module 4 can find every permission denial.
+    Use cartwheel.tool.name for the tool identity on this context span;
+    the automatic execution span already carries gen_ai.tool.name.
 
     If tracing is not configured, the span is non-recording and this function
     remains a no-op. The early return keeps the uninstrumented agent usable

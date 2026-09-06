@@ -2,6 +2,8 @@
 
 This repository holds the cumulative student work for the course "Evaluating and Improving AI Agents." It contains one customer facing support agent over the seeded fictional Cartwheel platform. Students continue in the same repository across all five modules.
 
+The local `cartwheel-homeworks/` checkout is the source of truth for student assignments and starter code. Keep the course reader and slides consistent with the assignments here.
+
 ## Commands
 
 - Install: `uv sync`

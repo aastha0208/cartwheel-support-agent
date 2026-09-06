@@ -1,6 +1,6 @@
 # Homework 2, implementing the traced agent endpoint
 
-Homework 2 asks you to expose the support agent through an authenticated HTTP endpoint and instrument its execution with OpenTelemetry. You will use the resulting traces to verify which identity reached the tools and where a permission denial occurred.
+Homework 2 asks you to expose the support agent through an authenticated HTTP endpoint and record its execution using OpenTelemetry GenAI semantic conventions. You will inspect model inputs and outputs, then verify which identity reached the tools and where a permission denial occurred.
 
 ## Expected work
 
@@ -14,6 +14,8 @@ The estimate assigns most of the time to implementing and testing the endpoint. 
 
 ## Preparation
 
+Continue in the same repository from Homework 1, with the five support tools implemented and the local database generated. Run the commands below from the repository root.
+
 Read the following files before editing code:
 
 - `server/app.py`, which provides request models and token helpers.
@@ -23,13 +25,9 @@ Read the following files before editing code:
 
 The token implementation is suitable only for local development. The provided token allows the endpoint to distinguish identity supplied by the server from identity claimed in a conversation.
 
-Before implementing anything, run the homework tests so you can see which cases exist and what a failing run looks like:
+The supplied setup uses OpenLLMetry OpenAI Agents instrumentation to record agent, model, and tool operations. Langfuse receives the spans through its native OpenTelemetry integration. Standard fields describe the model and token usage. The recorded model fields depend on the model API; the inspection instructions in Part E explain which fields to check. Application fields remain in `cartwheel.*`. Read the [OTel GenAI overview](https://opentelemetry.io/blog/2026/genai-observability/).
 
-```bash
-uv run pytest --runxfail -vv tests/test_hw_holes.py -k hw2
-```
-
-All tests should fail or be marked xfail at this point. You will run the same command after each part to confirm progress.
+Run `uv sync` to install the locked dependencies. You will verify tracing in Langfuse in Part E.
 
 ## Part A, record structured tool results
 
@@ -39,20 +37,16 @@ Implement `record_tool_result` and `_set_permission_denied_attributes` in `obser
 
 For every recorded tool result, create a child span named `cartwheel.tool_result`. The span must contain:
 
-- `gen_ai.tool.name`
+- `cartwheel.tool.name`
 - `cartwheel.user_role`, as a string
 - `cartwheel.user_id`, as the decimal user identifier stored in a string
 - `cartwheel.store_id`, as an integer when the caller is a merchant
 - `cartwheel.permission_denied`, as a Boolean value
 - `cartwheel.permission_denied.reason`, when permission was denied
 
-The span attributes have different purposes. The `gen_ai.*` attribute uses a conventional namespace recognized by other observability systems. The `cartwheel.*` attributes describe facts about Cartwheel queried by later evaluations.
+The automatic tool span contains `gen_ai.tool.name`, arguments, and results. The child span records Cartwheel authorization context, so use `cartwheel.tool.name` to identify the tool without labeling the child as another tool execution.
 
-After implementing, run the Part A tests:
-
-```bash
-uv run pytest --runxfail -vv tests/test_hw_holes.py -k "tool_result_span_attributes or permission_denied_attribute"
-```
+Verify the tool result spans in Langfuse in Part E.
 
 ## Part B, implement session creation
 
@@ -88,34 +82,25 @@ Run the agent inside a root span named `cartwheel.session_message`. Record the f
 - `cartwheel.user_id`, as the decimal user identifier stored in a string
 - `cartwheel.prompt_version`
 - `cartwheel.scenario_id`, when the request supplies a nonempty value
+- `gen_ai.input.messages`, containing the incoming user message when content capture is enabled
+- `gen_ai.output.messages`, containing the final assistant reply after the run completes, when content capture is enabled
 
-Return the session identifier, final reply, and prompt version. The OpenInference instrumentation will create the nested model and tool spans; do not reproduce the generated spans manually.
+Use the OTel GenAI message format, serialized with `json.dumps`, for both message attributes. For example, the input is `[{"role": "user", "parts": [{"type": "text", "content": body.message}]}]`. The output uses the same structure with role `assistant` and the final reply as its text. The automatic model spans contain the full input for each model call, including conversation history and tool results.
 
-After implementing, run the message endpoint test:
+Return the session identifier, final reply, and prompt version. The supplied OTel GenAI instrumentation records model and tool spans within the request span.
 
-```bash
-uv run pytest --runxfail -vv tests/test_hw_holes.py -k "message_endpoint_records_root_span"
-```
+Verify the root span and its attributes in Langfuse in Part E.
 
-At this point all four hw2 tests should pass:
+## Part D, test authentication
 
-```bash
-uv run pytest --runxfail -vv tests/test_hw_holes.py -k hw2
-```
-
-## Part D, test the authentication and trace contracts
-
-The supplied tests verify the provided contract, but they do not cover every authentication edge case. Writing your own tests forces you to think through the boundary conditions that the endpoint must handle and confirms that the trace attributes are set correctly for each case.
-
-Create `tests/test_observability.py`. Add tests for the following cases:
+Create `tests/test_observability.py` with authentication tests for the following cases:
 
 - Session creation rejects a user whose claimed role differs from the database role.
-- An allowed tool result records `cartwheel.permission_denied = false` without a denial reason.
 - A token issued for one session cannot authorize a different session.
 
-Use OpenTelemetry's `InMemorySpanExporter` for span assertions. The tests must not require Langfuse, Docker, or a model provider key.
+The tests must not require Langfuse, Docker, or a model provider key. Check tracing through the recorded spans in Part E.
 
-Run the supplied contract tests:
+Run the supplied session creation test:
 
 ```bash
 uv run pytest --runxfail tests/test_hw_holes.py -k hw2
@@ -130,13 +115,21 @@ uv run pytest
 
 ## Part E, run the endpoint and inspect traces
 
-Parts A through D verified the implementation offline. In this part you run the full stack, send real requests, and confirm that structured traces appear in the local Langfuse dashboard.
+After implementing the endpoints and testing authentication, run the full stack and confirm that the required spans appear in Langfuse.
 
 If you have not created `.env`, copy `.env.example` to `.env` and add one model provider key. Do not overwrite an existing `.env`. Verify that the three `LANGFUSE_*` values from `.env.example` are also present. You do not need a Langfuse Cloud account; the Docker Compose file runs a local Langfuse instance, and the `.env.example` values point at it.
 
-If you previously set `LANGFUSE_*` variables in your shell profile or environment, those values take precedence over `.env` because the loader uses `os.environ.setdefault`. Either unset them or make sure they match the local instance. A common symptom of a mismatch is that requests return HTTP 200 but no traces appear in the local dashboard.
+Keep the course configuration in `.env`. No shell exports are needed.
 
 Docker with Compose is required for the local trace stack.
+
+For the fictional course data, add `TRACELOOP_TRACE_CONTENT=true` to your existing `.env` before starting the server. The setting is included in the updated `.env.example`; do not overwrite your keys. Without content capture, model metadata is recorded but the messages needed for review are omitted. Use `TRACELOOP_TRACE_CONTENT=false` when message content must not be recorded, and redact sensitive information before exporting traces.
+
+For a model call, inspect the recorded model identifier, messages, and token counts. The standard integration records `gen_ai.request.model` for Chat Completions and LiteLLM calls, and `gen_ai.response.model` for Responses API calls. The first identifies the model requested by the caller; the second identifies the model returned by the provider. The pinned integration omits the requested model on Responses API spans; you do not need to patch the library to add it.
+
+For a tool call, inspect `gen_ai.operation.name=execute_tool`, `gen_ai.tool.name`, and the captured arguments and result. Confirm that the related spans share the request's trace ID.
+
+OpenLLMetry also creates an `Agent Workflow` span around the SDK run. The span groups the agent operations; it is not another model call. Use the tree or timeline to inspect individual calls. If the formatted view shows nested message `parts`, expand the values or use the JSON view to read the recorded messages.
 
 Start Langfuse and the agent server in separate terminals:
 
@@ -166,24 +159,23 @@ curl -s -X POST http://localhost:8010/sessions/SESSION_ID/messages \
 
 Submit at least five requests drawn from `hw1-session.jsonl`. Create a separate merchant session with `{"user_id":9002,"role":"merchant"}` for the request concerning order `4127`; a token from the shopper session cannot represent the merchant. Ask the agent to look up order `4127`, then confirm that the trace contains a `cartwheel.tool_result` span whose `cartwheel.permission_denied` attribute is `true`. A prose refusal without the structured tool result does not satisfy the requirement; repeat the request with explicit lookup wording if the model refuses before calling the tool.
 
+In Langfuse, open the root span and tool result spans and check the attributes listed in Parts A and C. Confirm that the response contains the session identifier, final reply, and prompt version. For an allowed tool call, confirm `cartwheel.permission_denied = false` with no denial reason. For a denied tool call, confirm `cartwheel.permission_denied = true` and the recorded reason.
+
 ## Part F, compare two prompt versions
 
 Module 2 will use prompt version hashes to group traces by the prompt that produced them. In this part you confirm that the instrumentation captures the version and that a prompt change produces a different hash, establishing the baseline for later comparisons.
 
-This part requires the prompt revision you made in Homework 1. If you did not revise the prompt in Homework 1, make a small, deliberate change to the system prompt now (for example, add an explicit instruction for the agent to escalate refund requests to a human) and treat the changed version as the "revised" prompt for the comparison below.
+Choose one request from `hw1-session.jsonl` and save the current `SYSTEM_PROMPT_TEMPLATE` from `agent/agent.py`. Submit the request through the Homework 2 endpoint in a new session, then find its trace in Langfuse and record `cartwheel.prompt_version`. Homework 1 does not require traces, so generate the trace for the comparison now.
 
-Find the `cartwheel.prompt_version` attribute for the motivating failed exchange from Homework 1. Save the exact revised text, then stop the server.
+Stop the server and temporarily replace the prompt with the earlier version from Homework 1. If Homework 1 did not produce a revision, make a small wording change for the purpose of checking version recording. A wording change for this check does not need to address a failure.
 
-Temporarily restore the earlier prompt text and restart the server. Restarting uvicorn clears all in-memory sessions, so you must create a new session and token before sending the request. Submit the same request with the same authenticated user. Verify a change in `cartwheel.prompt_version`, then restore the Homework 1 revision.
+Restart the server, create a new session and token for the same authenticated user, and submit the same request using the same model. Verify that `cartwheel.prompt_version` differs between the two traces. Restore the saved prompt and restart the server when the comparison is complete.
 
-The comparison is interpretable only when the prompt edit is the sole intended change between the two runs.
+Both runs must start with empty message history and the same database state. If the request changes an order, reset the development data with `uv run python -m seed.generate` before each run. The seed command restores the initial world and removes changes from earlier requests. The comparison checks prompt version recording, rather than whether one prompt performs better.
 
 ## Trace record
 
-Choose two traces you can explain from the root span through the final response:
-
-- One trace containing a write tool or an escalation tool.
-- One trace containing a permission denial.
+Choose any two traces you can explain from the root span through the final response.
 
 Create `hw2-traces.json` as a JSON array containing exactly two objects. For each trace, record:
 
@@ -206,9 +198,9 @@ Create `hw2-traces.json` as a JSON array containing exactly two objects. For eac
 
 Record one continuous screen video of no more than 5 minutes. In the recording:
 
-- Run one endpoint or instrumentation test.
+- Run one authentication test.
 - Read both selected traces from the root span to the final response.
 - Explain how the endpoint established the authenticated identity.
-- Show the tool result span recording the permission denial.
+- Explain the tool calls and their results in the selected traces.
 - Show the two prompt version hashes produced by the controlled comparison.
 - Regenerate the span count for one selected trace.
