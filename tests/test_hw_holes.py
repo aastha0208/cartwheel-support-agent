@@ -684,6 +684,10 @@ def test_m2_failure_report_matches_artifact_l_schema(analysis_state, tmp_path) -
     lead = next(mode for mode in report["modes"] if mode["name"] == DEMO_MODE)
     assert lead["name"] == DEMO_MODE
     assert round(lead["prevalence"]["corrected"], 3) == 0.163
+    # The demo judge gets 36/38 passes and 10/12 failures right.
+    evaluator = lead["evaluator"]
+    assert evaluator["test_tpr_interval"] == [0.8271, 0.9854]
+    assert evaluator["test_tnr_interval"] == [0.552, 0.953]
 
 def test_m2_select_traces_is_deterministic_and_offline(analysis_state, tmp_path) -> None:
     """`select_traces` clusters an export into a reproducible diverse batch
