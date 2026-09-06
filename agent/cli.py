@@ -9,6 +9,11 @@ Usage:
     uv run python -m agent.cli --role support --user 9502 --trace
     uv run python -m agent.cli --role support --defenses   # Module 4 guards + refund pause
 
+Tracing is off by default. ``--trace`` uses the course's Langfuse setup;
+``--trace-openai`` opts into OpenAI hosted tracing (requires OPENAI_API_KEY
+and is unavailable for zero-data-retention organizations). Pick one destination.
+``--debug`` prints tool calls locally and works independently of tracing.
+
 The role picks a default demo user (shopper 1, merchant 9001, support 9501);
 --user overrides it. The auth context comes from the users table, exactly as
 the server would inject it. It is never taken from the chat itself.
@@ -27,7 +32,7 @@ import asyncio
 import json
 import time
 
-from agents import Runner, SQLiteSession
+from agents import RunConfig, Runner, SQLiteSession
 from agents.items import RunItem
 from opentelemetry import trace
 
@@ -90,9 +95,15 @@ def resolve_auth(role: str, user_id: int | None) -> AuthContext:
 
 
 async def chat(
-    ctx: AuthContext, model: str | None, defenses: bool = False, debug: bool = False
+    ctx: AuthContext,
+    model: str | None,
+    defenses: bool = False,
+    debug: bool = False,
+    tracing: bool = False,
 ) -> None:
     agent = build_agent(ctx, model=model, defenses=defenses)
+    # main() enables callbacks for Langfuse or explicit OpenAI tracing.
+    run_config = RunConfig(tracing_disabled=not tracing)
     session = SQLiteSession(
         f"cli-{ctx.role}-{ctx.user_id}-{int(time.time())}", str(SESSIONS_DB)
     )
@@ -118,7 +129,12 @@ async def chat(
                 span.set_attribute("cartwheel.user_id", str(ctx.user_id))
                 span.set_attribute("cartwheel.prompt_version", version)
             result = await Runner.run(
-                agent, line, session=session, context=ctx, max_turns=MAX_TURNS
+                agent,
+                line,
+                session=session,
+                context=ctx,
+                max_turns=MAX_TURNS,
+                run_config=run_config,
             )
 
         # ------------------------------------------------------------------
@@ -140,7 +156,7 @@ async def chat(
         #       # pending call, including its JSON arguments.
         #       state.approve(item)                  # or state.reject(item)
         #   result = await Runner.run(agent, state, context=ctx,
-        #                             max_turns=MAX_TURNS)
+        #                             max_turns=MAX_TURNS, run_config=run_config)
         #
         # Loop until result.interruptions is empty (a resumed run can pause
         # again). Then fall through to printing final_output. Approving here
@@ -170,8 +186,13 @@ def main() -> None:
         default=None,
         help="gpt-5.5 | claude-opus-4-6 | glm-5.2 (default: $CARTWHEEL_MODEL or gpt-5.5)",
     )
-    parser.add_argument(
+    tracing_options = parser.add_mutually_exclusive_group()
+    tracing_options.add_argument(
         "--trace", action="store_true", help="ship spans to Langfuse (Lecture 2)"
+    )
+    tracing_options.add_argument(
+        "--trace-openai", action="store_true",
+        help="send traces to OpenAI (unavailable for zero-data-retention organizations)",
     )
     parser.add_argument(
         "--defenses",
@@ -186,10 +207,11 @@ def main() -> None:
     args = parser.parse_args()
 
     load_env()
-    if args.trace:
-        setup_tracing()
+    tracing = setup_tracing() if args.trace else args.trace_openai
     ctx = resolve_auth(args.role, args.user)
-    asyncio.run(chat(ctx, args.model, defenses=args.defenses, debug=args.debug))
+    asyncio.run(
+        chat(ctx, args.model, defenses=args.defenses, debug=args.debug, tracing=tracing)
+    )
 
 
 if __name__ == "__main__":
