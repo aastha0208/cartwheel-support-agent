@@ -18,6 +18,8 @@ They are marked xfail and flip to passing as you implement each function.
 
 from __future__ import annotations
 
+import re
+from difflib import SequenceMatcher
 from typing import Any
 
 from agent import db
@@ -52,8 +54,16 @@ def get_policy(ctx: AuthContext, policy_id: str) -> dict[str, Any]:
     Implementation notes:
         agent.helpcenter.load_policy_docs() returns every parsed doc.
     """
-    ### YOUR CODE HERE (HW1)
-    raise NotImplementedError("HW1: implement get_policy")
+    for doc in load_policy_docs():
+        if doc.policy_id == policy_id:
+            return {
+                "ok": True,
+                "policy_id": doc.policy_id,
+                "title": doc.title,
+                "audience": doc.audience,
+                "body": doc.body,
+            }
+    return {"ok": False, "error": "not_found", "reason": f"no policy {policy_id!r}"}
 
 
 def search_products(
@@ -95,8 +105,38 @@ def search_products(
         agent.db.list_products(conn, store_id) gives the candidate set.
         Open the database with agent.db.connect() and close it when done.
     """
-    ### YOUR CODE HERE (HW1)
-    raise NotImplementedError("HW1: implement search_products")
+    tokens = query.lower().split()
+    if not tokens:
+        return {"ok": False, "error": "invalid_argument", "reason": "empty query"}
+    if max_price_usd is not None and not max_price_usd > 0:
+        return {
+            "ok": False,
+            "error": "invalid_argument",
+            "reason": "price ceiling must be positive",
+        }
+    limit = max(1, min(limit, MAX_SEARCH_LIMIT))
+    conn = db.connect()
+    try:
+        store_id = None
+        if store is not None:
+            matched_store = db.get_store_by_name(conn, store)
+            if matched_store is None:
+                return {"ok": False, "error": "not_found", "reason": f"no store {store!r}"}
+            store_id = matched_store.id
+        matches = [
+            product for product in db.list_products(conn, store_id)
+            if all(token in f"{product.title} {product.description}".lower() for token in tokens)
+            and (max_price_usd is None or product.price_usd <= max_price_usd)
+        ]
+        matches.sort(key=lambda product: (product.price_usd, product.id))
+        products = [
+            {"product_id": product.id, "store_id": product.store_id,
+             "title": product.title, "price_usd": product.price_usd}
+            for product in matches[:limit]
+        ]
+        return {"ok": True, "products": products, "count": len(products)}
+    finally:
+        conn.close()
 
 
 def list_my_orders(ctx: AuthContext) -> dict[str, Any]:
@@ -121,8 +161,22 @@ def list_my_orders(ctx: AuthContext) -> dict[str, Any]:
         scope is baked into which query you run. That is the point of the
         tool: the model cannot ask for someone else's orders through it.
     """
-    ### YOUR CODE HERE (HW1)
-    raise NotImplementedError("HW1: implement list_my_orders")
+    if ctx.role == "support":
+        return {
+            "ok": False,
+            "error": "invalid_argument",
+            "reason": "Support staff have no orders of their own; use get_order to look up specific orders.",
+        }
+    conn = db.connect()
+    try:
+        if ctx.role == "shopper":
+            orders = db.list_orders_for_user(conn, ctx.user_id, limit=DEFAULT_ORDER_LIMIT)
+        else:
+            orders = db.list_orders_for_store(conn, ctx.store_id, limit=DEFAULT_ORDER_LIMIT)
+        payload = [order.to_public_dict() for order in orders]
+        return {"ok": True, "orders": payload, "count": len(payload)}
+    finally:
+        conn.close()
 
 
 def cancel_order(ctx: AuthContext, order_id: int, reason: str) -> dict[str, Any]:
@@ -167,8 +221,25 @@ def cancel_order(ctx: AuthContext, order_id: int, reason: str) -> dict[str, Any]
     paused = kill_switch("cancel_order")
     if paused is not None:
         return {"ok": False, "error": "paused", "reason": paused}
-    ### YOUR CODE HERE (HW1)
-    raise NotImplementedError("HW1: implement cancel_order")
+    conn = db.connect()
+    try:
+        order = db.get_order(conn, order_id)
+        if order is None:
+            return {"ok": False, "error": "not_found", "reason": f"no order #{order_id}"}
+        if not can_cancel_order(ctx, order.user_id, order.store_id):
+            return permission_denied(
+                f"role '{ctx.role}' (user {ctx.user_id}) may not cancel order #{order_id}"
+            )
+        if order.status != "placed":
+            return {
+                "ok": False,
+                "error": "not_eligible",
+                "reason": f"order #{order_id} has status '{order.status}'; orders can be cancelled only before shipment",
+            }
+        db.set_order_status(conn, order_id, "cancelled")
+        return {"ok": True, "order_id": order_id, "status": "cancelled"}
+    finally:
+        conn.close()
 
 
 def find_order(ctx: AuthContext, query: str) -> dict[str, Any]:
@@ -196,5 +267,43 @@ def find_order(ctx: AuthContext, query: str) -> dict[str, Any]:
         (at most 5), each as the dict returned by agent.db. If no orders
         match, return {"ok": True, "orders": []}.
     """
-    ### YOUR CODE HERE (HW1)
-    raise NotImplementedError("HW1: implement find_order")
+    query_tokens = re.findall(r"\w+", query.lower())
+    if not query_tokens:
+        return {"ok": True, "orders": []}
+    conn = db.connect()
+    try:
+        # Search the whole authorized history, not just the latest 20 orders.
+        if ctx.role == "shopper":
+            orders = db.list_orders_for_user(conn, ctx.user_id, limit=-1)
+        elif ctx.role == "merchant":
+            orders = db.list_orders_for_store(conn, ctx.store_id, limit=-1)
+        else:
+            # The supplied list helpers require a user or store filter.
+            rows = conn.execute("SELECT id FROM orders ORDER BY ordered_at DESC, id DESC").fetchall()
+            orders = [db.get_order(conn, row["id"]) for row in rows]
+        titles = {product.id: product.title.lower() for product in db.list_products(conn)}
+        matches = []
+        for order in orders:
+            title = titles.get(order.product_id, "")
+            title_tokens = re.findall(r"\w+", title)
+            # Token similarity also handles a product embedded in a sentence
+            # and small spelling mistakes without another dependency.
+            score = max(
+                (SequenceMatcher(None, token, word).ratio()
+                 for token in query_tokens for word in title_tokens),
+                default=0.0,
+            )
+            if title and title in query.lower():
+                score = 2.0
+            if score >= 0.8:
+                matches.append((score, order))
+        matches.sort(key=lambda match: (-match[0], -match[1].ordered_at.toordinal(), -match[1].id))
+        return {
+            "ok": True,
+            "orders": [
+                {"id": order.id, **order.to_public_dict()}
+                for _, order in matches[:5]
+            ],
+        }
+    finally:
+        conn.close()
