@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 REPO_ROOT = Path(__file__).resolve().parents[1]
 log = logging.getLogger("cartwheel.instrument")
 
-_tracer = trace.get_tracer("cartwheel")
 _genai_instrumented = False
 
 
@@ -80,35 +79,28 @@ def setup_tracing() -> None:
     log.info("tracing enabled; spans go to %s", os.environ.get("LANGFUSE_HOST"))
 
 
-def record_tool_result(
-    ctx: "AuthContext", tool_name: str, result: dict[str, Any]
-) -> None:
-    """Attach auth context and permission-denied attributes to the trace.
+def record_tool_result(ctx: "AuthContext", result: dict[str, Any]) -> None:
+    """Add authenticated identity and permission attributes to the active tool span.
 
-    Called by every tool wrapper in agent/agent.py after the tool logic runs.
-    It emits one small child span (named "cartwheel.tool_result") under the
-    current trace carrying the `cartwheel.*` attributes, so Module 2 can
-    query who the caller was and Module 4 can find every permission denial.
-    Use cartwheel.tool.name for the tool identity on this context span;
-    the automatic execution span already carries gen_ai.tool.name.
-
-    If tracing is not configured, the span is non-recording and this function
-    remains a no-op. The early return keeps the uninstrumented agent usable
-    before Homework 2 is complete.
+    OpenLLMetry creates the tool span and records its name, arguments, and
+    result. The tool wrappers call this helper before that span ends.
+    Add the caller's user_role and string user_id, plus the integer store_id
+    for merchants, then record the permission decision with the helper below.
+    When tracing is off, the active span is non-recording and this is a no-op.
     """
-    with _tracer.start_as_current_span("cartwheel.tool_result") as span:
-        if not span.is_recording():
-            return
-        ### YOUR CODE HERE (HW2)
-        raise NotImplementedError(
-            "HW2: record the tool name, authenticated caller, and denial attributes"
-        )
+    span = trace.get_current_span()
+    if not span.is_recording():
+        return
+    ### YOUR CODE HERE (HW2)
+    raise NotImplementedError(
+        "HW2: add authenticated caller and permission attributes to the tool span"
+    )
 
 
 def _set_permission_denied_attributes(
     span: trace.Span, result: dict[str, Any]
 ) -> None:
-    """Set the permission-denied attributes on a tool-result span.
+    """Set the permission-denied attributes on a tool span.
 
     Contract (Module 1 outline, Artifact G):
       - `result` is the structured dict a tool returned (see agent/auth.py

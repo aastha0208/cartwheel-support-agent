@@ -66,7 +66,7 @@ server/
   app.py                  HOMEWORK 2: session + message routes; token helpers provided
 observability/
   docker-compose.yml      self-hosted Langfuse (web, worker, postgres, clickhouse, redis, minio)
-  instrument.py           tracing setup (provided) + HOMEWORK 2: tool-result spans
+  instrument.py           tracing setup (provided) + HOMEWORK 2: tool span attributes
 scenarios/
   skill/SKILL.md          instructions that a coding agent follows to generate scenarios
   validate.py             executable schema and final-dataset checks

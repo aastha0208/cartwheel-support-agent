@@ -319,13 +319,13 @@ def escalate_to_human_logic(
 
 
 def _call(
-    wrapper: RunContextWrapper[AuthContext], tool_name: str, fn: Any, /, *args: Any
+    wrapper: RunContextWrapper[AuthContext], fn: Any, /, *args: Any
 ) -> dict[str, Any]:
     try:
         result = fn(wrapper.context, *args)
     except NotImplementedError as exc:
         result = {"ok": False, "error": "not_implemented", "reason": str(exc)}
-    record_tool_result(wrapper.context, tool_name, result)
+    record_tool_result(wrapper.context, result)
     return result
 
 
@@ -334,13 +334,13 @@ def search_help_center(
     wrapper: RunContextWrapper[AuthContext], query: str
 ) -> dict[str, Any]:
     """Search Cartwheel's help-center policy docs. Returns top matches with policy ids."""
-    return _call(wrapper, "search_help_center", search_help_center_logic, query)
+    return _call(wrapper, search_help_center_logic, query)
 
 
 @function_tool
 def get_order(wrapper: RunContextWrapper[AuthContext], order_id: int) -> dict[str, Any]:
     """Look up one order by id, including its refund eligibility."""
-    return _call(wrapper, "get_order", get_order_logic, order_id)
+    return _call(wrapper, get_order_logic, order_id)
 
 
 def _issue_refund_impl(
@@ -349,7 +349,7 @@ def _issue_refund_impl(
     """Shared refund tool body. Wrapped twice below: once plainly (default,
     Module 1 behavior) and once with ``needs_approval`` when ``defenses=True``.
     Keeping the body in one function means the two tool objects never drift."""
-    return _call(wrapper, "issue_refund", issue_refund_logic, order_id, amount_usd, reason)
+    return _call(wrapper, issue_refund_logic, order_id, amount_usd, reason)
 
 
 @function_tool
@@ -365,13 +365,13 @@ def escalate_to_human(
     wrapper: RunContextWrapper[AuthContext], summary: str, context: str
 ) -> dict[str, Any]:
     """Open a ticket for a human support agent when a case is above your authority."""
-    return _call(wrapper, "escalate_to_human", escalate_to_human_logic, summary, context)
+    return _call(wrapper, escalate_to_human_logic, summary, context)
 
 
 @function_tool
 def get_policy(wrapper: RunContextWrapper[AuthContext], policy_id: str) -> dict[str, Any]:
     """Fetch the full text of one policy doc by its exact policy id."""
-    return _call(wrapper, "get_policy", hw_tools.get_policy, policy_id)
+    return _call(wrapper, hw_tools.get_policy, policy_id)
 
 
 @function_tool
@@ -390,14 +390,14 @@ def search_products(
         )
     except NotImplementedError as exc:
         result = {"ok": False, "error": "not_implemented", "reason": str(exc)}
-    record_tool_result(ctx, "search_products", result)
+    record_tool_result(ctx, result)
     return result
 
 
 @function_tool
 def list_my_orders(wrapper: RunContextWrapper[AuthContext]) -> dict[str, Any]:
     """List the caller's recent orders (shopper) or their store's recent orders (merchant)."""
-    return _call(wrapper, "list_my_orders", hw_tools.list_my_orders)
+    return _call(wrapper, hw_tools.list_my_orders)
 
 
 @function_tool
@@ -405,7 +405,7 @@ def cancel_order(
     wrapper: RunContextWrapper[AuthContext], order_id: int, reason: str
 ) -> dict[str, Any]:
     """Cancel an order that has not shipped yet."""
-    return _call(wrapper, "cancel_order", hw_tools.cancel_order, order_id, reason)
+    return _call(wrapper, hw_tools.cancel_order, order_id, reason)
 
 
 @function_tool
@@ -413,7 +413,7 @@ def find_order(
     wrapper: RunContextWrapper[AuthContext], query: str
 ) -> dict[str, Any]:
     """Search your orders by product name (fuzzy match)."""
-    return _call(wrapper, "find_order", hw_tools.find_order, query)
+    return _call(wrapper, hw_tools.find_order, query)
 
 
 # Progressive disclosure: a session exposes only the tools its role can use.

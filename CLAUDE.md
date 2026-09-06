@@ -41,7 +41,7 @@ The local `cartwheel-homeworks/` checkout is the source of truth for student ass
   predicate holes. `promptfooconfig.yaml` is the Artifact F red-team starter, a
   basic config the student grows into a comprehensive one in homework Part C.
 - `homework/` contains the student assignments for Modules 1 to 5. Instructor notes remain outside the Cartwheel repository.
-- `observability/instrument.py` contains the Homework 2 tool result span holes.
+- `observability/instrument.py` contains the Homework 2 tool span attribute holes.
 - `scenarios/` contains the synthetic data skill and the scenario runner.
 - `analysis/` contains the Module 2 error analysis skill.
 - `eval_cases/` is the Module 3 evaluation case set (`cases.jsonl`; schema in `eval_cases/README.md`).

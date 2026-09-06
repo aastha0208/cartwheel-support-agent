@@ -29,24 +29,23 @@ The supplied setup uses OpenLLMetry OpenAI Agents instrumentation to record agen
 
 Run `uv sync` to install the locked dependencies. You will verify tracing in Langfuse in Part E.
 
-## Part A, record structured tool results
+## Part A, add application attributes to tool spans
 
-Every tool call the agent makes should leave a structured trace record so that later evaluations can query what happened without parsing prose. In this part you wire that recording into the instrumentation layer.
+OpenLLMetry records each tool execution, including its arguments and result. In this part you add the authenticated caller and permission decision to the same tool span.
 
 Implement `record_tool_result` and `_set_permission_denied_attributes` in `observability/instrument.py`.
 
-For every recorded tool result, create a child span named `cartwheel.tool_result`. The span must contain:
+Use the active tool span returned by `trace.get_current_span()`. Add the following application attributes:
 
-- `cartwheel.tool.name`
 - `cartwheel.user_role`, as a string
 - `cartwheel.user_id`, as the decimal user identifier stored in a string
 - `cartwheel.store_id`, as an integer when the caller is a merchant
 - `cartwheel.permission_denied`, as a Boolean value
 - `cartwheel.permission_denied.reason`, when permission was denied
 
-The automatic tool span contains `gen_ai.tool.name`, arguments, and results. The child span records Cartwheel authorization context, so use `cartwheel.tool.name` to identify the tool without labeling the child as another tool execution.
+The supplied tool wrappers call the recorder while the tool span is active. Standard `gen_ai.*` fields and application `cartwheel.*` fields belong on the same span.
 
-Verify the tool result spans in Langfuse in Part E.
+Verify the tool spans in Langfuse in Part E.
 
 ## Part B, implement session creation
 
@@ -157,9 +156,9 @@ curl -s -X POST http://localhost:8010/sessions/SESSION_ID/messages \
   -d '{"message":"Show me order 4127."}'
 ```
 
-Submit at least five requests drawn from `hw1-session.jsonl`. Create a separate merchant session with `{"user_id":9002,"role":"merchant"}` for the request concerning order `4127`; a token from the shopper session cannot represent the merchant. Ask the agent to look up order `4127`, then confirm that the trace contains a `cartwheel.tool_result` span whose `cartwheel.permission_denied` attribute is `true`. A prose refusal without the structured tool result does not satisfy the requirement; repeat the request with explicit lookup wording if the model refuses before calling the tool.
+Submit at least five requests drawn from `hw1-session.jsonl`. Create a separate merchant session with `{"user_id":9002,"role":"merchant"}` for the request concerning order `4127`; a token from the shopper session cannot represent the merchant. Ask the agent to look up order `4127`, then confirm that the trace contains a `get_order` tool span whose `cartwheel.permission_denied` attribute is `true`. A prose refusal without the structured tool result does not satisfy the requirement; repeat the request with explicit lookup wording if the model refuses before calling the tool.
 
-In Langfuse, open the root span and tool result spans and check the attributes listed in Parts A and C. Confirm that the response contains the session identifier, final reply, and prompt version. For an allowed tool call, confirm `cartwheel.permission_denied = false` with no denial reason. For a denied tool call, confirm `cartwheel.permission_denied = true` and the recorded reason.
+In Langfuse, open the root span and tool spans and check the attributes listed in Parts A and C. Confirm that the response contains the session identifier, final reply, and prompt version. For an allowed tool call, confirm `cartwheel.permission_denied = false` with no denial reason. For a denied tool call, confirm `cartwheel.permission_denied = true` and the recorded reason.
 
 ## Part F, compare two prompt versions
 
