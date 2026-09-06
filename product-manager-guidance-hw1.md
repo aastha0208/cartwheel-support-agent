@@ -10,10 +10,11 @@ The starter repository is https://github.com/ai-evals-course/cartwheel-homeworks
 
 - Give me one manageable step at a time. Briefly explain its purpose, do the technical work you can, and show me the result. Pause at the checkpoints below so I can ask questions or make a decision.
 - Ask one question at a time when you need information. Inspect the current folder and available tools before asking me something you can determine yourself.
+- Once I answer a checkpoint or ask you to continue, carry out the agreed step and proceed to the next question that needs my input. Avoid a separate permission question for each command or an extra "ready to continue?" after I have already answered.
 - Explain unfamiliar terms when we encounter them. Use the actual files and results as examples. Keep explanations short unless I ask for more.
-- Ask me to predict or assess behavior in ordinary language. Help me reason through my answer without inventing my judgment or filling in all the answers for me.
+- Ask me to predict or assess behavior in ordinary language. Show the actual result and ask what I notice before suggesting a pass/fail label or the source of a failure. If I am unsure, help me compare the result with the relevant requirement, then let me make the assessment. If my answer conflicts with the specification, explain the conflict and ask me to reconsider.
 - If something fails, inspect the error and try a focused fix. Explain what happened in plain language. If we remain stuck, prepare a short message for the course Discord with the step, the error, and what we tried. Remove secrets from that message.
-- Keep a short local progress note with completed steps, evidence, and the next step so we can resume later. Keep it separate from the homework submission files.
+- Keep a short local progress note with completed steps, evidence, and the next step so we can resume later. Maintain a current checklist of all deliverables, including the additional-tool requirement and my video, so unfinished work stays visible. Update the current status as we progress rather than only appending a history of old next steps. Keep the note separate from the homework submission files.
 
 ## 1. Get oriented
 
@@ -23,7 +24,7 @@ Read the repository instructions, README.md, homework/README.md, homework/module
 
 Explain what Cartwheel does and why we'll use it for later evals. Show me where SPEC.md lives and summarize what it already defines. Explain how an intended behavior gets implemented in the system prompt or tool code. Editing SPEC.md alone does not change the running application.
 
-Give me a short overview of the full HW1 finish line, including the working tools, recorded conversations, prompt investigation, and short demonstration video. Then focus on our first milestone: one real conversation with the local Cartwheel agent.
+Give me a short overview of the full HW1 finish line, including the five required tools and the additional-tool work requested in Part A. Also explain the recorded conversations, prompt investigation, and short demonstration video. Then focus on our first milestone: one real conversation with the local Cartwheel agent.
 
 Checkpoint: ask me whether the relationship between the existing repo, the specification, and the running agent is clear before moving on.
 
@@ -60,6 +61,8 @@ Start each separate conversation in a fresh CLI session so earlier requests and 
 Handle the technical work of capturing the actual request, tool calls and results, and final response in hw1-session.jsonl. Inspect how the CLI exposes those details and arrange reliable capture if needed. Do not invent missing tool calls or results. Use my assessment for the judgment fields and help me distinguish a prompt failure, a tool failure, and an unclear requirement.
 
 Explain when a refund or cancellation changes the local data. Reset between conversations when needed, preserving the records we have already saved and keeping state consistent within each conversation.
+
+Track missing capabilities as we examine conversations. Before leaving Part B, review them with me and choose a useful additional tool to satisfy Part A. Help me define its expected behavior, then implement, register, and test it. If we have not identified a gap, revisit the handout's suggestions together. Keep this requirement marked as pending until we have done the work.
 
 ## 5. Investigate a prompt improvement and finish
 
