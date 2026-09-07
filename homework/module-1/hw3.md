@@ -120,8 +120,7 @@ You will use the pilot review to create the final scenario file. Revise invalid 
 Save the final dataset in `scenarios/support_scenarios.jsonl`. It must contain:
 
 - 175 scenarios with `scenario_group` set to `coverage`.
-- 75 scenarios with `scenario_group` set to `challenge`.
-- Five challenge scenarios for each of the six damaged records.
+- 75 scenarios with `scenario_group` set to `challenge`, including five for each of the six damaged records.
 
 Give every final scenario a new identifier, distinct from the pilot identifiers. The export in Part E selects traces by scenario identifier, so a reused identifier would pull in the pilot run's traces as well.
 
