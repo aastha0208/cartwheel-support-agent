@@ -689,12 +689,13 @@ def test_m2_failure_report_matches_artifact_l_schema(analysis_state, tmp_path) -
     assert evaluator["test_tpr_interval"] == [0.8271, 0.9854]
     assert evaluator["test_tnr_interval"] == [0.552, 0.953]
 
-def test_m2_select_traces_is_deterministic_and_offline(analysis_state, tmp_path) -> None:
-    """`select_traces` clusters an export into a reproducible diverse batch
-    with a one-line reason per pick, no model call."""
+def test_m2_file_selection_is_deterministic_and_resumable(
+    analysis_state, tmp_path, monkeypatch
+) -> None:
+    """Select a repeatable batch, then resume after changing directories."""
     import json
 
-    from analysis.helpers import select_traces
+    from analysis.helpers import select_traces, next_to_label
 
     # A tiny synthetic export with feature vectors, written to a temp file.
     traces = [
@@ -703,7 +704,8 @@ def test_m2_select_traces_is_deterministic_and_offline(analysis_state, tmp_path)
                                      "tokens": 100 * (i % 7)}}
         for i in range(40)
     ]
-    export = tmp_path / "export.json"
+    monkeypatch.chdir(tmp_path)
+    export = Path("export.json")
     export.write_text(json.dumps({"traces": traces}))
 
     picks_a = select_traces(export, k=24, strategy="diversity")
@@ -718,6 +720,11 @@ def test_m2_select_traces_is_deterministic_and_offline(analysis_state, tmp_path)
     saved = json.loads((analysis_state / "samples.json").read_text())
     assert isinstance(saved, list) and saved
     assert set(saved[0]) >= {"trace_id", "reason", "trace", "features", "meta"}
+
+    # Resume from the full export, even after changing directories.
+    monkeypatch.chdir(analysis_state)
+    candidates = next_to_label("resumed", k=len(traces), strategy="random")
+    assert {c["trace_id"] for c in candidates} == {t["id"] for t in traces}
 
 
 def test_m2_module1_export_is_normalized_for_review(analysis_state, tmp_path) -> None:
@@ -793,6 +800,32 @@ def test_m2_next_to_label_enriches_from_confirmed(analysis_state, tmp_path) -> N
     assert "seed_fail" not in ids, "already-labeled traces are excluded"
     assert ids and ids[0] == "near", "the semantic neighbor ranks first"
     assert all(c.get("signal") for c in cands)
+
+
+def test_m2_next_to_label_resumes_live_source(analysis_state, monkeypatch) -> None:
+    from analysis.helpers import langfuse_io, select_traces, next_to_label
+    from analysis.helpers.normalization import normalize_traces
+
+    traces = normalize_traces([{"id": "live", "text": "hello"}])
+    monkeypatch.setattr(langfuse_io, "is_configured", lambda: True)
+    monkeypatch.setattr(langfuse_io, "fetch_traces", lambda: traces)
+    select_traces("langfuse", k=1)
+    assert next_to_label("resumed", k=1, strategy="random") == [
+        {"trace_id": "live", "signal": "random"}
+    ]
+
+
+@pytest.mark.parametrize("configured, error", [(False, RuntimeError), (True, ValueError)])
+def test_m2_unavailable_live_source_raises(
+    analysis_state, monkeypatch, configured, error
+) -> None:
+    """Missing setup or an empty live dataset should give a useful error."""
+    from analysis.helpers import langfuse_io, select_traces
+
+    monkeypatch.setattr(langfuse_io, "is_configured", lambda: configured)
+    monkeypatch.setattr(langfuse_io, "fetch_traces", lambda: [])
+    with pytest.raises(error, match="Langfuse"):
+        select_traces("langfuse", k=1)
 
 
 # --------------------------------------------------------------------------
