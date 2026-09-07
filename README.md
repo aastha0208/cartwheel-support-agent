@@ -7,20 +7,22 @@ The repository contains the Cartwheel support agent and starter code for all fiv
 
 Begin with the [homework index](homework/README.md). Each assignment names the code and records required for the corresponding module.
 
-## Guidance for product managers
+## Get started with Homework 1
 
-If you are a product manager or are unfamiliar with Python setup, use the [interactive Homework 1 tutorial](product-manager-guidance-hw1.md). Your coding agent handles setup and implementation while you decide what behavior to expect and review the results. The tutorial starts with your local copy of the existing repository and walks through the full assignment one step at a time.
+The course instructors put together this [HW1 walkthrough](homework/module-1/hw1-tutorial.md) for anyone who wants a hand, including PMs. Your coding agent handles setup and coding while you decide what to expect and check the results.
 
-Open this repository in Claude Code, Codex, or your preferred coding agent and paste:
+Choose the walkthrough for step-by-step help, or ask your agent to jump into a task. You can ask for help whenever you get stuck and switch approaches at any time.
+
+Open this repo in Codex, Claude Code, or your preferred coding agent and paste:
 
 ```text
-Read product-manager-guidance-hw1.md and use it to walk me through Homework 1 as an interactive tutorial. Start by checking the current folder and helping me get oriented. Give me one step at a time and pause at the checkpoints so I can ask questions and make decisions.
+Read AGENTS.md and help me get started with Homework 1.
 ```
 
-If you have not downloaded the repository yet, give your coding agent this instead:
+If you haven't downloaded the repo yet, paste this instead:
 
 ```text
-Help me clone https://github.com/ai-evals-course/cartwheel-homeworks onto my computer and open the local repository. Then read product-manager-guidance-hw1.md and follow it as an interactive Homework 1 tutorial, one step at a time.
+Help me get started with Homework 1 in https://github.com/ai-evals-course/cartwheel-homeworks. Use my existing local copy if I have one, or help me clone it. Then read AGENTS.md and help me choose how to proceed.
 ```
 
 ## Setup
@@ -62,7 +64,8 @@ Homework 2 also requires Docker with Compose. Follow the assignment for starting
 ## Repo map
 
 ```
-CLAUDE.md                 workspace config for your coding agent
+AGENTS.md                 instructions for your coding agent
+CLAUDE.md                 symlink to AGENTS.md
 SPEC.md                   support specification: scope, access matrix, criteria table
 facts.yaml                the facts sheet; every policy number lives here
 data/
