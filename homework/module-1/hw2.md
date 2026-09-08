@@ -2,6 +2,18 @@
 
 Homework 2 asks you to expose the support agent through an authenticated HTTP endpoint and record its execution using OpenTelemetry GenAI semantic conventions. You will inspect model inputs, outputs, and tool results, then verify which authenticated identity reached the tools.
 
+## Working through the assignment with a coding agent
+
+If you would like a coding agent to walk you through the assignment, paste the prompt below at the start of a session in your repository. The prompt assumes no programming background, so it suits an analyst or a product manager as well as an engineer. The Homework 1 tutorial does not cover Homework 2.
+
+> Walk me through Homework 2 in `homework/module-1/hw2.md` as an interactive tutorial. Read `AGENTS.md`, `homework/module-1/AGENTS.md`, the handout, and `SPEC.md` first. I may not have a programming background, so assume nothing about what I know, and adapt once you see what I do know.
+>
+> Work one step at a time, in the handout's order. Before each step, explain in plain language what we are about to do and why the assignment needs it. Then do the technical work, show me the result, and explain what it means. Move on only when you are confident I understand the current step. One short question about what I expect to see, or what a result means, is enough to check; keep questions few, and do not turn the session into a quiz. Explain every unfamiliar term the first time it appears, using the actual files and outputs as examples, and explain each command before you run it. When a picture would help, draw one; a text diagram is fine.
+>
+> If something fails, read the error, explain it plainly, and try a focused fix. Keep a short progress note of what is done and what is next, so we can resume later, and keep a checklist of every deliverable so nothing is skipped. Leave the assessments and the video to me. Do not call the assignment done until every file in the "Files to commit" list exists and the checks in the handout pass.
+>
+> Concepts I need to understand before we use them: what an HTTP endpoint and a session are, why the server, not the conversation, decides who I am, what a trace and a span are, and how the standard `gen_ai.*` fields differ from the application's `cartwheel.*` fields. Diagrams that would help me: the path from my message to the endpoint, the agent, the tools, and the trace, and the tree of spans inside one trace.
+
 ## Expected work
 
 - Estimated time: 4 to 6 hours.
