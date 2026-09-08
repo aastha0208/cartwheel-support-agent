@@ -32,6 +32,11 @@ import asyncio
 import json
 import time
 
+try:  # readline transparently upgrades input(): arrow keys, ctrl-a/e/k/w,
+    import readline  # noqa: F401  # and up-arrow recall within this session
+except ImportError:  # Windows and slim builds ship without it
+    pass
+
 from agents import RunConfig, Runner, SQLiteSession
 from agents.items import RunItem
 from opentelemetry import trace
