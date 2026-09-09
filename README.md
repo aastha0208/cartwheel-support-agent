@@ -119,3 +119,22 @@ The Module 1 implementation tasks are marked `### YOUR CODE HERE (HW1)` or `### 
 
 > [!IMPORTANT]
 > The Module 1 handouts are in `homework/module-1/`. The [homework index](homework/README.md) lists all released assignments. A [video walkthrough](https://youtu.be/qO98jDayTHo?si=gLN5FZ3FDiAIs_gG) of how to attempt Homework 1 is also available.
+
+## Enabling complete evaluation CI
+
+Offline checks run on every push and pull request, including contributions from
+forks. The complete evaluation job is opt-in because the starter includes
+unfinished homework functions, including HW6's leakage check and pass-rate rules.
+
+After completing the required agent, evaluation and judge implementations, set
+the GitHub Actions repository variable `CARTWHEEL_ENABLE_COMPLETE_EVALS` to `true`
+and configure the `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` repository secrets.
+The job then runs on same-repository pull requests and the nightly schedule.
+It fails if either credential is absent, if the leakage check fails, or if a
+regression evaluation fails. Fork pull requests run offline checks only because
+GitHub does not supply repository secrets to their workflows.
+
+The complete tests run with `uv run pytest tests/eval/test_e2e.py -q -s`; each
+case runs five times as configured in `tests/eval/conftest.py`. A skipped complete
+job means product quality was not assessed by live-model evaluation;
+it does not mean those evaluations passed.
