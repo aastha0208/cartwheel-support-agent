@@ -1,8 +1,7 @@
 # The CI workflow for Homework 6.
 #
 # On every push, the workflow runs unit and integration tests without model
-# calls. Once CARTWHEEL_ENABLE_COMPLETE_EVALS is enabled, pull requests from
-# this repository and nightly runs also run the complete
+# calls. On pull requests and each nightly run, the workflow runs the complete
 # evaluation tests five times and applies the rule saved with each test. The pull
 # request job also checks whether an evaluation request was copied into the
 # agent prompt or a judge example.
@@ -35,14 +34,7 @@ jobs:
 
   complete-evaluations:
     name: complete evaluations and leakage check
-    # The starter intentionally contains HW6 placeholders. Enable this job
-    # after implementing them and configuring model credentials. Fork PRs
-    # cannot access those credentials and must use the offline checks.
-    if: >-
-      vars.CARTWHEEL_ENABLE_COMPLETE_EVALS == 'true' &&
-      github.event_name != 'push' &&
-      (github.event_name != 'pull_request' ||
-       github.event.pull_request.head.repo.full_name == github.repository)
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     env:
       CARTWHEEL_RUN_E2E: "1"
@@ -52,11 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync
-      - name: Require model and judge credentials
-        run: |
-          test -n "$OPENAI_API_KEY" || { echo "::error::OPENAI_API_KEY is required for complete evaluations"; exit 1; }
-          test -n "$ANTHROPIC_API_KEY" || { echo "::error::ANTHROPIC_API_KEY is required for complete evaluations"; exit 1; }
       - name: Evaluation case and prompt leakage check
         run: uv run python scripts/check_leakage.py
       - name: CI evaluation tests, with five runs per complete test
-        run: uv run pytest tests/eval/test_e2e.py -q -s
+        run: make eval-ci
