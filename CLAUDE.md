@@ -1,76 +1,22 @@
 # Cartwheel course repository
 
-This repository holds the cumulative student work for the course "Evaluating and Improving AI Agents." It contains one customer facing support agent over the seeded fictional Cartwheel platform. Students continue in the same repository across all five modules.
+Cartwheel is the support agent used throughout "Evaluating and Improving AI Agents." Students complete the starter code and use the same repository for later evaluation exercises.
 
-The local `cartwheel-homeworks/` checkout is the source of truth for student assignments and starter code. Keep the course reader and slides consistent with the assignments here.
+## Find the relevant instructions
 
-## Commands
+- Read [README.md](README.md) for setup and commands. Run commands from the repository root.
+- For homework help, identify the assignment from the request and existing work. If it is unclear, ask which assignment the student is working on. The [homework index](homework/README.md) lists released assignments.
+- For HW1, HW2, or HW3, read [Module 1 instructions](homework/module-1/AGENTS.md) before proceeding, including when changing files outside that folder. Follow the relevant handout for requirements and deliverables.
+- For repository maintenance, follow the requested change directly. Preserve unfinished homework functions unless implementing them is part of the request.
 
-- Install: `uv sync`
-- Seed the world (deterministic, dev scale): `uv run python -m seed.generate`
-- Tests: `uv run pytest` (offline, no API keys needed; homework tests are xfail until implemented)
-- Chat: `uv run python -m agent.cli --role shopper`
-- Serve: `uv run uvicorn server.app:app --port 8010`
-- Tracing stack: `docker compose -f observability/docker-compose.yml up -d`
-- CI evaluation suite (Module 3; complete agent tasks need an API key): `harbor run -p eval_cases/`
-- Replay one failing task ~10 times: `harbor run -p eval_cases/e-001-unconfirmed-write/ --repeat 10`
-- Leakage check (task inputs vs. prompts): `uv run pytest tests/test_leakage.py`
+## Shared rules
 
-## Layout
+- Read [SPEC.md](SPEC.md) and the relevant function contracts before changing agent behavior. Policy numbers come from `facts.yaml`. Editing the specification alone does not change the running application.
+- Reuse the supplied database and authorization helpers and return structured tool results.
+- Preserve permission checks, refund thresholds, human approval, and kill-switch protections. Keep evaluation cases as regression tests and keep evaluation inputs out of prompts.
+- Preserve existing student work and settings. Before regenerating data, check whether it would erase work the student wants to keep. Generate demo data through the seed tools and preserve the pinned demo orders. Confine adversarial fixtures to temporary database copies and keep their generated data out of commits.
+- Handle API keys locally through `.env`. Never request keys in chat, print their values, or commit them. Refer to credentials by environment variable name.
+- Homework placeholders intentionally raise `NotImplementedError`. Expected failures are unfinished work, not proof of completion. Follow the handout's focused tests and run relevant regression checks; resolve mismatches without weakening requirements or tests merely to pass.
+- Report which checks ran offline and which used a live model, and record only observed conversations and tool results. When helping with a submission, leave the student's assessments and recording to the student, and keep unverified deliverables marked as pending.
 
-- `SPEC.md` is the support agent specification with the access matrix and the criteria table.
-- `facts.yaml` is the facts sheet; every policy number comes from it.
-- `seed/` generates `data/cartwheel.db` and `data/policies/`. Do not edit generated data by hand.
-- `agent/` contains the support agent. `agent/tools.py` holds the Homework 1 holes.
-- `agent/guards.py` holds the Module 4 guard holes: the detection functions
-  (`flags_injection`, `strip_external_links`), the wired SDK guardrails
-  (`injection_input_guardrail`, `link_output_guardrail`), and the
-  `needs_approval` predicate (`refund_needs_human`). `agent/approvals.py` holds
-  the human-approval flow that fills the Module 1 stub: four holes
-  (`list_pending_refunds`, `approve_refund`, `reject_refund`,
-  `render_decision_record`); `ensure_approvals_table` is provided.
-  `agent/review.py` is the review-surface CLI with a loop seam the student
-  fills. `agent/killswitch.py` is the provided Module 4 kill switch, wired into
-  the refund and cancel tools.
-- `seed/adversarial.py` injects the Module 4 adversarial fixtures post-seed
-  (store 21, user 5012, order #7002, a poisoned help-center page, a poisoned
-  refund reason). It is never run by `make seed`; load it by hand for live
-  red-teaming.
-- `tests/test_adversarial.py` is the Module 4 `-k m4` suite: invariant
-  code-block tests that pass out of the box, plus the guard, approval, and
-  predicate holes. `promptfooconfig.yaml` is the Artifact F red-team starter, a
-  basic config the student grows into a comprehensive one in homework Part C.
-- `homework/` contains the student assignments for Modules 1 to 5. Instructor notes remain outside the Cartwheel repository.
-- `observability/instrument.py` contains the Homework 2 tool span attribute holes.
-- `scenarios/` contains the synthetic data skill and the scenario runner.
-- `analysis/` contains the Module 2 error analysis skill.
-- `eval_cases/` is the Module 3 evaluation case set (`cases.jsonl`; schema in `eval_cases/README.md`).
-- `tests/eval/` holds the Module 3 evaluation tests; `tests/eval/passk.py` holds `hw6` holes.
-- `replay/` contains the replay code, and `replay/harness.py` holds `hw6` holes.
-- `monitoring/` contains the CD monitoring job, and its three helper files hold `hw7` holes.
-- `scripts/check_leakage.py` compares evaluation inputs with prompts and contains an `hw6` hole.
-- `.github/workflows/evals.yml` runs the offline checks on each push and the complete agent cases plus leakage check on pull requests.
-
-## Rules for coding agents working here
-
-- Homework holes are marked `### YOUR CODE HERE (HWn)` (or `(m2)` /
-  `(m4)`) and raise `NotImplementedError`. Implement exactly what each
-  docstring specifies. The Module 4 holes (`m4`) live in `agent/guards.py`,
-  `agent/approvals.py`, and `agent/review.py`, and are selected by
-  `tests/test_adversarial.py -k m4`.
-- The Module 4 kill switch reads the `CARTWHEEL_KILL_SWITCH` env var: "off"
-  (default, a no-op), "refunds" (pauses the refund tool), "readonly" (pauses
-  all write tools). It is provided; do not weaken it. Keep the default a
-  no-op so existing tests stay green.
-- Do not edit `seed/adversarial.py` outputs into `data/`. The adversarial
-  fixtures are injected post-seed into a throwaway copy or a dev DB, never
-  committed and never run by `make seed`.
-- Do not delete evaluation cases when a bug is fixed; an evaluation case stays as the
-  regression test that proves the fix holds. Do not quote evaluation inputs in
-  any prompt (the leakage check fails the build).
-- Do not weaken or bypass permission checks in `agent/auth.py` or the refund threshold logic.
-  Authorization is not a prompt, and it is not negotiable in code either.
-- Do not edit `seed/` outputs or the pinned demo orders (#4127, #3980, #4455).
-- Never print or commit values from `.env`. Refer to keys by env var name.
-- Keep functions small and typed. Return structured tool results
-  (`{"ok": ..., "error": ..., "reason": ...}`), never prose errors.
+`AGENTS.md` is the canonical instruction file at each level. `CLAUDE.md` is a relative symlink to it; edit the target rather than maintaining a second copy.

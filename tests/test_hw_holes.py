@@ -147,7 +147,7 @@ def test_hw1_find_order(world: dict) -> None:
     result = tools.find_order(SHOPPER_1, product_name)
     assert result["ok"] is True
     assert isinstance(result["orders"], list)
-    assert any(o["id"] == 4127 for o in result["orders"])
+    assert any(o["order_id"] == 4127 for o in result["orders"])
 
     # No match returns an empty list, not an error.
     empty = tools.find_order(SHOPPER_1, "zzzznonexistent9999")
@@ -684,13 +684,18 @@ def test_m2_failure_report_matches_artifact_l_schema(analysis_state, tmp_path) -
     lead = next(mode for mode in report["modes"] if mode["name"] == DEMO_MODE)
     assert lead["name"] == DEMO_MODE
     assert round(lead["prevalence"]["corrected"], 3) == 0.163
+    # The demo judge gets 36/38 passes and 10/12 failures right.
+    evaluator = lead["evaluator"]
+    assert evaluator["test_tpr_interval"] == [0.8271, 0.9854]
+    assert evaluator["test_tnr_interval"] == [0.552, 0.953]
 
-def test_m2_select_traces_is_deterministic_and_offline(analysis_state, tmp_path) -> None:
-    """`select_traces` clusters an export into a reproducible diverse batch
-    with a one-line reason per pick, no model call."""
+def test_m2_file_selection_is_deterministic_and_resumable(
+    analysis_state, tmp_path, monkeypatch
+) -> None:
+    """Select a repeatable batch, then resume after changing directories."""
     import json
 
-    from analysis.helpers import select_traces
+    from analysis.helpers import select_traces, next_to_label
 
     # A tiny synthetic export with feature vectors, written to a temp file.
     traces = [
@@ -699,7 +704,8 @@ def test_m2_select_traces_is_deterministic_and_offline(analysis_state, tmp_path)
                                      "tokens": 100 * (i % 7)}}
         for i in range(40)
     ]
-    export = tmp_path / "export.json"
+    monkeypatch.chdir(tmp_path)
+    export = Path("export.json")
     export.write_text(json.dumps({"traces": traces}))
 
     picks_a = select_traces(export, k=24, strategy="diversity")
@@ -714,6 +720,11 @@ def test_m2_select_traces_is_deterministic_and_offline(analysis_state, tmp_path)
     saved = json.loads((analysis_state / "samples.json").read_text())
     assert isinstance(saved, list) and saved
     assert set(saved[0]) >= {"trace_id", "reason", "trace", "features", "meta"}
+
+    # Resume from the full export, even after changing directories.
+    monkeypatch.chdir(analysis_state)
+    candidates = next_to_label("resumed", k=len(traces), strategy="random")
+    assert {c["trace_id"] for c in candidates} == {t["id"] for t in traces}
 
 
 def test_m2_module1_export_is_normalized_for_review(analysis_state, tmp_path) -> None:
@@ -791,6 +802,32 @@ def test_m2_next_to_label_enriches_from_confirmed(analysis_state, tmp_path) -> N
     assert all(c.get("signal") for c in cands)
 
 
+def test_m2_next_to_label_resumes_live_source(analysis_state, monkeypatch) -> None:
+    from analysis.helpers import langfuse_io, select_traces, next_to_label
+    from analysis.helpers.normalization import normalize_traces
+
+    traces = normalize_traces([{"id": "live", "text": "hello"}])
+    monkeypatch.setattr(langfuse_io, "is_configured", lambda: True)
+    monkeypatch.setattr(langfuse_io, "fetch_traces", lambda: traces)
+    select_traces("langfuse", k=1)
+    assert next_to_label("resumed", k=1, strategy="random") == [
+        {"trace_id": "live", "signal": "random"}
+    ]
+
+
+@pytest.mark.parametrize("configured, error", [(False, RuntimeError), (True, ValueError)])
+def test_m2_unavailable_live_source_raises(
+    analysis_state, monkeypatch, configured, error
+) -> None:
+    """Missing setup or an empty live dataset should give a useful error."""
+    from analysis.helpers import langfuse_io, select_traces
+
+    monkeypatch.setattr(langfuse_io, "is_configured", lambda: configured)
+    monkeypatch.setattr(langfuse_io, "fetch_traces", lambda: [])
+    with pytest.raises(error, match="Langfuse"):
+        select_traces("langfuse", k=1)
+
+
 # --------------------------------------------------------------------------
 # Grading a student's OWN submission (mode-agnostic; opt-in).
 #
@@ -858,3 +895,15 @@ def test_m2_submission_has_a_frozen_judge_per_split_mode() -> None:
             frozen_modes.add(j.get("mode"))
     for mode in splits:
         assert mode in frozen_modes, f"{mode}: no frozen judge (freeze before reporting)"
+
+
+@hw(1, "find_order")
+@pytest.mark.parametrize("ctx,scope", [(SHOPPER_1, "shopper"), (AuthContext(user_id=9002, role="merchant", store_id=2), "merchant"), (SUPPORT, "support")])
+def test_hw1_find_order_roles_and_old_matches(order_search_cases, ctx, scope):
+    title, expected = order_search_cases
+    result = tools.find_order(ctx, title)
+    assert result["ok"] is True
+    with db.connection() as conn:
+        wanted = [db.get_order(conn, order_id).to_public_dict() for order_id in expected[scope][:5]]
+    assert result["orders"] == wanted
+    assert tools.find_order(ctx, "zzzznonexistent9999") == {"ok": True, "orders": []}
