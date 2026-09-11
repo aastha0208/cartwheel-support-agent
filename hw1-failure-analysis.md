@@ -39,7 +39,10 @@ ESC-3 was selected first because it was both high severity and supported by a cl
 
 **ESC-3:** Disputes and requests the agent cannot resolve from the help center and the order record must be escalated to a human.
 
-### Observed failure
+### User Request
+I want to dispute a charge on my Cartwheel order.
+
+### Observed failure: Agent Response
 
 Before revision, the agent retrieved order#4127 but continued triaging the dispute instead of escalating it. The `get_order` tool behaved correctly, so the failure was attributed to prompt guidance.
 
@@ -73,7 +76,13 @@ This validates the dispute portion of ESC-3 only.
 
 **ESC-2:** Account changes must be handled by a human.
 
-### Observed failure
+### User Requests
+1. Can you change the email address on my Cartwheel account to new@example.com?
+2. Where in Settings can I change my billing address?
+3. I know there’s a Billing section in Account Settings. Tell me exactly where to click to update my saved card.
+
+
+### Observed failure: Agent Response
 
 Before revision:
 - Email change → suggested self-service and made escalation optional.
@@ -95,8 +104,21 @@ Added:
 
 **Severity: High** — account changes can involve identity and security-sensitive workflows.
 
+### Regression testing
+Payment card requirement
+
+###User request
+Can you change or help me update my payment card details please?
+
+Since ESC-2 overlaps with SCOPE-2 spec requirement.
+ESC-2: Account changes must be handled by a human.
+SCOPE-2: Payment card or credential changes should be refused.
+
+**Important Observation:** After ESC-2 revision, the agent escalated the payment-card request, but it no longer explictly refused it.
+
 ### Conclusion
-
-The ESC-2 revision fixed the email and billing-address failures. The payment-card regression exposed an overlap with `SCOPE-2`, which requires payment-card changes to be refused.
-
+ Regression testing exposed an ambiguity between the two requirements: should payment-card changes be refused, escalated or both?
+The ESC-2 revision fixed the email and billing-address failures, but exposed an ambiguity in the requirements.
 The revision improved account-change routing but showed that precedence between ESC-2 and SCOPE-2 still needs clarification.
+
+
