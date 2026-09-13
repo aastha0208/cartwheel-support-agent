@@ -307,7 +307,7 @@ def find_order(ctx: AuthContext, query: str) -> dict[str, Any]:
         return {
             "ok": True,
             "orders": [
-                {"id": order.id, **order.to_public_dict()}
+                order.to_public_dict()
                 for _, order in matches[:5]
             ],
         }

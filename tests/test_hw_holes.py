@@ -610,9 +610,12 @@ def test_m2_run_judge_never_calls_a_model_offline(analysis_state) -> None:
     assert got == {"store-0000": 1, "store-0001": 1}
 
 
-def test_m2_run_judge_persists_store_predictions_for_prevalence(analysis_state) -> None:
+def test_m2_run_judge_persists_store_predictions_for_prevalence(analysis_state, monkeypatch) -> None:
     """A store run writes the rows consumed by corrected_prevalence."""
-    from analysis.helpers import run_judge, tools
+    from analysis.helpers import langfuse_io, run_judge, tools
+
+    # Exercise the copied demo traces regardless of local Langfuse settings.
+    monkeypatch.setattr(langfuse_io, "is_configured", lambda: False)
 
     judge = tools._load_judge(DEMO_JUDGE)
     judge.pop("store_predictions", None)
