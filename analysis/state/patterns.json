@@ -1,1 +1,360 @@
-{"modes": []}
+{
+  "modes": [
+    {
+      "name": "dispute_not_escalated",
+      "status": "confirmed",
+      "definition": "The user's message expresses an order/charge dispute (intent:dispute), but the agent never calls escalate_to_human -- instead it investigates the issue itself and/or asks the user clarifying questions.",
+      "example_trace_ids": [
+        "7d91b1a1a90b557a4554fd30c6841f47",
+        "d4a183f5189924ee6d6f87ab9d3480fe",
+        "07c04331fb3877c490cd6f73d0f5d479",
+        "8b7cc4d00ac2e118f0c1fe0af76da3e7",
+        "7d285533e5802a008a93f3137ff3226a",
+        "de07dfb65eab5a1d229ce5781cf05f30",
+        "fe65a4e0bea00ecdf56ac739e1694d3e"
+      ],
+      "close_negative_trace_ids": [
+        "059cb6485250785b429748a2d0740fbb",
+        "3a70d592db7c5588c2ba541639cc56e2"
+      ],
+      "origin_annotation_ids": [
+        "a1790257354285618",
+        "a1790260303739831",
+        "a1790298225129136",
+        "a1790255752404300",
+        "a1790255907609544",
+        "a1790349721919176",
+        "a1790417333649467",
+        "a1790417409291229",
+        "a1790472032129"
+      ],
+      "boundary": "Distinct from policy_citation_missing: 059cb6485250785b429748a2d0740fbb correctly treats the case as needing human handling (states the escalate-for-disputes rule) so it is a close negative here, not a positive -- its defect is failing to cite a retrieved policy id, not failing to escalate. Also distinct from incomplete_write_left_undone (a completed-but-unconfirmed write action, not a missing escalation).",
+      "evaluator_type": "llm_judge -- production traffic carries no ground-truth intent label, so a judge must first decide whether the user's message is a dispute, then check the trace for an escalate_to_human call",
+      "requirement_source": "SPEC.md Section 5 ESC-3 (\"Disputes ... always go to a human\"); agent.py system prompt's Escalation section: \"Disputes must always be escalated to a human using escalate_to_human. Do not resolve or continue triaging them automatically.\"",
+      "notes": "Now 7 positives. Phrasing hypothesis holds: the trigger is hedged/uncertain dispute language rather than explicit \"I want to dispute this.\" Investigating first is not itself the violation -- several traces show the agent gathering useful order/price context before failing; the actual violation is (a) never calling escalate_to_human at all, (b) resolving/dismissing the dispute using the investigation's result instead of escalating unconditionally, or (c) correctly naming escalation as the right move but asking the user's permission first instead of calling escalate_to_human -- support-0084 (fe65a4e0bea00ecdf56ac739e1694d3e): \"Would you like me to go ahead and escalate?\" with no followup turn to ever answer it, so escalation never happens. Two close negatives: 059cb6485250785b429748a2d0740fbb (escalates correctly but skips citation) and 3a70d592db7c5588c2ba541639cc56e2 / support-0224 (escalates immediately and correctly with citation)."
+    },
+    {
+      "name": "find_order_cap_excludes_target",
+      "status": "confirmed",
+      "definition": "find_order's fixed 5-result cap silently excludes the order the user's request actually needs, and the agent proceeds (stalls, asks for clarification, or reports on the wrong/incomplete candidate set) without the target order ever appearing in a tool result.",
+      "example_trace_ids": [
+        "2b8e1594915ab47c40d71bf52881f7ea",
+        "0d759a5e4d9f82d621e3b3e083ef200c",
+        "1ea0dcd4a66e321d5925c72f3304ddce",
+        "7f018507f5f469bdf43689bc1f9d4793",
+        "1b9617a3eafa089e0a43a43d97941067",
+        "2ed56ad10ff2b54412c8765a0b88fa7b",
+        "2c84f42f5ebfcd9dbc3b561a425e0fd1",
+        "b4e9277891c05fbdedb565cfb6188bfd",
+        "8ee8a6ae131cecdf64cadfd0d5e6ff39",
+        "dad9d7a0adceeed216387ceb556035c2",
+        "da076a4514b73af3ff53e767c3596633",
+        "91bffa5c91c5613927b8b7504ef5139c",
+        "5f8b05cb2de695c976afbe2638af050e",
+        "5fcbdeaeceeb2aba38a894091254a27c",
+        "2735a67e6b530cfaa7b94662860a15da",
+        "2445041ff9197e175d28492efd065ae9"
+      ],
+      "close_negative_trace_ids": [
+        "0ca3ca16cd9f5ea7f5ad16c43010b650",
+        "244b5d28a9babd0df8dbb22ff21596d9"
+      ],
+      "origin_annotation_ids": [
+        "a1790259493727968",
+        "a1790262172105801",
+        "a1790325187332831",
+        "a1790323226298774",
+        "a1790326286964662",
+        "a1790350486170783",
+        "a1790419782213",
+        "a1790435870173",
+        "a1790501116414",
+        "a1790501278106",
+        "a1790501529628",
+        "a1790502850797",
+        "a1790503136236",
+        "a1790503479032",
+        "a1790504786206",
+        "a1790505954998",
+        "a1790521644927",
+        "a1790526990678"
+      ],
+      "boundary": "Distinct from order_metadata_not_exposed: here the target order is entirely invisible to the agent (never returned by any tool call at all). In order_metadata_not_exposed the order IS returned, just without a name field the agent can match it by.",
+      "evaluator_type": "code_check -- deterministic: replay find_order's underlying query against the full order table for the scenario's caller scope, and check whether the target order_id is in the true candidate set but absent from the top-5 actually returned",
+      "requirement_source": "SPEC.md:88 tool contract (\"Up to five fuzzy product-name matches\") does not define behavior when more than 5 real matches exist. Recorded as a pending SPEC revision (see hw4_pending_spec_revision_find_order_cap memory note), not yet an explicit requirement violation.",
+      "notes": "Now 6 instances. Manifestations: platform-wide support search (#7101), a single busy merchant store (#1703), cross-store mixing where a different store's newer order crowded out the target (#2630, support-0117), a single busy store again (#4945, support-0112), a sharper variant (#8002, support-0039) where the tool's ranking criterion (ordered_at descending) is misaligned with what the user's query actually needs (shipping/delivery recency) so the target looks 'old' and gets excluded even though it's the most relevant match by the metric that matters (support-0039 also compounds this with a confident-wrong-guess, reporting a different, wrong order's status as if confirmed), and a 6th (#3053, support-0148) where a 227-day-old order that should be denied never surfaces among 5 more-recent candidates at all -- compounded by unsound_order_pick, since the agent's selection among the visible wrong candidates uses refund-eligibility itself as the deciding factor rather than genuine matching. Same root cause throughout, worth keeping as one mode since a single fix (raise the cap / add a has-more signal / let find_order scope by store / fix the ranking criterion) addresses all six. 16th instance: support-0138 (batch 4)."
+    },
+    {
+      "name": "order_metadata_not_exposed",
+      "status": "confirmed",
+      "definition": "find_order and list_my_orders return only product_id/store_id, never product_title/store_name, so the agent cannot match a user's plain-language reference to a specific order without an extra get_order round-trip per candidate -- and when those extra calls aren't made, the agent either gives up, reports incorrectly that no matching order exists, or fails to disambiguate correctly.",
+      "example_trace_ids": [
+        "0b2f4c6a10e0c524c7a08aa5a481e00c",
+        "302a2ca584e060ee3cb51c8706d85fed",
+        "d4786980450df6328f693d660ccaaf97",
+        "b530b9f011ae780a66aee74d77dc2de1",
+        "e0df21cb7ad682aee30d5172a19775e5",
+        "ed87b7d77f64eedea371b6243e740fc5"
+      ],
+      "close_negative_trace_ids": [],
+      "origin_annotation_ids": [
+        "a1790244741319999",
+        "a1790250853415122",
+        "a1790280452747685",
+        "a1790332064496",
+        "a1790521508429",
+        "a1790526726273",
+        "a1790526913075"
+      ],
+      "boundary": "Distinct from store_identity_not_resolved (watch-list): there, the name IS obtainable via a single get_order call and the agent simply doesn't make it. Here, no bulk call in the available tool set returns the name at all, so resolving it costs one extra round-trip per candidate order -- a schema gap, not a behavior gap.",
+      "evaluator_type": "code_check -- deterministic: for scenarios where the user's request names a store or product, check whether the trace ever obtains that name (via get_order or any other call) before the agent asserts a match or gives up",
+      "requirement_source": "No current SPEC.md requirement covers this. find_order/list_my_orders' documented return shape (SPEC.md tool contract table) omits product_title/store_name by design. Recorded as a second candidate SPEC revision alongside the find_order cap item.",
+      "notes": "No close negative identified yet -- still need an example where a store/product-name request succeeds despite this same schema gap (e.g. because the agent made the extra get_order calls anyway). Look for one in batch 2/3. support-0087 was previously flagged here as a probable 4th instance, but it turned out to be a scenario-generation data-quality bug (expected order didn't match the customer's own description) and is now marked excluded -- not usable as evidence for this mode. 5th instance: support-0103 (batch 4) -- agent asserted order 6793 was the match for Petal & Stem purely from a bare find_order result (only store_id, no name); guess was correct but never verified via get_order. 6th instance: support-0099 (batch 4) -- gives-up variant: agent explicitly states it cannot confirm store names, punts 4-way disambiguation to customer instead of calling get_order."
+    },
+    {
+      "name": "store_identity_not_resolved",
+      "status": "confirmed",
+      "instance_count": 5,
+      "independent_instance_count": 2,
+      "definition": "The agent cannot determine which order or store a request refers to at all, despite an available and cheap resolution path (a direct get_order call on a small candidate set, or an identity it already has) -- an identification failure, upstream of any policy question. Direction-agnostic: covers both 'order known, store unclear' (one get_order call always resolves this) and 'store named, order unclear' (resolves cheaply only when candidates are already narrowed to a small set by some other signal -- status, recency, etc.). Also covers the more conservative variant of never even attempting the next safe read call (support-0076: stops after find_order misfires, asks permission to call list_my_orders instead of just calling it -- no permission is needed for a read-tier tool).",
+      "example_trace_ids": [
+        "806de685e1cac28c6f02022946fbea38",
+        "2f49d006ebd79634075620f0502527d8",
+        "f2f01224f4534881e68b12ca91a24e80",
+        "7987dca1130313cc8a1e42bd28ff9481",
+        "b6af3fd154492c4223fe41686d198e56"
+      ],
+      "origin_annotation_ids": [
+        "a1790324042421993",
+        "a1790407928710942",
+        "a179041018732942",
+        "a1790413696324",
+        "a1790415468054"
+      ],
+      "boundary": "Upstream of store_override_not_detected: this mode is about not knowing WHICH store/order applies at all; store_override_not_detected presupposes identity is already known and is about skipping the check for that store's specific policy once identity is settled. A trace can exhibit both (support-0073 does both, and is double-counted here and in store_override_not_detected). Distinct from find_order_cap_excludes_target (the tool structurally excludes the match no matter what -- a cap fix, not a behavior fix) and order_metadata_not_exposed (many candidates, no narrowing signal, resolution would cost many calls -- a schema fix). The dividing line from order_metadata_not_exposed is cardinality/cost, not direction: a 'store named, order unclear' case with many candidates and no narrowing signal belongs in order_metadata_not_exposed instead, regardless of which direction the ambiguity runs (this is why support-0087 was rejected from this mode -- ~20 candidates, no narrowing signal).",
+      "notes": "Confirmed 2026-09-26, now with 5 instances, but only ~2 independent kinds of evidence: support-0069 (cancellation intent, no override angle -- independent), and a 4-member template-family cluster (support-0073, support-0074, support-0075, support-0076 -- all intent:refund, difficulty:boundary, applicable_policy:store_override, same 'bought X from [Store] weeks ago' framing, differing only in store/day-count/turn-count). Treat as 2 confirmed evidence clusters (1 independent + 1 deep-but-narrow), not 5 independent confirmations, when writing up generalizability -- the template family shows the failure is robust *within that recipe*, not that it generalizes broadly across scenario shapes. Considered renaming to order_store_match_not_found for concreteness; kept current name to avoid boundary confusion with find_order_cap_excludes_target (both could sound like \"match not found\" despite meaning structurally different things)."
+    },
+    {
+      "name": "store_override_not_detected",
+      "status": "confirmed",
+      "definition": "The agent already knows (or can trivially determine) which store applies, but doesn't check for, retrieve, or cite that store's specific policy override before applying or citing only the generic platform default.",
+      "example_trace_ids": [
+        "055f7cc1d0ec5c7d15b1f50218d5c833",
+        "67a5c615b365104176ee483b77eedf2d",
+        "2f49d006ebd79634075620f0502527d8",
+        "d941b2ccda38d2a447224a9c4f17ce5a"
+      ],
+      "close_negative_trace_ids": [
+        "1072dc7d908d48b052310e787f74cd2c",
+        "68dc0f8dc95c0b8aff9e7f38c39db9b4"
+      ],
+      "origin_annotation_ids": [
+        "a1790322196996869",
+        "a1790264656648173",
+        "a1790408913635299",
+        "a1790431552458"
+      ],
+      "boundary": "Downstream of store_identity_not_resolved: this mode presupposes the store is already known (from a system-prompt store_id, an explicitly named store, or a resolved order) -- the failure is skipping the override lookup, not failing to identify the store. Close negatives: support-0062 (1072dc7d908d48b052310e787f74cd2c) and support-0191r (68dc0f8dc95c0b8aff9e7f38c39db9b4) both show the correct behavior -- agent searches specifically for the named store's policy (not just a generic query) and correctly applies the opt-in/override logic even when the result is 'no override exists.'",
+      "evaluator_type": "llm_judge -- requires reading whether the cited policy is the most specific one applicable (a store override vs. the platform default), which isn't a simple keyword check",
+      "requirement_source": "cw-store-overrides policy document (\"when a store policy and the platform default disagree, the store policy wins, whether stricter or looser\"); RESP-1 (cite the policy id for every claim derived from a policy document).",
+      "notes": "Formed 2026-09-26 by splitting off from store_identity_not_resolved once evidence showed a materially different fix is needed (always-check-for-an-override prompt nudge, vs. always-resolve-identity prompt nudge). Confirmed with 3 positives immediately upon the split. This is the taxonomy revision to record in review_summary.md."
+    },
+    {
+      "name": "unnecessary_tool_call",
+      "status": "confirmed",
+      "instance_count": 4,
+      "definition": "The agent calls a tool whose result is never used or referenced anywhere in the final reply -- pure waste, not just extra narration.",
+      "example_trace_ids": [
+        "4be3771bf913221d9634c74aeb72a593",
+        "b6af3fd154492c4223fe41686d198e56",
+        "244b5d28a9babd0df8dbb22ff21596d9",
+        "62c973650e1230553d5ae25b74da5d32"
+      ],
+      "close_negative_trace_ids": [
+        "806de685e1cac28c6f02022946fbea38"
+      ],
+      "origin_annotation_ids": [
+        "a1790420372456275",
+        "a1790420508790",
+        "a1790423560524_244b5d",
+        "a1790423560524_62c973"
+      ],
+      "boundary": "Different from every other mode in the taxonomy so far -- all the others are about a missing or misused call; this is the first about a superfluous one. Three mechanisms seen, kept as one mode: (1) continuing to gather info after a result that already makes further action pointless (support-0057: search_help_center called after get_order already returned permission_denied); (2) speculative parallel pre-fetch that turns out unneeded (support-0076: search_help_center called alongside find_order before knowing whether the order lookup would even succeed); (3) fetching a policy whose relevance depends on an outcome that didn't happen (support-0123, support-0124: get_policy(\"cw-refunds\") fetched for refund-processing details, but the order turns out ineligible around the same time via get_order, so refund processing never becomes relevant). Close negative support-0056 (806de685e1cac28c6f02022946fbea38) stops immediately after permission_denied, no extra call.",
+      "evaluator_type": "code_check -- deterministic: for each tool_call/tool_result pair in a trace, check whether any of its returned fields are referenced (semantically) in the final assistant reply",
+      "requirement_source": "No current SPEC.md requirement covers call efficiency. Not a correctness violation on its own (the final answer is still correct in all 4 instances) -- worth tracking for cost/latency and as a risk surface (an unused result sitting in context could mislead a harder case even when it didn't here), not as a SPEC violation.",
+      "notes": "First spotted from a course-video comparison (a different tool's cluster named the same thing) that we initially said had no evidence in our own data -- now it does, 4 instances, confirmed. Traces get marked pass on their objective outcome even when this mode is present, since it hasn't caused a wrong answer in any instance so far -- watch for a case where the discarded result should have changed the answer. get_policy itself is not redundant with search_help_center in general (search snippets are truncated; get_policy also returns audience) -- the defect in support-0123/0124 specifically is calling get_policy for an outcome (refund processing) that became moot once eligibility was determined the other way, not that the tool duplicates the search."
+    },
+    {
+      "name": "return_refund_query_excludes_cw_returns",
+      "status": "confirmed",
+      "instance_count": 7,
+      "definition": "search_help_center's BM25 ranking excludes cw-returns from its top-3 results whenever the query combines both 'return' and 'refund' terms together, in any order or phrasing -- cw-refunds/cw-disputes/cw-cancellations (or cw-payouts) reliably outrank it instead. A tool/retrieval defect, not an agent reasoning failure: no prompt change fixes this, since the agent's query is reasonable and the tool's ranking is what's wrong.",
+      "example_trace_ids": [
+        "055f7cc1d0ec5c7d15b1f50218d5c833",
+        "2f49d006ebd79634075620f0502527d8",
+        "4be3771bf913221d9634c74aeb72a593",
+        "62c973650e1230553d5ae25b74da5d32",
+        "67a5c615b365104176ee483b77eedf2d",
+        "b6af3fd154492c4223fe41686d198e56",
+        "d4786980450df6328f693d660ccaaf97"
+      ],
+      "close_negative_trace_ids": [
+        "9779181a94c000f1177ed889eb2f9984"
+      ],
+      "origin_annotation_ids": [
+        "a1790422927012_055f7c",
+        "a1790422927012_2f49d0",
+        "a1790422927012_4be377",
+        "a1790422927012_62c973",
+        "a1790422927012_67a5c6",
+        "a1790422927012_b6af3f",
+        "a1790422927012_d47869"
+      ],
+      "boundary": "Different from unnecessary_tool_call and policy_citation_missing/policy_miscitation: those are about what the agent does with a tool result; this is about the tool's retrieval quality itself, upstream of any agent decision. Confirmed 100% reproducible: 7/7 queries combining 'return' and 'refund' failed to surface cw-returns, regardless of word order (\"return and refund\", \"refund return\", \"return policy deadline refund\" all fail the same way). Close negative: support-0072 (9779181a94c000f1177ed889eb2f9984) queries plain \"return policy\" (no \"refund\") and \"Petal & Stem return policy\" and gets cw-returns both times -- confirms the trigger is specifically the co-occurrence of both terms, not just querying about returns in general.",
+      "evaluator_type": "code_check -- fully deterministic: run search_help_center with the exact query text and check whether cw-returns appears in the top-k results",
+      "requirement_source": "No SPEC.md requirement covers retrieval quality. Recorded as a third candidate item for the pending SPEC/tool revision, alongside the find_order 5-result cap and the missing store_name/product_title fields (see hw4_pending_spec_revision_find_order_cap memory note) -- this one is about search_help_center's ranking rather than find_order's cap, but the same underlying theme: the tools sometimes don't give the agent what it needs even when its query is reasonable.",
+      "notes": "Only support-0180 recovers cw-returns in-trace, via a second, more specific follow-up query (\"return window eligibility requirements\") after the first combined query failed. The other 6 traces never retrieve cw-returns at all anywhere in the conversation. Whether this directly causes each trace's final-answer defect varies -- some traces have a separate, independently-sufficient failure (e.g. support-0076's store_identity_not_resolved never even reaches a policy question) -- but the retrieval defect itself is present and reproducible regardless of downstream impact."
+    },
+    {
+      "name": "policy_citation_missing",
+      "status": "candidate",
+      "instance_count": 2,
+      "definition": "The agent takes the correct action but states a policy rule from memory/instructions rather than citing a retrieved policy id (RESP-1).",
+      "example_trace_ids": [
+        "62c973650e1230553d5ae25b74da5d32",
+        "059cb6485250785b429748a2d0740fbb"
+      ],
+      "notes": "Needs a 3rd instance."
+    },
+    {
+      "name": "policy_miscitation",
+      "status": "candidate",
+      "instance_count": 1,
+      "definition": "The agent cites a specific policy id for a claim, but that policy doesn't actually govern the claim being made -- a different, more specific policy does (e.g. citing a fee policy for a return-window claim).",
+      "example_trace_ids": [
+        "7987dca1130313cc8a1e42bd28ff9481"
+      ],
+      "origin_annotation_ids": [
+        "a1790413696325"
+      ],
+      "boundary": "Distinct from policy_citation_missing: that mode is about citing nothing (stating a rule from memory); this mode is about citing something, just the wrong policy id. Different fix -- policy_citation_missing needs 'always cite a retrieved policy id,' this needs 'verify the cited id actually governs the specific claim,' a stronger, more specific check.",
+      "notes": "1 instance so far: support-0075 (7987dca1130313cc8a1e42bd28ff9481) attributes a 30-day return-window claim to cw-restocking-fees, which only covers the restocking fee, not the window; the correct citation would be cw-returns or store-cascade-audio-policy. Needs 2 more instances."
+    },
+    {
+      "name": "unsound_order_pick",
+      "status": "confirmed",
+      "instance_count": 4,
+      "definition": "The agent's method for narrowing among multiple candidate orders is unsound (ignores a mismatched identifying field it already has, or filters by an unrelated criterion), even though the data needed to disambiguate correctly was already present.",
+      "example_trace_ids": [
+        "0d759a5e4d9f82d621e3b3e083ef200c",
+        "302a2ca584e060ee3cb51c8706d85fed",
+        "2ed56ad10ff2b54412c8765a0b88fa7b",
+        "7261544853e5ec8aaea2596e52320943"
+      ],
+      "close_negative_trace_ids": [
+        "a26118f5a5abbac4c5f6b95da64be440"
+      ],
+      "origin_annotation_ids": [
+        "a1790435870173",
+        "a1790506118378"
+      ],
+      "evaluator_type": "human_judgment -- requires comparing the candidate set's distinguishing fields against the user's description to see whether the agent's stated reason for picking one actually narrows anything down",
+      "requirement_source": "RESP-3 (state missing info, don't invent) -- picking a specific order without a sound basis for distinguishing it from equally-matching candidates is a form of proceeding on invented certainty.",
+      "notes": "Confirmed at 3 instances: support-0117 and support-0077's traces, plus support-0148 (2ed56ad10ff2b54412c8765a0b88fa7b), where among 5 candidates matching 'qty=1, ~$19' equally well, the agent picks the one that happens to be refund_eligible and frames eligibility itself as if it were a matching criterion -- backwards, circular selection logic. Distinct from order_metadata_not_exposed and find_order_cap_excludes_target: here the needed data IS present in the tool result, the agent's selection logic is just wrong. Origin annotation ids for the first 2 instances predate this mode's id-tracking and weren't recorded at the time. Close negative: support-0141 (a26118f5a5abbac4c5f6b95da64be440) -- two orders equally match (same product, price, ~2 months old); agent correctly recognizes genuine ambiguity and asks the merchant which one instead of guessing. 4th instance: support-0068 (7261544853e5ec8aaea2596e52320943) -- picks the order that's actually the worse date-match (13 days vs. \"three weeks ago\") while claiming it's the best match; the data (order/delivery dates) needed to pick correctly was right there.",
+      "boundary": "Distinct from incomplete_write_left_undone: a wrong candidate pick and a stalled write are independent defects. Picking the wrong order doesn't cause the write to stall, and stalling on a write doesn't depend on which candidate was picked -- support-0068 shows both at once (wrong order picked, then the refund is never attempted at all), but as two separate failures in the same trace, not one causing the other. Different fixes: sound selection logic for candidates already in hand, versus completing an authorized write instead of stalling on it."
+    },
+    {
+      "name": "incomplete_write_left_undone",
+      "status": "confirmed",
+      "instance_count": 5,
+      "definition": "The agent correctly identifies the authorized write action to take, but never calls the write tool -- stalling on confirmation or a reason the user's request already implied.",
+      "example_trace_ids": [
+        "0baaa7cf7bb9d3aac6dacf01a96593c9",
+        "ec1db3bdc0745e9c2d62d0e1628840a2",
+        "d2fe1e34cd5a5630b77503e55f8c54d2",
+        "d5e58073dadec3f9ed7da82c81fbed40",
+        "7261544853e5ec8aaea2596e52320943"
+      ],
+      "close_negative_trace_ids": [
+        "98c4220e5376c707ff40be6e801c737b"
+      ],
+      "origin_annotation_ids": [
+        "1790436748798",
+        "a1790437578221",
+        "a1790472709165",
+        "a1790506118378"
+      ],
+      "evaluator_type": "human_judgment -- requires confirming the candidate set actually resolves to one order unambiguously (e.g. via status) and that no policy requires the withheld information before proceeding",
+      "requirement_source": "RESP-2/expected.outcome pattern across cancellation scenarios (\"confirm only after cancel_order reports success\") -- the scenario design expects the write to happen in-turn, not to be gated on a reply that a single-turn, no-followup scenario can never supply.",
+      "notes": "Confirmed at 4 instances. First 3 are cancel_order stalls where exactly one order has status 'placed' (uniquely resolving it), but the agent stalls asking the customer to confirm the order and/or give a cancellation reason instead of just cancelling -- support-0162, support-0166 (ec1db3bdc0745e9c2d62d0e1628840a2), and support-0168 (d2fe1e34cd5a5630b77503e55f8c54d2, the purest case: confirmation-only stall, no reason ask). 4th instance broadens the mode beyond cancellation: support-0011 (d5e58073dadec3f9ed7da82c81fbed40, issue_refund) -- eligibility and full-refund amount both confirmed, agent still asks for a return reason on the scenario's final turn instead of calling issue_refund, so it never happens. None of these questions reflect genuine ambiguity: order identity/eligibility is already resolved, and neither cw-cancellations.md nor cw-refunds.md require a stated reason. 5th instance: support-0068 (7261544853e5ec8aaea2596e52320943, issue_refund) -- also asks for a return reason instead of processing, on the scenario's only turn (double-tagged with unsound_order_pick, since the wrong order was also picked). Close negative: support-0012 (98c4220e5376c707ff40be6e801c737b, batch 4) -- same setup (single unique 'placed' order), agent supplies its own reason and cancels immediately without stalling.",
+      "boundary": "Distinct from unsound_order_pick: a stalled write and a wrong candidate pick are independent defects, not one causing the other -- support-0068 shows both in the same trace (wrong order picked, then the refund never attempted), but stalling on a write happens regardless of whether the right order was identified first."
+    },
+    {
+      "name": "unconfirmed_write",
+      "status": "candidate",
+      "instance_count": 0,
+      "definition": "The agent's reply states that a write operation succeeded, but the most recent tool result for that operation does not confirm success (the handout's own worked example).",
+      "example_trace_ids": [],
+      "close_negative_trace_ids": [
+        "135f980834033479b62927b73db47461",
+        "010cb6308a3efaaccc80ec8fb5b4f5c4"
+      ],
+      "notes": "Zero positives found in batch 1 -- only hedged, non-asserted close negatives so far. Actively hunt for a real positive in batch 2/3 rather than assuming this doesn't occur."
+    },
+    {
+      "name": "missing_data_not_disclosed",
+      "status": "candidate",
+      "instance_count": 2,
+      "definition": "A field the customer needs (e.g. a product's name) is blank/absent at the data source, and the agent neither invents a value nor discloses that it's missing -- it just omits any mention of it.",
+      "example_trace_ids": [
+        "cb2f33fcfda540d8bf5186f721e5ac05",
+        "b5f3b4110191f1408c9ecfc16a422e81"
+      ],
+      "close_negative_trace_ids": [],
+      "origin_annotation_ids": [
+        "a1790470787570",
+        "a1790471450931366"
+      ],
+      "boundary": "Distinct from order_metadata_not_exposed: there, the field exists but requires an extra tool round-trip the agent skips; here, no tool call can ever surface the value (the catalog field itself is blank), so the only correct move is to state the gap, not fetch harder.",
+      "evaluator_type": "human_judgment -- requires checking the data_quality_table ground truth to confirm the field really is blank, then checking whether the reply says so",
+      "requirement_source": "RESP-3 (state missing info, don't invent) -- covers not inventing, but this trace shows the reply can also just silently omit the topic instead of stating it's missing, which RESP-3's 'state missing info' half also requires.",
+      "notes": "2 instances, both dq-product-missing-title/product 3: support-0046 (cb2f33fcfda540d8bf5186f721e5ac05) and support-0048 (b5f3b4110191f1408c9ecfc16a422e81, stronger case -- search_products literally returns title:\"\" and the agent still omits it). Neither invents a name, neither discloses the gap. Needs 1 more instance to confirm."
+    },
+    {
+      "name": "unreliable_record_trusted",
+      "status": "candidate",
+      "instance_count": 1,
+      "definition": "An order's own fields are internally inconsistent (e.g. its store doesn't match where its product is actually sold), and the agent acts on the record's face-value data (e.g. a refund-eligibility flag) instead of flagging the inconsistency and escalating.",
+      "example_trace_ids": [
+        "f37973df77f37b26a7fac1ff3037efce"
+      ],
+      "close_negative_trace_ids": [],
+      "origin_annotation_ids": [
+        "a1790472448017"
+      ],
+      "boundary": "Distinct from missing_data_not_disclosed: there, a field is blank and the agent stays silent; here, fields are present but contradict each other, and the agent proceeds as if the record were trustworthy rather than questioning it.",
+      "evaluator_type": "human_judgment -- requires checking the data_quality_table ground truth for the specific inconsistency, then checking whether the reply flags/escalates it",
+      "requirement_source": "No SPEC.md rule directly covers this yet; closest is the general expectation (RESP-3 family) that the agent not assert conclusions it cannot actually verify. Candidate for a recorded SPEC revision.",
+      "notes": "1 instance so far: support-0037 (f37973df77f37b26a7fac1ff3037efce, dq-order-store-mismatch). Order 8003 recorded under Blue Heron Ceramics (store 1) but its product actually belongs to Golden Hour Coffee (store 14); agent reports refund_eligible:false as if reliable (\"likely outside the return window\") instead of flagging the mismatch, offering escalation only as an optional customer-initiated step, not because the record itself is unreliable. Needs 2 more instances; check other dq-* scenarios."
+    },
+    {
+      "name": "stale_option_offered",
+      "status": "candidate",
+      "instance_count": 2,
+      "definition": "After correctly denying one time-bound option, the agent offers a second time-bound option (e.g. a dispute) without checking it against data it already has, even though that option has also already expired.",
+      "example_trace_ids": [
+        "5c1365b8bc595be906fe20fb1a6ecb78",
+        "8f2d5cdd955b035c8e3a3660033d7da8"
+      ],
+      "close_negative_trace_ids": [],
+      "origin_annotation_ids": [
+        "a1790472922441",
+        "a1790506047003"
+      ],
+      "boundary": "Distinct from dispute_not_escalated: that mode is about failing to escalate a dispute the customer actually raised; here the customer never raised a dispute at all -- the agent proactively suggests one that is not actually available given data (delivery date) already in hand.",
+      "evaluator_type": "code_check -- deterministic: given the order's delivered_at already in the trace, compute days-since-delivery and check it against the 60-day dispute window before the reply offers disputing as an option",
+      "requirement_source": "RESP-3 (state missing info, don't invent) -- offering something as available without checking it against data already possessed is a form of asserting an unverified/false claim.",
+      "notes": "2 instances: support-0122 (5c1365b8bc595be906fe20fb1a6ecb78, 367d) and support-0130 (8f2d5cdd955b035c8e3a3660033d7da8, 450d, stronger case -- confidently asserts \"would still be within that window\" rather than just offering it without checking). Both correctly deny the refund itself; the failure is purely in the stale dispute-window offer, using delivery-date data the agent already has. Needs 1 more instance to confirm."
+    }
+  ]
+}

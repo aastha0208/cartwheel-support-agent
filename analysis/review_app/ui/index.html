@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<!--
+  Error-analysis review interface for Homework 4 (Cartwheel).
+
+  Adapted from the reference UI (analysis/ui/index.html), which is itself
+  adapted from the instructor's error-discovery skill. Reused close to as-is:
+  the annotation popover mechanics, the map view, and the progress/suggestion
+  queue view — none of that logic depends on Cartwheel's specific trace shape.
+
+  Genuinely new here, built from evidence gathered reviewing real Cartwheel
+  traces in Langfuse (see analysis/report/interface_comparison.md):
+
+    - A left session rail: the server now returns one record per
+      *conversation* (analysis/helpers/normalization.py merges same-session
+      turns), so "the list of samples" already is "the list of sessions" —
+      no client-side grouping needed. Browsing here replaces the
+      ClickHouse/grep detective work the stock Langfuse UI required to find a
+      conversation's other turns.
+    - A status strip: role, scenario id, prompt version, and badges computed
+      from each tool_call/tool_result pair actually present in the
+      conversation (not hardcoded to one tool) — lets a reviewer see what
+      kind of case this is, and whether a write action's outcome, before
+      reading a word of the reply.
+    - turn_boundary messages (inserted by the merge step) render as dividers
+      between turns, so it's clear which raw Langfuse trace a stretch of
+      messages came from without digging into nested JSON.
+    - thinking messages render collapsed by default (a <details>), instead of
+      being silently dropped or shown inline as if it were the reply.
+    - IDs are shown in full, in monospace, and allowed to wrap
+      (word-break: break-all) rather than truncated — a full id is not
+      something a reviewer should ever have to go hunting for.
+
+  Talks to the file-backed API in server.py:
+    GET/POST /api/samples  /api/annotations  /api/patterns  /api/suggestions
+    GET      /api/scenarios (read-only, for the Batch Ledger's coverage view)
+
+  This targets the Cartwheel trace shape as normalize_trace() produces it
+  (analysis/helpers/normalization.py): messages are flat
+  {role, text|name+arguments|content} dicts, not the raw nested
+  {role, parts:[...]} shape Langfuse's API returns — the server always sends
+  already-normalized data.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cartwheel error analysis</title>
+<script>
+/* Set before the stylesheet paints anything, so there's no flash of the
+   wrong theme on load. Defaults to dark (no saved preference yet means a
+   fresh install, and dark was the explicit ask). */
+(function () {
+  try {
+    document.documentElement.dataset.theme = localStorage.getItem('cartwheel_theme') || 'dark';
+  } catch (e) {
+    document.documentElement.dataset.theme = 'dark';
+  }
+})();
+</script>
+<style>
+  :root {
+    /* role hues (Gestalt similarity: one hue per role, full saturation) */
+    --role-user: #2563eb;
+    --role-assistant: #059669;
+    --role-tool-call: #b45309;
+    --role-tool-result: #7c3aed;
+    --role-system: #6b7280;
+    --role-retrieval: #0891b2;
+    --role-observation: #0891b2;
+    --role-thinking: #9ca3af;
+
+    --bg: #f7f7f8;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --hl: #fde68a;             /* human annotation highlight */
+    --hl-pending: #fef08a;     /* mid-annotation, before save */
+
+    /* surfaces that were hardcoded hex before dark mode existed; kept as
+       variables so light/dark each get their own value in one place */
+    --code-bg: #f3f4f6;
+    --thinking-bg: #fafafa;
+    --active-bg: #eff6ff;
+    /* a fixed dark "filled button" surface (active tab, toast) that does not
+       flip with the theme, since it is meant to read as solid/pressed in
+       both — reusing --ink here would go invisible once --ink turns light */
+    --solid: #1a1a1a;
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181d;
+    --panel: #1e2128;
+    --ink: #e6e8eb;
+    --muted: #8b93a1;
+    --line: #33383f;
+    --hl: #a3822f;
+    --hl-pending: #b8932f;
+    --code-bg: #14161b;
+    --thinking-bg: #1a1d23;
+    --active-bg: #1c2b42;
+  }
+  /* the highlighter effect only works as dark-ink-on-bright-color; force it
+     regardless of theme rather than trying to find a dark-safe bright hue */
+  .hl { color: #1a1a1a; }
+  * { box-sizing: border-box; }
+  /* buttons don't inherit color from their container by default (the UA
+     stylesheet gives them a fixed system color instead) — without this,
+     every button below that doesn't set its own color falls back to a
+     dark system color that goes invisible against a dark --bg */
+  button { font: inherit; color: inherit; }
+  body {
+    margin: 0;
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  code, pre, .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .mono-wrap { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; word-break: break-all; }
+
+  /* ---- top bar ---- */
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 18px; background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 50;
+    overflow-x: auto;
+  }
+  header h1 { font-size: 15px; margin: 0; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  header h1 .dim { color: var(--muted); font-weight: 400; }
+  .views { display: flex; gap: 4px; flex-shrink: 0; }
+  .views button {
+    border: 1px solid var(--line); background: var(--bg);
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; font: inherit;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .views button.active { background: var(--solid); color: #fff; border-color: var(--solid); }
+  .views button { cursor: grab; }
+  .views button.dragging { opacity: 0.4; cursor: grabbing; }
+  .spacer { flex: 1; }
+  .counts { color: var(--muted); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+  .nav { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+  .nav button {
+    border: 1px solid var(--line); background: var(--bg);
+    width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font: inherit;
+    flex-shrink: 0;
+  }
+  .nav button#download-trace {
+    width: auto; padding: 0 12px; font-size: 12.5px; margin-left: 6px; white-space: nowrap;
+  }
+  .nav .pos { color: var(--muted); font-size: 13px; min-width: 74px; text-align: center; white-space: nowrap; flex-shrink: 0; }
+
+  /* ---- toast banner for new samples/suggestions ---- */
+  #toast {
+    position: fixed; right: 18px; bottom: 18px; z-index: 100;
+    background: var(--solid); color: #fff; padding: 10px 16px;
+    border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none;
+    transition: opacity .2s; max-width: 320px;
+  }
+  #toast.show { opacity: 1; pointer-events: auto; }
+  .toast-undo {
+    margin-left: 8px; background: none; border: 1px solid #ffffff55; color: #fff;
+    border-radius: 5px; padding: 2px 8px; font: inherit; font-size: 12px;
+    font-weight: 700; cursor: pointer;
+  }
+  .toast-undo:hover { background: #ffffff22; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ---- trace view: session rail + main column ---- */
+  #trace-view { padding: 0; }
+  .trace-layout { display: flex; align-items: flex-start; }
+
+  #session-rail {
+    width: 250px; flex-shrink: 0; align-self: stretch;
+    background: var(--panel); border-right: 1px solid var(--line);
+    padding: 14px 10px; overflow-y: auto; max-height: calc(100vh - 51px);
+  }
+  #session-rail .rail-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--muted); padding: 0 6px 8px;
+  }
+  #rail-scenario-jump {
+    box-sizing: border-box; font: inherit; font-size: 12px; padding: 6px 8px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: inherit;
+    margin: 0 6px 8px; width: calc(100% - 12px);
+  }
+  #rail-filters { display: flex; gap: 6px; padding: 0 6px 10px; }
+  #rail-filters select {
+    flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 4px 6px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: inherit;
+  }
+  .rail-item {
+    padding: 9px 10px 9px 8px; border-radius: 8px; border: 1px solid var(--line);
+    border-left: 4px solid transparent; margin-bottom: 8px; cursor: pointer;
+    background: var(--panel);
+  }
+  .rail-item:hover { border-color: #c7d2fe; }
+  /* review status: a left-edge stripe, independent of the active highlight
+     below, so "which session am I viewing" and "is it reviewed, and how"
+     never collide into one ambiguous color. */
+  .rail-item.status-unreviewed { border-left-color: var(--line); }
+  .rail-item.status-clean { border-left-color: #059669; }
+  .rail-item.status-flagged { border-left-color: #dc2626; }
+  .rail-item.status-excluded { border-left-color: #9ca3af; }
+  .rail-item.active {
+    border-top: 1.5px solid var(--role-user); border-right: 1.5px solid var(--role-user);
+    border-bottom: 1.5px solid var(--role-user); background: var(--active-bg);
+  }
+  .rail-item .rid { font-weight: 700; font-size: 11.5px; }
+  .rail-item .rturns {
+    font-size: 10px; font-weight: 700; color: var(--muted); float: right;
+  }
+  .rail-item .rmeta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .rail-item .rreviewed {
+    display: inline-block; margin-top: 5px; font-size: 9.5px; font-weight: 700;
+    padding: 1px 6px; border-radius: 8px;
+  }
+  .rail-item .rreviewed.flagged { background: #fee2e2; color: #991b1b; }
+  .rail-item .rreviewed.clean { background: #d1fae5; color: #065f46; }
+  .rail-item .rreviewed.dim { background: #f3f4f6; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .rail-item .rreviewed.clean + .rreviewed.dim { margin-top: 0; }
+  .rail-outline {
+    margin-top: 8px; padding-top: 7px; border-top: 1px dashed var(--line);
+  }
+  .ro-turn {
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--muted); margin: 6px 0 2px;
+  }
+  .ro-turn:first-child { margin-top: 0; }
+  .ro-step {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; color: var(--role-tool-call); padding: 2px 0 2px 10px;
+    cursor: pointer;
+  }
+  .ro-step:hover { text-decoration: underline; }
+
+  .trace-main { flex: 1; min-width: 0; }
+
+  /* ---- status strip ---- */
+  #status-strip {
+    padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap; min-height: 20px;
+  }
+  #status-strip .badge {
+    font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 9px;
+  }
+  .badge.role { background: #dbeafe; color: #1e40af; }
+  .badge.dim { background: #f3f4f6; color: var(--muted); font-weight: 400; }
+  .badge.ok { background: #d1fae5; color: #065f46; }
+  .badge.warn { background: #fef3c7; color: #92400e; }
+  .badge.bad { background: #fee2e2; color: #991b1b; }
+  .badge.info { background: #ede9fe; color: #6d28d9; }
+  button.badge.clean-toggle {
+    border: none; cursor: pointer; font: inherit; font-size: 10.5px; font-weight: 700;
+  }
+  button.badge.clean-toggle:not(.dim) { background: #d1fae5; color: #065f46; }
+  button.badge.clean-toggle:hover { filter: brightness(0.96); }
+
+  .trace-header {
+    display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline;
+    max-width: 980px; margin: 14px auto 14px; padding: 0 18px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .trace-header .tid { font-weight: 700; }
+  .trace-header .meta { color: var(--muted); font-size: 13px; }
+  .trace-header .flag {
+    font-size: 11px; background: #fef3c7; color: #92400e;
+    padding: 2px 7px; border-radius: 10px;
+  }
+  .trace-body-wrap {
+    display: flex; gap: 24px; max-width: 980px; margin: 0 auto;
+    align-items: flex-start; position: relative; padding: 0 18px 120px;
+  }
+  .trace-body { flex: 1; max-width: 720px; }
+  .margin-col { width: 240px; position: relative; flex-shrink: 0; }
+
+  /* a step groups a tool call + its result (Gestalt common region) */
+  .step {
+    border: 1px solid var(--line); border-radius: 8px;
+    margin-bottom: 20px; overflow: hidden; background: var(--panel);
+  }
+  .step.tight { margin-bottom: 8px; }         /* tight within a logical group */
+
+  .msg { padding: 10px 14px; border-left: 4px solid var(--line); }
+  .msg + .msg { border-top: 1px solid var(--line); }
+  .msg .role {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; margin-bottom: 5px;
+  }
+  .msg[data-role="user"]        { border-left-color: var(--role-user); }
+  .msg[data-role="user"] .role        { color: var(--role-user); }
+  .msg[data-role="assistant"]   { border-left-color: var(--role-assistant); }
+  .msg[data-role="assistant"] .role   { color: var(--role-assistant); }
+  .msg[data-role="tool_call"]   { border-left-color: var(--role-tool-call); }
+  .msg[data-role="tool_call"] .role   { color: var(--role-tool-call); }
+  .msg[data-role="tool_result"] { border-left-color: var(--role-tool-result); }
+  .msg[data-role="tool_result"] .role { color: var(--role-tool-result); }
+  .msg[data-role="system"]      { border-left-color: var(--role-system); opacity: .55; }
+  .msg[data-role="system"] .role      { color: var(--role-system); }
+  .msg[data-role="retrieval"]   { border-left-color: var(--role-retrieval); }
+  .msg[data-role="retrieval"] .role   { color: var(--role-retrieval); }
+  .msg[data-role="observation"] { border-left-color: var(--role-observation); }
+  .msg[data-role="observation"] .role { color: var(--role-observation); }
+  .msg.boiler { opacity: .5; }                /* identical-across-traces content */
+
+  .msg .text { white-space: pre-wrap; word-wrap: break-word; }
+  .fn { font-weight: 700; }
+  details.args { margin-top: 6px; }
+  details.args summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  pre.json {
+    background: var(--code-bg); border-radius: 6px; padding: 8px 10px; margin: 6px 0 0;
+    font-size: 12.5px; overflow-x: auto; white-space: pre;
+  }
+  .result-summary { color: var(--muted); font-size: 13px; }
+
+  /* ---- turn divider (turn_boundary messages) ---- */
+  .turn-divider {
+    text-align: center; font-size: 10.5px; color: var(--muted);
+    letter-spacing: .04em; text-transform: uppercase; margin: 14px 0 2px;
+  }
+  .turn-divider .mono { text-transform: none; letter-spacing: normal; }
+
+  /* ---- thinking (collapsed by default) ---- */
+  .msg[data-role="thinking"] {
+    border-left-color: var(--role-thinking); border-left-style: dashed;
+    opacity: .8; background: var(--thinking-bg);
+  }
+  .msg[data-role="thinking"] .role { color: var(--role-thinking); }
+  details.thinking summary {
+    cursor: pointer; font-size: 12.5px; color: var(--muted); font-style: italic;
+  }
+  details.thinking .text { margin-top: 6px; font-size: 13px; font-style: italic; color: #4b5563; }
+
+  /* ---- highlights + margin notes ---- */
+  .hl { background: var(--hl); border-radius: 2px; cursor: pointer; }
+  .hl.pending-highlight { background: var(--hl-pending); }
+  .hl.outline { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+  .mnote {
+    position: absolute; left: 0; width: 100%;
+    background: var(--panel); border-left: 3px solid var(--hl);
+    border-radius: 4px; padding: 7px 9px; font-size: 12.5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .mnote.outline { box-shadow: 0 0 0 2px var(--ink); }
+  .mnote .quote { color: var(--muted); font-style: italic; margin-bottom: 3px; }
+  .mnote .body { white-space: pre-wrap; }
+  .mnote .acts { margin-top: 5px; display: flex; gap: 6px; }
+  .mnote .acts button {
+    border: 1px solid var(--line); background: var(--bg); font: inherit;
+    font-size: 11px; padding: 2px 8px; border-radius: 5px; cursor: pointer;
+  }
+  .mnote .acts .accept { border-color: var(--role-assistant); color: var(--role-assistant); }
+  .mnote .acts .reject { border-color: #dc2626; color: #dc2626; }
+  .mnote.human .acts { visibility: hidden; }
+  .mnote.human:hover .acts { visibility: visible; }
+  .mnote.human:has(.edit-input) .acts { visibility: visible; } /* stay visible while typing, not just on hover */
+  .edit-input {
+    width: 100%; box-sizing: border-box; font: inherit; font-size: 12.5px;
+    border: 1px solid var(--role-user); border-radius: 4px; padding: 5px 6px;
+    resize: vertical; min-height: 48px;
+  }
+
+  /* ---- annotation popover ---- */
+  #popover {
+    position: absolute; z-index: 200; display: none;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.16); padding: 8px;
+  }
+  #popover input {
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+    font: inherit; width: 280px;
+  }
+  #popover .hint { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+  /* ---- map view ---- */
+
+  /* ---- progress view ---- */
+  #progress-view { padding: 18px; max-width: 980px; margin: 0 auto; }
+  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase;
+                   letter-spacing: .04em; color: var(--muted); margin: 18px 0 10px; }
+
+  /* ---- status summary (the "helicopter view") ---- */
+  #status-summary { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat-card {
+    flex: 1 1 150px; border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; background: var(--panel); cursor: pointer;
+    text-align: left; font: inherit; color: inherit;
+  }
+  .stat-card:hover { border-color: var(--role-user); }
+  .stat-card .stat-n { font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-card .stat-label { font-size: 12px; color: var(--muted); margin-top: 5px; }
+  .stat-card .stat-notes-link {
+    display: block; font-size: 11px; color: var(--role-user); margin-top: 8px;
+    text-decoration: underline;
+  }
+  .stat-card.clean .stat-n { color: #059669; }
+  .stat-card.clean-notes .stat-n { color: #b45309; }
+  .stat-card.flagged .stat-n { color: #dc2626; }
+  .stat-card.unreviewed .stat-n { color: var(--muted); }
+  .rail-clear-filter {
+    font-size: 11px; color: var(--role-user); cursor: pointer; margin-left: 8px;
+    text-decoration: underline;
+  }
+  #treemap { display: flex; flex-wrap: wrap; gap: 10px; }
+  .mode-block {
+    border: 1px solid var(--line); border-radius: 8px; padding: 12px;
+    background: var(--panel); min-width: 260px; flex: 1 1 260px;
+  }
+  .mode-block h3 {
+    margin: 0 0 4px; font-size: 14px; font-family: ui-monospace, monospace;
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    column-gap: 8px; row-gap: 3px;
+  }
+  .mode-block h3 .mode-name { flex: 1 1 140px; min-width: 0; word-break: break-word; }
+  .mode-block h3 .mode-meta {
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    white-space: nowrap; font-family: -apple-system, sans-serif;
+  }
+  .mode-block .count { color: var(--muted); font-weight: 400; font-size: 13px; }
+  .mode-block .def { color: var(--muted); font-size: 12.5px; margin: 4px 0 8px; }
+  .mode-block .notes { list-style: none; margin: 0; padding: 0; }
+  .mode-block .notes li { font-size: 12.5px; padding: 3px 0; border-top: 1px dashed var(--line); }
+  .mode-block .notes li a { color: inherit; text-decoration: none; cursor: pointer; display: block; }
+  .mode-block .notes li a:hover { color: var(--role-user); }
+  .mode-block .notes li.more-hint { color: var(--muted); font-style: italic; }
+  .mode-block .close-neg-label {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--muted); margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line);
+  }
+  .mode-block .notes.close-negs li { color: var(--muted); font-style: italic; }
+  .mode-block .notes.close-negs li a:hover { color: var(--muted); text-decoration: underline; }
+
+  /* Batch Ledger view */
+  .ledger-batch-row { display: flex; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .ledger-batch-row:last-child { border-bottom: none; }
+  .ledger-batch-label { width: 88px; flex: 0 0 88px; font-weight: 700; font-size: 13px; }
+  .ledger-batch-label span { display: block; color: var(--muted); font-weight: 400; font-size: 11px; margin-top: 1px; }
+  .ledger-bar { flex: 1; display: flex; height: 22px; border-radius: 5px; overflow: hidden; background: var(--surface, transparent); border: 1px solid var(--line); }
+  .ledger-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10.5px; color: #fff; min-width: 0; font-weight: 600; }
+  .ledger-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0 22px; font-size: 12px; color: var(--muted); }
+  .ledger-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .ledger-legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+  .cov-row { display: grid; grid-template-columns: 130px 1fr 66px; align-items: center; gap: 10px; padding: 5px 0; }
+  .cov-label { font-size: 12.5px; }
+  .cov-track { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+  .cov-track.cov-stack { display: flex; }
+  .cov-seg { height: 100%; min-width: 0; }
+  .cov-pct { font-variant-numeric: tabular-nums; font-size: 11.5px; text-align: right; color: var(--muted); }
+  .cov-note { margin-top: 10px; font-size: 12px; color: var(--muted); background: var(--line); padding: 8px 12px; border-radius: 6px; }
+  .coverage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .coverage-tile { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .coverage-tile h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); margin: 0 0 8px; font-weight: 700; }
+  table.heat-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  table.heat-table th { font-size: 9.5px; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 3px 5px; text-align: center; }
+  table.heat-table th:first-child { text-align: left; }
+  table.heat-table td { padding: 3px 5px; text-align: center; font-variant-numeric: tabular-nums; border-radius: 3px; }
+  table.heat-table td:first-child { text-align: left; font-family: ui-monospace, monospace; font-size: 10.8px; border-radius: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+  table.heat-table .total-col { color: var(--muted); font-size: 10px; }
+  .coverage-tile .cov-note { margin-top: 8px; font-size: 11px; }
+  .ledger-cn { display: inline-block; margin-left: 4px; font-size: 9.5px; color: var(--muted); font-style: italic; }
+  .tbl-wrap { overflow-x: auto; }
+  .ledger-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .ledger-table th { text-align: left; color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  .ledger-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  .ledger-table tr:last-child td { border-bottom: none; }
+  .ledger-table .num { text-align: center; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .ledger-table .num.hit { color: var(--ink); font-weight: 700; }
+  .ledger-table .num.ledger-total { color: var(--ink); font-weight: 700; }
+  .ledger-table .mode-name { font-family: ui-monospace, monospace; font-size: 12px; }
+  .ledger-sugg-summary { display: flex; gap: 8px; margin-bottom: 10px; }
+  .pill { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .pill.accepted { background: #05966922; color: #059669; }
+  .pill.rejected { background: #dc262622; color: #dc2626; }
+  .pill.pending { background: #b4530922; color: #b45309; }
+  .ledger-sugg-list li { display: flex; justify-content: space-between; gap: 10px; }
+  .ledger-sugg-status { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
+  .sugg-accepted .ledger-sugg-status { color: #059669; }
+  .sugg-rejected .ledger-sugg-status { color: var(--muted); }
+  .sugg-pending .ledger-sugg-status { color: #b45309; }
+  .mode-block .status {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    padding: 1px 6px; border-radius: 8px;
+  }
+  .status.candidate { background: #fef3c7; color: #92400e; }
+  .status.confirmed { background: #d1fae5; color: #065f46; }
+  .status.frozen    { background: #e0e7ff; color: #3730a3; }
+  .fix-type {
+    display: inline-block; font-size: 10.5px; font-weight: 700; white-space: nowrap;
+    padding: 1px 7px; border-radius: 8px;
+  }
+  .fix-type-prompt { background: #e0e7ff; color: #3730a3; }
+  .fix-type-code   { background: #fee2e2; color: #991b1b; }
+  .fix-type-needs  { background: #f1f5f9; color: #475569; }
+  .fix-sub {
+    display: inline-block; margin-left: 5px; font-size: 9.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .03em; color: var(--muted);
+  }
+  table.boundary-matrix { border-collapse: collapse; font-size: 11px; }
+  table.boundary-matrix th, table.boundary-matrix td { width: 26px; height: 26px; text-align: center; vertical-align: middle; }
+  table.boundary-matrix th.colnum { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+  table.boundary-matrix th.rowlabel { text-align: right; padding-right: 8px; font-family: ui-monospace, monospace; font-size: 10px; white-space: nowrap; font-weight: 400; }
+  table.boundary-matrix td.cell { border-radius: 4px; cursor: default; }
+  .boundary-legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0; font-size: 11.5px; color: var(--muted); }
+  .boundary-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .boundary-legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+  .boundary-key { margin-top: 12px; font-size: 11px; line-height: 1.8; color: var(--muted); }
+  .boundary-key b { color: var(--ink); font-family: ui-monospace, monospace; font-weight: 600; }
+
+  .empty { color: var(--muted); font-size: 13px; padding: 10px 0; }
+
+  /* ---- notes view ---- */
+  #notes-view { padding: 18px; max-width: 980px; margin: 0 auto; }
+  #notes-search {
+    width: 100%; box-sizing: border-box; border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; font: inherit; margin-bottom: 12px;
+  }
+  #notes-list { display: flex; flex-direction: column; gap: 8px; }
+  .note-row {
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    background: var(--panel); cursor: pointer; display: block; color: inherit; text-decoration: none;
+  }
+  .note-row:hover { border-color: var(--role-user); }
+  .note-row .note-meta {
+    display: flex; gap: 8px; align-items: center; font-size: 11.5px;
+    color: var(--muted); margin-bottom: 5px;
+  }
+  .note-row .note-scenario { font-family: ui-monospace, monospace; font-weight: 700; color: var(--ink); }
+  .note-row .note-kind {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    padding: 1px 6px; border-radius: 8px;
+  }
+  .note-kind.clean { background: #d1fae5; color: #065f46; }
+  .note-kind.quote { background: #e0e7ff; color: #3730a3; }
+  .note-row .note-quote {
+    font-size: 12px; color: var(--muted); font-style: italic;
+    border-left: 2px solid var(--line); padding-left: 8px; margin-bottom: 5px;
+  }
+  .note-row .note-text { font-size: 13.5px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cartwheel <span class="dim">error analysis</span></h1>
+  <div class="views">
+    <button data-view="trace" class="active">Trace</button>
+    <button data-view="progress">Progress</button>
+    <button data-view="notes">Notes</button>
+    <button data-view="ledger">Coverage</button>
+    <button data-view="map">Map</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="nav" id="trace-nav">
+    <button id="prev">&larr;</button>
+    <span class="pos" id="pos">0 / 0</span>
+    <button id="next">&rarr;</button>
+    <button id="download-trace" title="Download this conversation as Markdown">&#8681; Download</button>
+  </div>
+  <button id="theme-toggle" style="border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;width:30px;height:30px;cursor:pointer;font:inherit;font-size:14px;flex-shrink:0;" title="Toggle dark mode"></button>
+  <div class="counts" id="counts"></div>
+</header>
+
+<div id="trace-view" class="view active">
+  <div class="trace-layout">
+    <div id="session-rail">
+      <select id="rail-scenario-jump"><option value="">Jump to scenario&hellip;</option></select>
+      <div id="rail-list"></div>
+    </div>
+    <div class="trace-main">
+      <div id="status-strip"></div>
+      <div class="trace-header" id="trace-header"></div>
+      <div class="trace-body-wrap">
+        <div class="trace-body" id="trace-body"></div>
+        <div class="margin-col" id="margin-col"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="progress-view" class="view">
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+    <div class="section-title" style="margin:0;">Review status</div>
+    <select id="progress-batch-select" style="font:inherit; font-size:12px; padding:3px 6px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:inherit;"></select>
+  </div>
+  <div id="status-summary"></div>
+  <div id="progress-batch-composition"></div>
+
+  <div class="section-title" style="margin-top:18px;">Failure modes <span style="text-transform:none; font-weight:400;">(always all batches -- a mode is a cross-cutting pattern, not scoped to one)</span></div>
+  <div id="treemap"></div>
+  <div class="section-title">Where each mode surfaced <span style="text-transform:none; font-weight:400;">(positives, with close negatives noted)</span></div>
+  <div id="ledger-modes"></div>
+  <div class="section-title">Fix type by confirmed mode</div>
+  <div id="progress-fix-table"></div>
+
+  <div class="section-title" style="margin-top:18px;">Boundary gap matrix <span style="text-transform:none; font-weight:400;">(every confirmed-mode pair -- green: boundary documented, amber: same fix type, unchecked, gray: different fix type, low priority)</span></div>
+  <div id="boundary-matrix"></div>
+
+  <div class="section-title" style="margin-top:18px;">Agent suggestions to review <span style="text-transform:none; font-weight:400;">(depth-search retrieval, accept/reject)</span></div>
+  <div id="ledger-suggestions"></div>
+</div>
+
+<div id="notes-view" class="view">
+  <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+    <input id="notes-search" placeholder="filter by scenario, trace id, or note text&hellip;" style="flex:1; margin-bottom:0;" />
+    <button id="download-notes" title="Download the notes currently shown, as Markdown"
+            style="border:1px solid var(--line); background:var(--bg); border-radius:6px; padding:0 12px; height:30px; font-size:12.5px; cursor:pointer;">&#8681; Download</button>
+  </div>
+  <div id="notes-bucket-bar" style="font-size:12px; color:var(--muted); margin-bottom:10px;"></div>
+  <div id="notes-list"></div>
+</div>
+
+<div id="ledger-view" class="view">
+  <div id="ledger-progress" style="color:var(--muted); font-size:12.5px; margin-bottom:14px;"></div>
+  <div class="section-title">Scenario coverage <span style="text-transform:none; font-weight:400;">(reviewed / full 250-scenario dataset, across every categorical dimension; batch columns, cell shade = share covered)</span></div>
+  <div id="ledger-grid"></div>
+</div>
+
+<div id="map-view" class="view">
+  <div class="section-title">Trace map <span style="text-transform:none; font-weight:400;">(PCA of turn_count/tool_call_count/distinct_tools/has_retrieval/tokens; click a ringed/orange dot to open that trace)</span></div>
+  <div id="map-zoom-controls" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"></div>
+  <canvas id="map" style="width:100%; height:560px; border:1px solid var(--line); border-radius:8px; cursor:pointer;"></canvas>
+  <div id="map-legend" style="margin-top:12px;"></div>
+</div>
+
+<div id="popover"><input id="note-input" placeholder="what went wrong? (Enter to save)" /><div class="hint">first failure only, in your own words</div></div>
+<div id="toast"></div>
+
+<script>
+/* ------------------------------------------------------------------ *
+ * State + API                                                         *
+ * ------------------------------------------------------------------ */
+const state = {
+  samples: [],       // [{trace_id, meta, trace, features, ...}] — one per CONVERSATION
+  annotations: [],   // [{id, trace_id, quote, start, end, note, ts}]
+  suggestions: [],   // [{id, trace_id, mode, quote, start, end}]
+  patterns: {},      // {mode: {definition, status, count, example_trace_ids, example_quotes}}
+  scenarios: [],     // [{id, intent, role}] — the full HW3 dataset, read-only, for the Batch Ledger's coverage view
+  graph: {nodes: [], clusters: []},  // {nodes: [{trace_id, x, y, cluster}]} — the Map tab's 2D projection
+  cur: 0,            // index into samples
+  railFilter: null,  // null | 'clean' | 'clean_notes' | 'flagged' | 'unreviewed' — set from the Progress-tab summary cards
+  notesBucketFilter: null,  // same values, but for the Notes view's "view notes" link
+  batchFilter: null,  // null | 1 | 2 | 3 | ... — from the rail's Batch dropdown
+  roleFilter: null,  // null | 'shopper' | 'merchant' | 'support' — from the rail's Role dropdown
+};
+
+const api = {
+  async get(path) { const r = await fetch(path); return r.json(); },
+  async post(path, body) {
+    await fetch(path, {method: 'POST', headers: {'Content-Type': 'application/json'},
+                       body: JSON.stringify(body)});
+  },
+};
+
+/* Annotations on disk are usually a bare array (what this app POSTs), but a
+   seeded file may wrap them as {"annotations": [...]} with a little
+   metadata. Accept either on read; we always write the bare array. */
+function asAnnotationList(a) {
+  if (Array.isArray(a)) return a;
+  if (a && Array.isArray(a.annotations)) return a.annotations;
+  return [];
+}
+
+async function loadAll() {
+  const [samples, annotations, suggestions, patterns, graph] = await Promise.all([
+    api.get('/api/samples'), api.get('/api/annotations'),
+    api.get('/api/suggestions'), api.get('/api/patterns'),
+    api.get('/api/graph'),
+  ]);
+  state.samples = Array.isArray(samples) ? samples : [];
+  state.annotations = asAnnotationList(annotations);
+  state.suggestions = Array.isArray(suggestions) ? suggestions : [];
+  state.patterns = patterns && typeof patterns === 'object' ? patterns : {};
+  state.graph = graph && Array.isArray(graph.nodes) ? graph : {nodes: [], clusters: []};
+}
+
+/* localStorage backup of human annotations, per SKILL.md */
+function backupAnnotations() {
+  try { localStorage.setItem('cartwheel_annotations', JSON.stringify(state.annotations)); }
+  catch (e) {}
+}
+// Merge remote annotations that this client did not create (a second
+// reviewer, an agent-side script writing the file directly, or a replay)
+// into the local list. De-dup by id, falling back to a content key for
+// seeded items that arrive without one. Shared by poll() and
+// saveAnnotations() so a save can never clobber a remote addition this
+// tab just hasn't polled in yet.
+function mergeRemoteAnnotations(remoteRaw) {
+  const key = a => a.id || `${a.trace_id}::${(a.note || '').slice(0, 40)}`;
+  const seen = new Set(state.annotations.map(key));
+  // A delete pending its undo window hasn't been told to the server yet,
+  // so the server's copy is still there — without this, merging would
+  // silently resurrect it mid-undo-window.
+  if (pendingDelete) seen.add(key(pendingDelete.annotation));
+  const remote = asAnnotationList(remoteRaw);
+  const merged = [...state.annotations];
+  remote.forEach(a => { const k = key(a); if (!seen.has(k)) { seen.add(k); merged.push(a); } });
+  return merged;
+}
+async function saveAnnotations() {
+  backupAnnotations();
+  // Fetch-merge-post instead of a blind overwrite: without this, if the
+  // server gained an annotation this tab hasn't polled in yet (another
+  // reviewer, or a script writing the file directly), this save would
+  // silently erase it the moment it posts its own stale copy back.
+  try {
+    const remote = await api.get('/api/annotations');
+    const merged = mergeRemoteAnnotations(remote);
+    if (merged.length !== state.annotations.length) {
+      state.annotations = merged;
+      renderTrace(); renderRail(); renderProgress(); renderNotes();
+    }
+  } catch (e) { /* server unreachable; save local state as-is rather than block */ }
+  await api.post('/api/annotations', state.annotations);
+}
+
+/* ------------------------------------------------------------------ *
+ * Session rail — one row per conversation (the server already merged *
+ * same-session turns; no client-side grouping needed).                *
+ * ------------------------------------------------------------------ */
+function turnCount(s) {
+  const n = (s.trace || []).filter(m => m.role === 'turn_boundary').length;
+  return n > 0 ? n : 1;
+}
+/* A trace-level "reviewed, no failure found" marker — distinct from a
+   quote-anchored annotation (kind: 'clean', no quote/idx). Lets "no note
+   yet" (unreviewed) stay distinguishable from "reviewed, found nothing"
+   (per the handout: saved annotations must tell those apart). */
+function cleanMarker(s) {
+  return state.annotations.find(a => a.trace_id === s.trace_id && a.kind === 'clean');
+}
+/* A trace excluded from pass/fail entirely -- not an agent defect, e.g. a
+   scenario-generation bug means the expected outcome doesn't correspond to
+   what the agent was actually asked. Distinct from both clean and flagged:
+   it should never render as a failure stripe. */
+function excludedMarker(s) {
+  return state.annotations.find(a => a.trace_id === s.trace_id && a.kind === 'excluded');
+}
+function realNoteCount(s) {
+  const tid = s.trace_id;
+  return state.annotations.filter(a => a.trace_id === tid && a.kind !== 'clean' && a.kind !== 'excluded').length;
+}
+function reviewStatus(s) {
+  // The clean/excluded markers are the reviewer's deliberate final verdict;
+  // they win even when exploratory quote-anchored notes also exist
+  // underneath (a note is an observation made along the way, not itself a
+  // verdict). excludedMarker takes precedence -- an excluded trace's other
+  // notes are context for the exclusion, not evidence of a failure.
+  if (excludedMarker(s)) return 'excluded';
+  if (cleanMarker(s)) return 'clean';
+  if (realNoteCount(s) > 0) return 'flagged';
+  return 'unreviewed';
+}
+/* The five-way split behind the Progress-tab "helicopter view": unlike
+   reviewStatus() (which collapses clean+notes into one 'clean' color for the
+   rail stripe), this keeps "passed outright" and "passed but flagged a
+   loophole" as separate buckets, since they're a different reviewer signal
+   even though both render the same green stripe in the rail today. */
+function reviewBucket(s) {
+  if (excludedMarker(s)) return 'excluded';
+  const clean = !!cleanMarker(s);
+  const n = realNoteCount(s);
+  if (clean && n === 0) return 'clean';
+  if (clean && n > 0) return 'clean_notes';
+  if (n > 0) return 'flagged';
+  return 'unreviewed';
+}
+/* The current session's steps (turn boundaries + tool calls), skipping the
+   AGENT/SPAN wrapper nodes normalize_trace() already filters out as
+   structural noise — so this ends up as a cleaner outline than Langfuse's
+   own tree, not just a copy of it. Each tool-call entry jumps the main
+   transcript to that message on click. */
+function stepOutline(s) {
+  const msgs = s.trace || [];
+  const items = [];
+  let turn = 0;
+  msgs.forEach((m, idx) => {
+    if (m.role === 'turn_boundary') { turn++; items.push({type: 'turn', label: `Turn ${turn}`, idx}); }
+    else if (m.role === 'tool_call') { items.push({type: 'tool', label: m.name || 'tool', idx}); }
+  });
+  return items;
+}
+
+function renderRail() {
+  const el = document.getElementById('rail-list');
+  if (!state.samples.length) {
+    el.innerHTML = '<div class="rail-title">Sessions</div><div class="empty">no samples yet</div>';
+    return;
+  }
+  const indices = state.samples
+    .map((s, i) => i)
+    .filter(i => {
+      const s = state.samples[i];
+      if (state.railFilter && reviewBucket(s) !== state.railFilter) return false;
+      if (state.batchFilter != null && s.batch !== state.batchFilter) return false;
+      if (state.roleFilter && (s.meta || {}).role !== state.roleFilter) return false;
+      return true;
+    });
+  const anyFilterActive = state.railFilter || state.batchFilter != null || state.roleFilter;
+
+  // Jump-to-scenario dropdown: lists every scenario regardless of active
+  // filters (you want to reach a trace even if it's currently filtered out),
+  // sorted by scenario id. Stays synced to whatever trace is actually being
+  // viewed -- doubles as a "where am I" indicator, not just a one-shot jump,
+  // so it reflects prev/next and rail-click navigation too, not only its
+  // own selections.
+  const jumpSelect = document.getElementById('rail-scenario-jump');
+  const byScenario = [...state.samples].sort((a, b) => {
+    const sa = (a.meta || {}).scenario_id || '', sb = (b.meta || {}).scenario_id || '';
+    return sa.localeCompare(sb, undefined, {numeric: true});
+  });
+  jumpSelect.innerHTML = byScenario.map(s => {
+    const m = s.meta || {};
+    const label = `${m.scenario_id || s.trace_id.slice(0, 8)} (${m.role || '?'})`;
+    return `<option value="${escape(s.trace_id)}">${escape(label)}</option>`;
+  }).join('');
+  const curTid = (state.samples[state.cur] || {}).trace_id;
+  if (curTid) jumpSelect.value = curTid;
+  jumpSelect.onchange = (e) => {
+    if (e.target.value) gotoTrace(e.target.value);
+  };
+  const rows = indices.map(i => {
+    const s = state.samples[i];
+    const m = s.meta || {};
+    const active = i === state.cur;
+    const status = reviewStatus(s);
+    const n = realNoteCount(s);
+    let statusBadge = '';
+    if (status === 'clean') statusBadge += `<span class="rreviewed clean">no failure</span>`;
+    if (status === 'excluded') statusBadge += `<span class="rreviewed dim">excluded</span>`;
+    if (n > 0) {
+      // Neutral color once a clean verdict already exists — red is reserved
+      // for "unresolved concern," not "has commentary attached."
+      const cls = status === 'clean' ? 'dim' : 'flagged';
+      statusBadge += `<span class="rreviewed ${cls}">${n} note${n === 1 ? '' : 's'}</span>`;
+    }
+    let outlineHtml = '';
+    if (active) {
+      const outline = stepOutline(s);
+      if (outline.length) {
+        outlineHtml = '<div class="rail-outline">' + outline.map(o =>
+          o.type === 'turn'
+            ? `<div class="ro-turn">${escape(o.label)}</div>`
+            : `<div class="ro-step" data-jump="${o.idx}">${escape(o.label)}()</div>`
+        ).join('') + '</div>';
+      }
+    }
+    return `<div class="rail-item status-${status}${active ? ' active' : ''}" data-i="${i}">` +
+      `<span class="rid mono-wrap">${escape(s.trace_id)}</span>` +
+      `<span class="rturns">${turnCount(s)} turn${turnCount(s) === 1 ? '' : 's'}</span>` +
+      `<div class="rmeta">${escape(m.role || '?')}${m.scenario_id ? ' · ' + escape(m.scenario_id) : ''}</div>` +
+      statusBadge + outlineHtml +
+      `</div>`;
+  }).join('');
+  const filterLabels = {clean: 'clean', clean_notes: 'passed w/ notes', flagged: 'flagged', unreviewed: 'unreviewed', excluded: 'excluded'};
+  const batches = [...new Set(state.samples.map(s => s.batch).filter(b => b != null))].sort((a, b) => a - b);
+  const roles = [...new Set(state.samples.map(s => (s.meta || {}).role).filter(Boolean))].sort();
+  const filterBarHtml =
+    `<div id="rail-filters">` +
+    `<select id="rail-batch-select"><option value="">All batches</option>` +
+    batches.map(b => `<option value="${b}"${state.batchFilter === b ? ' selected' : ''}>Batch ${b}</option>`).join('') +
+    `</select>` +
+    `<select id="rail-role-select"><option value="">All roles</option>` +
+    roles.map(r => `<option value="${escape(r)}"${state.roleFilter === r ? ' selected' : ''}>${escape(r)}</option>`).join('') +
+    `</select>` +
+    `</div>`;
+  const titleBits = [];
+  if (state.roleFilter) titleBits.push(escape(state.roleFilter));
+  if (state.batchFilter != null) titleBits.push(`batch ${state.batchFilter}`);
+  if (state.railFilter) titleBits.push(escape(filterLabels[state.railFilter]));
+  const titleHtml = anyFilterActive
+    ? `<div class="rail-title">${indices.length} ${titleBits.join(' · ') || 'filtered'}` +
+      `<span class="rail-clear-filter" id="rail-clear-filter">clear (${state.samples.length} total)</span></div>`
+    : `<div class="rail-title">Sessions (${state.samples.length})</div>`;
+  const rowsHtml = rows || (anyFilterActive ? '<div class="empty">no sessions match this filter</div>' : '');
+  el.innerHTML = filterBarHtml + titleHtml + rowsHtml;
+  document.getElementById('rail-batch-select').onchange = (e) => {
+    state.batchFilter = e.target.value ? parseInt(e.target.value, 10) : null;
+    renderRail();
+  };
+  document.getElementById('rail-role-select').onchange = (e) => {
+    state.roleFilter = e.target.value || null;
+    renderRail();
+  };
+  const clearBtn = document.getElementById('rail-clear-filter');
+  if (clearBtn) clearBtn.onclick = (e) => {
+    e.stopPropagation();
+    state.railFilter = null; state.batchFilter = null; state.roleFilter = null;
+    renderRail();
+  };
+  el.querySelectorAll('.rail-item').forEach(row => {
+    row.onclick = () => gotoTrace(state.samples[parseInt(row.dataset.i, 10)].trace_id);
+  });
+  el.querySelectorAll('.ro-step').forEach(row => {
+    row.onclick = (e) => {
+      e.stopPropagation(); // don't also trigger the parent rail-item's onclick
+      const target = document.querySelector(`.msg[data-idx="${row.dataset.jump}"]`);
+      if (target) target.scrollIntoView({behavior: 'smooth', block: 'center'});
+    };
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Status strip — role/scenario/prompt-version + badges computed from *
+ * whatever tool_call/tool_result pairs are actually in this trace.   *
+ * ------------------------------------------------------------------ */
+function toolBadges(s) {
+  const msgs = s.trace || [];
+  const badges = [];
+  for (let i = 0; i < msgs.length; i++) {
+    if (msgs[i].role !== 'tool_call') continue;
+    const result = (msgs[i + 1] && msgs[i + 1].role === 'tool_result') ? msgs[i + 1] : null;
+    const name = msgs[i].name || 'tool';
+    let cls = 'dim', label = name;
+    const content = result ? result.content : null;
+    if (content && typeof content === 'object') {
+      if (content.status) { label = `${name} · ${content.status}`; cls = content.status === 'auto_approved' ? 'ok' : 'warn'; }
+      else if (content.ok === true) { label = `${name} · ok`; cls = 'ok'; }
+      else if (content.ok === false) { label = `${name} · ${content.error || 'failed'}`; cls = 'bad'; }
+      if (content.ticket_id) label += ` #${content.ticket_id}`;
+    }
+    badges.push({label, cls});
+  }
+  return badges;
+}
+function renderStatusStrip() {
+  const el = document.getElementById('status-strip');
+  const s = curTrace();
+  if (!s) { el.innerHTML = ''; return; }
+  const m = s.meta || {};
+  const bits = [];
+  bits.push(`<span class="mono-wrap" style="font-weight:700;font-size:13px;">${escape(s.trace_id)}</span>`);
+  if (m.scenario_id) bits.push(`<span class="badge dim">${escape(m.scenario_id)}</span>`);
+  if (m.role) bits.push(`<span class="badge role">${escape(m.role)}</span>`);
+  if (m.prompt_version) bits.push(`<span class="badge dim">prompt ${escape(m.prompt_version)}</span>`);
+  bits.push('<div class="spacer"></div>');
+  const clean = cleanMarker(s);
+  if (clean) {
+    const label = clean.note && clean.note !== 'no failure observed' ? clean.note : 'no failure observed';
+    bits.push(`<button class="badge clean-toggle" id="clean-toggle" title="click to unmark">&#10003; ${escape(label)}</button>`);
+  } else {
+    bits.push('<button class="badge dim clean-toggle" id="clean-toggle">Mark: no failure observed</button>');
+  }
+  toolBadges(s).forEach(b => bits.push(`<span class="badge ${b.cls}">${escape(b.label)}</span>`));
+  el.innerHTML = bits.join('');
+  document.getElementById('clean-toggle').onclick = () => toggleCleanMarker(s);
+}
+
+/* The trace-level "reviewed, no failure" marker — a distinct annotation
+   with no quote/idx (nothing to highlight), so it's excluded from the
+   margin-note flow in itemsForTrace() and lives only in the status strip
+   and the rail's status stripe. */
+async function toggleCleanMarker(s) {
+  const existing = cleanMarker(s);
+  if (existing) {
+    state.annotations = state.annotations.filter(a => a.id !== existing.id);
+  } else {
+    // Optional context beyond the bare pass/fail verdict — e.g. why a close
+    // call reads as clean, for later use as a close-negative example.
+    const note = window.prompt(
+      'Optional note (why this is clean — useful for a close call worth remembering):',
+      'no failure observed'
+    );
+    if (note === null) return; // cancelled, not saved
+    state.annotations.push({
+      id: 'a' + Date.now() + Math.floor(Math.random() * 1000),
+      trace_id: s.trace_id, kind: 'clean',
+      note: note.trim() || 'no failure observed', ts: new Date().toISOString(),
+    });
+  }
+  await saveAnnotations();
+  renderStatusStrip(); renderRail();
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendering: the trace view                                          *
+ * ------------------------------------------------------------------ */
+function curTrace() { return state.samples[state.cur]; }
+
+function renderHeader() {
+  const s = curTrace();
+  const h = document.getElementById('trace-header');
+  if (!s) { h.innerHTML = '<span class="meta">no samples yet</span>'; return; }
+  const m = s.meta || {};
+  const bits = [];
+  if (m.session_id) bits.push(`<span class="meta mono-wrap">session ${escape(m.session_id)}</span>`);
+  if (s.timestamp) bits.push(`<span class="meta">${escape(s.timestamp)}</span>`);
+  h.innerHTML = bits.join(' ');
+}
+
+/* Render one conversation as a sequence of steps. A tool_call and the
+   tool_result that follows it are grouped into one .step container (common
+   region). turn_boundary messages (inserted by the session merge) render as
+   plain dividers, outside any .step box. */
+function renderTrace() {
+  const s = curTrace();
+  const body = document.getElementById('trace-body');
+  if (!s || !Array.isArray(s.trace)) { body.innerHTML = ''; return; }
+  const html = [];
+  let i = 0;
+  let turn = 0;
+  const msgs = s.trace;
+  while (i < msgs.length) {
+    const m = msgs[i];
+    if (m.role === 'turn_boundary') {
+      turn++;
+      html.push(`<div class="turn-divider">turn ${turn} · trace <span class="mono">${escape(m.trace_id || '')}</span></div>`);
+    } else if (m.role === 'tool_call') {
+      const parts = [renderMsg(m, i)];
+      if (i + 1 < msgs.length && msgs[i + 1].role === 'tool_result') {
+        parts.push(renderMsg(msgs[i + 1], i + 1));
+        i++;
+      }
+      html.push(`<div class="step">${parts.join('')}</div>`);
+    } else {
+      html.push(`<div class="step">${renderMsg(m, i)}</div>`);
+    }
+    i++;
+  }
+  body.innerHTML = html.join('');
+  applyHighlights();
+  layoutMargin();
+}
+
+function renderMsg(m, idx) {
+  const role = m.role || 'assistant';
+  const label = (m.label || role).replace(/_/g, ' ');
+  const boiler = m.boilerplate ? ' boiler' : '';
+  let inner = '';
+  if (role === 'thinking') {
+    inner = `<details class="thinking"><summary>reasoning (collapsed)</summary>` +
+            `<div class="text">${md(m.text || '')}</div></details>`;
+    return `<div class="msg${boiler}" data-role="${role}" data-idx="${idx}">` +
+           `<div class="role">${escape(label)}</div>${inner}</div>`;
+  }
+  if (role === 'tool_call') {
+    inner = `<div class="fn">${escape(m.name || 'tool')}()</div>`;
+    if (m.arguments !== undefined) {
+      inner += `<details class="args"><summary>arguments</summary>` +
+               `<pre class="json">${escape(pretty(m.arguments))}</pre></details>`;
+    }
+  } else if (role === 'tool_result') {
+    const full = pretty(m.content !== undefined ? m.content : m.text);
+    const long = full.length > 240;
+    if (long) {
+      inner = `<details class="args"><summary class="result-summary">result (${full.length} chars)</summary>` +
+              `<pre class="json annotatable" data-idx="${idx}">${escape(full)}</pre></details>`;
+    } else {
+      inner = `<pre class="json annotatable" data-idx="${idx}">${escape(full)}</pre>`;
+    }
+  } else {
+    const text = m.text !== undefined ? m.text : pretty(m.content);
+    inner = `<div class="text annotatable" data-idx="${idx}">${md(text)}</div>`;
+  }
+  return `<div class="msg${boiler}" data-role="${role}" data-idx="${idx}">` +
+         `<div class="role">${escape(label)}</div>${inner}</div>`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Highlights + margin notes                                          *
+ * ------------------------------------------------------------------ */
+function itemsForTrace() {
+  const tid = curTrace() ? curTrace().trace_id : null;
+  // Exclude the trace-level "no failure observed" marker: it has no
+  // quote/idx to highlight and belongs in the status strip / rail stripe,
+  // not the margin-note column. Suggestions no longer render here at all --
+  // their accept/reject story now lives as a computed, read-only summary on
+  // the Taxonomy tab, not as an in-context click target (that workflow was
+  // never actually used; every trace got a real written annotation instead).
+  return state.annotations
+    .filter(a => a.trace_id === tid && a.kind !== 'clean')
+    .map(a => ({...a, kind: 'human'}));
+}
+
+/* Wrap each item's [start,end] span within its target block in a <span.hl>.
+   We re-render text then walk offsets, so overlapping spans stay simple: we
+   only highlight the first occurrence of the quote inside its block. */
+/* Text of `node`, but with <br> read back as "\n" — matching how md()
+   rendered a message's original newlines into <br> tags. Walked by hand
+   (not el.textContent, not el.innerText): textContent drops <br> entirely,
+   which silently breaks matching for any saved quote that spans a paragraph
+   break; innerText respects CSS visibility, which returns empty text for
+   anything inside a collapsed <details> — and long tool results default to
+   collapsed. Neither alone is correct for both cases this app renders. */
+function textWithBreaks(node) {
+  let out = '';
+  node.childNodes.forEach(child => {
+    if (child.nodeType === Node.TEXT_NODE) out += child.textContent;
+    else if (child.nodeName === 'BR') out += '\n';
+    else out += textWithBreaks(child);
+  });
+  return out;
+}
+function escapeKeepingBreaks(s) {
+  return escape(s).replace(/\n/g, '<br>');
+}
+
+function applyHighlights() {
+  const items = itemsForTrace();
+  document.querySelectorAll('.annotatable').forEach(el => {
+    const idx = parseInt(el.dataset.idx, 10);
+    const mine = items.filter(it => it.idx === idx || it.idx === undefined);
+    if (!mine.length) return;
+    let text = textWithBreaks(el);
+    // Build a list of [start, end, item] ranges found by quote match.
+    const ranges = [];
+    mine.forEach(it => {
+      if (!it.quote) return;
+      const pos = text.indexOf(it.quote);
+      if (pos >= 0) ranges.push([pos, pos + it.quote.length, it]);
+    });
+    if (!ranges.length) return;
+    ranges.sort((a, b) => a[0] - b[0]);
+    let out = '', cursor = 0;
+    ranges.forEach(([s, e, it]) => {
+      if (s < cursor) return; // skip overlaps
+      out += escapeKeepingBreaks(text.slice(cursor, s));
+      const cls = it.kind === 'sugg' ? 'hl sugg' : 'hl';
+      out += `<span class="${cls}" data-item="${it.id}">${escapeKeepingBreaks(text.slice(s, e))}</span>`;
+      cursor = e;
+    });
+    out += escapeKeepingBreaks(text.slice(cursor));
+    el.innerHTML = out;
+  });
+}
+
+/* Position margin notes absolutely, top offset = highlight top relative to the
+   margin container (NO scrollTop; that double-counts). Stack with a min gap. */
+let editingAnnotationId = null;  // human annotation currently in inline-edit mode
+
+function layoutMargin() {
+  const col = document.getElementById('margin-col');
+  col.innerHTML = '';
+  const items = itemsForTrace();
+  if (!items.length) return;
+  const colRect = col.getBoundingClientRect();
+  const placed = [];
+  let lastBottom = 0;
+  // order by vertical position of the highlight
+  const withPos = items.map(it => {
+    const hl = document.querySelector(`.hl[data-item="${it.id}"]`);
+    const top = hl ? (hl.getBoundingClientRect().top - colRect.top) : 0;
+    return {it, top, hl};
+  }).sort((a, b) => a.top - b.top);
+
+  withPos.forEach(({it, top, hl}) => {
+    const note = document.createElement('div');
+    note.className = 'mnote human';
+    note.dataset.item = it.id;
+    let html = '';
+    if (it.quote) html += `<div class="quote">"${escape(clip(it.quote, 80))}"</div>`;
+    if (editingAnnotationId === it.id) {
+      html += `<textarea class="edit-input" data-edit="${it.id}" title="Ctrl+Enter to save, Esc to cancel">${escape(it.note || '')}</textarea>`;
+      html += `<div class="acts"><button class="accept" data-save="${it.id}" title="Ctrl+Enter">save</button>` +
+              `<button data-cancel-edit="${it.id}">cancel</button></div>`;
+    } else {
+      html += `<div class="body">${escape(it.note || '')}</div>`;
+      html += `<div class="acts"><button data-edit-btn="${it.id}">edit</button>` +
+              `<button data-del="${it.id}">delete</button></div>`;
+    }
+    note.innerHTML = html;
+    const y = Math.max(top, lastBottom);
+    note.style.top = y + 'px';
+    col.appendChild(note);
+    lastBottom = y + note.offsetHeight + 8;
+
+    // hover linking between note and highlight
+    if (hl) {
+      note.addEventListener('mouseenter', () => hl.classList.add('outline'));
+      note.addEventListener('mouseleave', () => hl.classList.remove('outline'));
+      hl.addEventListener('mouseenter', () => note.classList.add('outline'));
+      hl.addEventListener('mouseleave', () => note.classList.remove('outline'));
+    }
+    placed.push(note);
+  });
+
+  col.querySelectorAll('[data-del]').forEach(b =>
+    b.onclick = () => deleteAnnotation(b.dataset.del));
+  col.querySelectorAll('[data-edit-btn]').forEach(b =>
+    b.onclick = () => { editingAnnotationId = b.dataset.editBtn; layoutMargin(); });
+  col.querySelectorAll('[data-cancel-edit]').forEach(b =>
+    b.onclick = () => { editingAnnotationId = null; layoutMargin(); });
+  col.querySelectorAll('[data-save]').forEach(b =>
+    b.onclick = () => saveEditedAnnotation(b.dataset.save));
+  const editBox = col.querySelector('.edit-input');
+  if (editBox) {
+    editBox.focus();
+    editBox.setSelectionRange(editBox.value.length, editBox.value.length);
+    editBox.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { editingAnnotationId = null; layoutMargin(); }
+      // Ctrl+Enter / Cmd+Enter saves; plain Enter and Shift+Enter stay as
+      // newline (the textarea's own default) — see the discussion on why
+      // plain Enter should not submit here.
+      else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        saveEditedAnnotation(editBox.dataset.edit);
+      }
+    });
+  }
+}
+
+async function saveEditedAnnotation(id) {
+  const textarea = document.querySelector(`textarea.edit-input[data-edit="${id}"]`);
+  if (!textarea) return;
+  const newNote = textarea.value.trim();
+  if (!newNote) return; // empty note: cancel rather than save nothing
+  const ann = state.annotations.find(a => a.id === id);
+  if (ann) { ann.note = newNote; ann.ts = new Date().toISOString(); }
+  editingAnnotationId = null;
+  await saveAnnotations();
+  renderTrace(); renderRail(); renderProgress();
+}
+
+/* ------------------------------------------------------------------ *
+ * In-place annotation                                                *
+ * ------------------------------------------------------------------ */
+let pendingRange = null;   // the wrapped pending-highlight span
+let pendingCtx = null;     // {trace_id, quote, idx}
+
+document.getElementById('trace-body').addEventListener('mouseup', () => {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed) return;
+  const text = sel.toString().trim();
+  if (!text) return;
+  const anchor = sel.anchorNode && sel.anchorNode.parentElement
+    ? sel.anchorNode.parentElement.closest('.annotatable') : null;
+  if (!anchor) return;
+
+  // Wrap the range in a pending highlight BEFORE focusing the input, so the
+  // native selection clearing does not lose the reviewer's context.
+  const range = sel.getRangeAt(0);
+  const span = document.createElement('span');
+  span.className = 'hl pending-highlight';
+  try { range.surroundContents(span); } catch (e) { return; }
+  pendingRange = span;
+  pendingCtx = {
+    trace_id: curTrace().trace_id,
+    quote: text,
+    idx: parseInt(anchor.dataset.idx, 10),
+  };
+  sel.removeAllRanges();
+
+  const rect = span.getBoundingClientRect();
+  const pop = document.getElementById('popover');
+  pop.style.display = 'block';
+  pop.style.left = (window.scrollX + rect.left) + 'px';
+  pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+  const input = document.getElementById('note-input');
+  input.value = '';
+  input.focus();
+});
+
+document.getElementById('note-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { commitAnnotation(); }
+  else if (e.key === 'Escape') { cancelAnnotation(); }
+});
+document.addEventListener('mousedown', (e) => {
+  const pop = document.getElementById('popover');
+  if (pop.style.display === 'block' && !pop.contains(e.target)) cancelAnnotation();
+});
+
+function clearPending() {
+  if (pendingRange && pendingRange.parentNode) {
+    const parent = pendingRange.parentNode;
+    while (pendingRange.firstChild) parent.insertBefore(pendingRange.firstChild, pendingRange);
+    parent.removeChild(pendingRange);
+    parent.normalize();
+  }
+  pendingRange = null; pendingCtx = null;
+  document.getElementById('popover').style.display = 'none';
+}
+function cancelAnnotation() { clearPending(); renderTrace(); }
+
+async function commitAnnotation() {
+  const note = document.getElementById('note-input').value.trim();
+  if (!note || !pendingCtx) { clearPending(); return; }
+  state.annotations.push({
+    id: 'a' + Date.now() + Math.floor(Math.random() * 1000),
+    trace_id: pendingCtx.trace_id,
+    quote: pendingCtx.quote,
+    idx: pendingCtx.idx,
+    note, ts: new Date().toISOString(),
+  });
+  clearPending();
+  await saveAnnotations();
+  renderTrace();
+  renderRail();
+  renderProgress();
+  toast('saved · the agent is grouping your notes');
+}
+
+// A delete is held here during its undo window: removed from view and from
+// poll()'s merge immediately, but not sent to the server (saveAnnotations)
+// until the window closes without an undo. Only one pending delete at a
+// time, on purpose — a second delete while one is pending just commits the
+// first early, rather than building an undo stack.
+let pendingDelete = null; // {annotation, index, timer}
+
+async function deleteAnnotation(id) {
+  const index = state.annotations.findIndex(a => a.id === id);
+  if (index === -1) return;
+  if (pendingDelete) await commitPendingDelete();
+
+  const [annotation] = state.annotations.splice(index, 1);
+  renderTrace(); renderRail(); renderProgress();
+
+  pendingDelete = {annotation, index, timer: setTimeout(commitPendingDelete, 6000)};
+  toastWithUndo('annotation deleted', undoDelete);
+}
+
+async function commitPendingDelete() {
+  if (!pendingDelete) return;
+  clearTimeout(pendingDelete.timer);
+  pendingDelete = null;
+  await saveAnnotations();
+}
+
+function undoDelete() {
+  if (!pendingDelete) return;
+  clearTimeout(pendingDelete.timer);
+  const {annotation, index} = pendingDelete;
+  state.annotations.splice(Math.min(index, state.annotations.length), 0, annotation);
+  pendingDelete = null;
+  renderTrace(); renderRail(); renderProgress();
+  toast('restored');
+}
+
+
+/* ------------------------------------------------------------------ *
+ * Progress view                                                      *
+ * ------------------------------------------------------------------ */
+function renderProgress() {
+  renderStatusSummary();
+  renderBatchComposition();
+  renderTaxonomySection();
+  renderFixTable();
+  renderBoundaryMatrix();
+}
+
+/* The "helicopter view": one clickable card per review-status bucket, each
+   jumping to the Trace view filtered to just that group. Scoped to
+   state.batchFilter (the same variable the rail's Batch dropdown sets), so
+   picking a batch anywhere in the app consistently scopes the whole UI to
+   it -- "how much of batch 2 is done" without cross-referencing the rail. */
+function renderStatusSummary() {
+  const batchSelect = document.getElementById('progress-batch-select');
+  const batches = [...new Set(state.samples.map(s => s.batch).filter(b => b != null))].sort((a, b) => a - b);
+  batchSelect.innerHTML = `<option value="">All batches (${state.samples.length})</option>` +
+    batches.map(b => {
+      const n = state.samples.filter(s => s.batch === b).length;
+      return `<option value="${b}"${state.batchFilter === b ? ' selected' : ''}>Batch ${b} (${n})</option>`;
+    }).join('');
+  batchSelect.onchange = (e) => {
+    state.batchFilter = e.target.value ? parseInt(e.target.value, 10) : null;
+    renderProgress();
+    if (document.getElementById('trace-view').classList.contains('active')) renderRail();
+  };
+
+  const el = document.getElementById('status-summary');
+  const scoped = state.batchFilter != null ? state.samples.filter(s => s.batch === state.batchFilter) : state.samples;
+  const counts = {clean: 0, clean_notes: 0, flagged: 0, unreviewed: 0, excluded: 0};
+  scoped.forEach(s => { counts[reviewBucket(s)]++; });
+  const cards = [
+    {key: 'clean', cls: 'clean', label: 'Passed cleanly', n: counts.clean,
+      title: 'No failure found, and no notes worth flagging along the way.'},
+    {key: 'clean_notes', cls: 'clean-notes', label: 'Passed, with flagged notes', n: counts.clean_notes,
+      title: 'Passed overall, but a note was left on it worth remembering (e.g. a near-miss or candidate close negative).'},
+    {key: 'flagged', cls: 'flagged', label: 'Failed', n: counts.flagged,
+      title: 'At least one failure note was recorded on this trace.'},
+    {key: 'unreviewed', cls: 'unreviewed', label: 'Not yet reviewed', n: counts.unreviewed,
+      title: 'No verdict saved yet.'},
+    {key: 'excluded', cls: 'unreviewed', label: 'Excluded (invalid scenario)', n: counts.excluded,
+      title: 'Not graded pass/fail -- the scenario itself has a known generation bug.'},
+  ];
+  el.innerHTML = cards.map(c =>
+    `<button class="stat-card ${c.cls}" data-bucket="${c.key}" title="${escape(c.title)}">` +
+    `<div class="stat-n">${c.n}</div><div class="stat-label">${escape(c.label)}</div>` +
+    (c.n > 0 ? `<span class="stat-notes-link" data-bucket="${c.key}">view notes &rarr;</span>` : '') +
+    `</button>`
+  ).join('');
+  el.querySelectorAll('.stat-card').forEach(card => {
+    card.onclick = () => filterRailToBucket(card.dataset.bucket);
+  });
+  el.querySelectorAll('.stat-notes-link').forEach(link => {
+    link.onclick = (e) => { e.stopPropagation(); filterNotesToBucket(link.dataset.bucket); };
+  });
+}
+function filterRailToBucket(bucket) {
+  state.railFilter = bucket;
+  const firstMatch = state.samples.findIndex(s => reviewBucket(s) === bucket);
+  if (firstMatch >= 0) state.cur = firstMatch;
+  switchView('trace');
+  renderHeader(); renderStatusStrip(); renderTrace(); renderRail(); updatePos();
+}
+
+/* Normalize the taxonomy into [{name, ...}] regardless of on-disk shape.
+   During a live session the agent pushes a flat map {mode_name: {...}} as it
+   groups notes. The committed demo/final state uses the Artifact L schema:
+   {modes: [{name, ...}], human_signoff, reconciliation}. Accept both. */
+function normalizePatterns(p) {
+  if (!p || typeof p !== 'object') return [];
+  if (Array.isArray(p.modes)) return p.modes.filter(m => m && m.name);
+  return Object.entries(p).map(([name, m]) => ({name, ...(m || {})}));
+}
+function modeCount(m) {
+  // a live mode carries `count`; a final mode carries the any-instance count.
+  if (typeof m.count === 'number') return m.count;
+  if (typeof m.any_instance_count === 'number') return m.any_instance_count;
+  if (typeof m.first_failure_count === 'number') return m.first_failure_count;
+  return (m.example_trace_ids || []).length;
+}
+
+/* What kind of change would actually resolve each confirmed mode --
+   judgment calls made during Part D analysis, not derivable from
+   patterns.json's fields alone, so kept as a small lookup here rather than
+   a new state file. Keyed by mode name; a mode without an entry just
+   renders with a "needs classification" placeholder instead of erroring. */
+const FIX_TYPES = {
+  dispute_not_escalated: {
+    category: 'prompt',
+    fix: 'Strengthen the escalation trigger so intent:dispute routes straight to escalate_to_human before any investigation/clarifying turn, not after.'
+  },
+  find_order_cap_excludes_target: {
+    category: 'code', sub: 'Tool',
+    fix: 'Raise or remove find_order’s hard 5-result cap, or add a has-more signal / let it scope by store, so a real match can’t silently fall outside the window.'
+  },
+  order_metadata_not_exposed: {
+    category: 'code', sub: 'Tool',
+    fix: 'Add product_title/store_name to find_order and list_my_orders’ return shape so the agent doesn’t need a per-candidate get_order round-trip to match a plain-language reference.'
+  },
+  store_identity_not_resolved: {
+    category: 'prompt',
+    fix: 'Instruct the agent to always resolve order/store identity via the cheap lookup already available (get_order on a small candidate set) before answering, instead of stalling.'
+  },
+  store_override_not_detected: {
+    category: 'prompt',
+    fix: 'Add an explicit step requiring a store-override check (cw-store-overrides) before citing or applying the platform default policy.'
+  },
+  unnecessary_tool_call: {
+    category: 'prompt',
+    fix: 'Low-priority efficiency fix: trim redundant tool calls whose result is never used in the final reply; not a correctness bug in the observed instances.'
+  },
+  return_refund_query_excludes_cw_returns: {
+    category: 'code', sub: 'Retrieval',
+    fix: 'Fix search_help_center’s BM25 ranking (or add a synonym/boost rule) so cw-returns surfaces for queries combining “return” and “refund”, instead of being reliably outranked.'
+  },
+  unsound_order_pick: {
+    category: 'prompt',
+    fix: 'Add explicit disambiguation guidance: only select among candidate orders using fields that genuinely narrow the match, never eligibility or an unrelated criterion.'
+  },
+  incomplete_write_left_undone: {
+    category: 'prompt',
+    fix: 'Remove confirmation-gating on writes the user’s single-turn request already authorized; the write tool should be called in-turn, not deferred to a reply that can’t come.'
+  },
+};
+const FIX_CATEGORY_LABEL = { prompt: 'Prompt fix', code: 'Code fix' };
+
+/* Renders the Progress tab's "what would fix this" table -- confirmed
+   modes only, since candidate modes don't have enough evidence yet to
+   commit to a specific fix. Category (Prompt fix / Code fix) is the
+   primary pill -- the thing that determines who picks up the work --
+   with the code sub-type (Tool/Retrieval) shown as a smaller secondary
+   label, since both are still "someone has to change code", just in
+   different places. */
+function renderFixTable() {
+  const el = document.getElementById('progress-fix-table');
+  if (!el) return;
+  const modes = normalizePatterns(state.patterns)
+    .filter(m => (m.status || 'candidate') === 'confirmed')
+    .sort((a, b) => modeCount(b) - modeCount(a));
+  if (!modes.length) { el.innerHTML = '<div class="empty">No confirmed modes yet.</div>'; return; }
+  const rows = modes.map(m => {
+    const info = FIX_TYPES[m.name] || { category: 'needs', fix: '—' };
+    const label = FIX_CATEGORY_LABEL[info.category] || 'Needs classification';
+    const sub = info.sub ? `<span class="fix-sub">${escape(info.sub)}</span>` : '';
+    return `<tr><td class="mode-name">${escape(m.name)}</td>` +
+      `<td class="num">${modeCount(m)}</td>` +
+      `<td><span class="fix-type fix-type-${escape(info.category)}">${escape(label)}</span>${sub}</td>` +
+      `<td>${escape(info.fix)}</td></tr>`;
+  }).join('');
+  el.innerHTML = `<div class="tbl-wrap"><table class="ledger-table"><thead><tr>` +
+    `<th>Mode</th><th>n</th><th>Fix type</th><th>What would resolve it</th>` +
+    `</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* Systematic merge-candidate check: every pair of confirmed modes, one cell
+   each. Green = a boundary is already written between them (mode-level
+   `boundary` text naming the other mode) -- already checked, kept separate.
+   Amber = no boundary yet, but same fix type (Tool/Prompt/Retrieval) -- a
+   real "worth checking" candidate. Gray = no boundary, different fix type --
+   low odds, not worth the time. This is what actually caught the strongest
+   near-miss merge candidate this session (store_identity_not_resolved vs.
+   unsound_order_pick), by surfacing a pair with no boundary yet instead of
+   relying on a text-similarity score (which we found doesn't track failure
+   mechanism -- see the removed consolidation-matrix tab). */
+const BOUNDARY_COLORS = {has_boundary: '#34d399', gap_same_type: '#fbbf24', gap_diff_type: '#374151'};
+function renderBoundaryMatrix() {
+  const el = document.getElementById('boundary-matrix');
+  if (!el) return;
+  const modes = normalizePatterns(state.patterns)
+    .filter(m => (m.status || 'candidate') === 'confirmed')
+    .sort((a, b) => modeCount(b) - modeCount(a));
+  if (modes.length < 2) { el.innerHTML = '<div class="empty">Need at least 2 confirmed modes to compare.</div>'; return; }
+
+  const names = modes.map(m => m.name);
+  const typeOf = (name) => { const info = FIX_TYPES[name]; return info ? (info.sub || info.category) : 'needs'; };
+  const mentions = {};
+  modes.forEach(m => {
+    const b = m.boundary || '';
+    mentions[m.name] = new Set(names.filter(n => n !== m.name && b.includes(n)));
+  });
+
+  const cellState = (a, b) => {
+    const covered = mentions[a].has(b) || mentions[b].has(a);
+    if (covered) return 'has_boundary';
+    return typeOf(a) === typeOf(b) ? 'gap_same_type' : 'gap_diff_type';
+  };
+
+  let counts = {has_boundary: 0, gap_same_type: 0, gap_diff_type: 0};
+  const head = `<tr><th></th>` + names.map((n, i) => `<th class="colnum" title="${escape(n)}">${i + 1}</th>`).join('') + `</tr>`;
+  const rows = names.map((rowName, i) => {
+    const cells = names.map((colName, j) => {
+      if (j <= i) return '<td></td>';
+      const state = cellState(rowName, colName);
+      counts[state]++;
+      return `<td class="cell" style="background:${BOUNDARY_COLORS[state]}" title="${escape(rowName)} × ${escape(colName)}"></td>`;
+    }).join('');
+    return `<tr><th class="rowlabel" title="${escape(rowName)}">${i + 1}. ${escape(rowName)}</th>${cells}</tr>`;
+  }).join('');
+
+  const total = counts.has_boundary + counts.gap_same_type + counts.gap_diff_type;
+  const legend = `<div class="boundary-legend">` +
+    `<span><i style="background:${BOUNDARY_COLORS.has_boundary}"></i>Boundary documented (${counts.has_boundary}/${total})</span>` +
+    `<span><i style="background:${BOUNDARY_COLORS.gap_same_type}"></i>Same fix type, unchecked -- worth investigating (${counts.gap_same_type}/${total})</span>` +
+    `<span><i style="background:${BOUNDARY_COLORS.gap_diff_type}"></i>Different fix type -- low priority (${counts.gap_diff_type}/${total})</span>` +
+    `</div>`;
+
+  el.innerHTML = `<div class="tbl-wrap"><table class="boundary-matrix">${head}${rows}</table></div>` + legend;
+}
+
+/* ------------------------------------------------------------------ *
+ * Batch Ledger view — batch composition + which batch each mode's    *
+ * evidence actually came from. Pure derivation from state already in *
+ * memory (samples/annotations/patterns); no new server data needed.  *
+ * ------------------------------------------------------------------ */
+/* One pass over the annotation notes' trailing "[mode_a, mode_b]" bracket
+   tag -- the convention this session settled on for marking which modes a
+   fail note applies to. Shared by the mode table and the suggestions section
+   so both agree on what a trace "counted as." */
+function modeTagsFor(tid) {
+  const tags = new Set();
+  state.annotations.filter(a => a.trace_id === tid).forEach(a => {
+    const note = a.note || '';
+    [...note.matchAll(/\[([^\]]+)\]/g)].forEach(m => {
+      m[1].split(',').forEach(mode => tags.add(mode.trim()));
+    });
+  });
+  return tags;
+}
+
+/* Side-by-side clean/fail/excluded bars, one per batch -- lives on the
+   Progress tab, right under the status-summary stat cards, since both show
+   the same review-bucket categories at different granularities (the cards
+   scope to whichever batch is selected; this always compares all of them). */
+function renderBatchComposition() {
+  const el = document.getElementById('progress-batch-composition');
+  if (!el) return;
+  const batchIds = [...new Set(state.samples.map(s => s.batch).filter(b => b != null))].sort((a, b) => a - b);
+  const segColors = {clean: '#059669', clean_notes: '#b45309', flagged: '#dc2626', excluded: 'var(--muted)', unreviewed: 'var(--line)'};
+  el.innerHTML = batchIds.map(b => {
+    const group = state.samples.filter(s => s.batch === b);
+    const counts = {clean: 0, clean_notes: 0, flagged: 0, unreviewed: 0, excluded: 0};
+    group.forEach(s => counts[reviewBucket(s)]++);
+    const segs = Object.entries(counts).filter(([, n]) => n > 0)
+      .map(([k, n]) => `<div class="ledger-seg" style="flex:${n};background:${segColors[k]}" title="${k.replace('_', ' ')}: ${n}">${n}</div>`)
+      .join('');
+    return `<div class="ledger-batch-row">` +
+      `<div class="ledger-batch-label">Batch ${b}<span>${group.length} traces</span></div>` +
+      `<div class="ledger-bar">${segs}</div></div>`;
+  }).join('') +
+    `<div class="ledger-legend">` +
+    `<span><i style="background:#059669"></i>Clean</span>` +
+    `<span><i style="background:#b45309"></i>Clean, flagged note</span>` +
+    `<span><i style="background:#dc2626"></i>Failed</span>` +
+    `<span><i style="background:var(--muted)"></i>Excluded</span>` +
+    `<span><i style="background:var(--line)"></i>Unreviewed</span></div>`;
+}
+
+// Every categorical dimension worth a coverage view -- the high-cardinality
+// per-scenario identifiers (order_id, product_id, store_id, user_id,
+// record_state) are deliberately excluded, since "coverage of order_id" isn't
+// a meaningful question.
+const COVERAGE_DIMS = [
+  {field: 'intent', label: 'Intent'},
+  {field: 'role', label: 'Role'},
+  {field: 'difficulty', label: 'Difficulty'},
+  {field: 'scenario_group', label: 'Scenario type'},
+  {field: 'data_quality_case_id', label: 'Data-quality trap', filterDq: true},
+  {field: 'tools_needed', label: 'Tools needed'},
+  {field: 'user_style', label: 'User style'},
+];
+function renderLedger() {
+  const batchIds = [...new Set(state.samples.map(s => s.batch).filter(b => b != null))].sort((a, b) => a - b);
+  // "reviewed" = distinct base scenario ids touched by any sample, stripping
+  // the trailing "r" a replacement scenario's id carries (support-0177r is
+  // still coverage for support-0177's slot).
+  const reviewedIds = new Set(state.samples.map(s => (s.meta && s.meta.scenario_id || '').replace(/r$/, '')));
+
+  document.getElementById('ledger-progress').textContent =
+    `${state.samples.length} traces sampled, ${reviewedIds.size} distinct scenarios, of ≥100 required`;
+
+  const gridEl = document.getElementById('ledger-grid');
+  if (!state.scenarios.length) {
+    gridEl.innerHTML = '<div class="empty">Loading the full scenario set&hellip;</div>';
+    return;
+  }
+
+  // Which batch a base scenario id actually came from (an excluded
+  // original and its replacement share the same base id and batch, so
+  // last-write-wins here never double-counts a scenario into two batches).
+  const scenarioBatch = new Map();
+  state.samples.forEach(s => {
+    const base = ((s.meta && s.meta.scenario_id) || '').replace(/r$/, '');
+    if (base) scenarioBatch.set(base, s.batch);
+  });
+
+  const byKey = (field, source) => {
+    const buckets = {};
+    (source || state.scenarios).forEach(sc => {
+      const key = sc[field] || 'unknown';
+      buckets[key] = buckets[key] || {total: 0, byBatch: {}};
+      buckets[key].total++;
+      if (reviewedIds.has(sc.id)) {
+        const b = scenarioBatch.get(sc.id);
+        const bKey = b != null ? String(b) : 'other';
+        buckets[key].byBatch[bKey] = (buckets[key].byBatch[bKey] || 0) + 1;
+      }
+    });
+    return Object.entries(buckets).map(([key, c]) => {
+      const reviewed = Object.values(c.byBatch).reduce((a, b) => a + b, 0);
+      return {key, total: c.total, reviewed, byBatch: c.byBatch, pct: c.total ? reviewed / c.total : 0};
+    }).sort((a, b) => b.total - a.total);
+  };
+
+  // Same per-batch palette used everywhere else in the app (the old
+  // stacked-bar coverage view, the Progress tab's batch composition), so a
+  // batch reads as the same color no matter which chart it's in. Each
+  // batch's own hue, with alpha scaling by that batch's share of the value's
+  // total -- monotone-blue intensity was harder to read than a distinct
+  // color per batch.
+  const BATCH_RGB = {'1': '47,111,176', '2': '124,92,191', '3': '201,134,60', '4': '74,157,122'};
+  const shade = (n, total, b) => {
+    if (!n) return 'transparent';
+    const alpha = Math.min(0.9, 0.25 + (n / total) * 2.2);
+    const rgb = BATCH_RGB[String(b)] || '138,138,138';
+    return `rgba(${rgb},${alpha.toFixed(2)})`;
+  };
+  const heatTile = (label, rows) => {
+    const head = `<tr><th>${escape(label)}</th>` + batchIds.map(b => `<th>B${b}</th>`).join('') + `<th class="total-col">Cov.</th></tr>`;
+    const body = rows.map(r => {
+      const cells = batchIds.map(b => {
+        const n = r.byBatch[String(b)] || 0;
+        return `<td style="background:${shade(n, r.total, b)};" title="${escape(r.key)}, batch ${b}: ${n}">${n || ''}</td>`;
+      }).join('');
+      return `<tr><td title="${escape(r.key)}">${escape(r.key)}</td>${cells}<td class="total-col">${r.reviewed}/${r.total}</td></tr>`;
+    }).join('');
+    const untouched = rows.filter(r => r.reviewed === 0);
+    const note = untouched.length
+      ? `<div class="cov-note">Never reviewed: ` + untouched.map(r => `<strong>${escape(r.key)}</strong>`).join(', ') + `.</div>`
+      : '';
+    return `<div class="coverage-tile"><h3>${escape(label)}</h3><div class="tbl-wrap"><table class="heat-table">${head}${body}</table></div>${note}</div>`;
+  };
+
+  // Compute every dimension's rows once, so the tiles and the cross-
+  // dimension analysis panel below both read from the same numbers instead
+  // of recomputing (and potentially disagreeing).
+  const dimResults = COVERAGE_DIMS.map(({field, label, filterDq}) => {
+    const source = filterDq ? state.scenarios.filter(sc => sc.data_quality_case_id) : undefined;
+    const rows = byKey(field, source);
+    return {field, label, rows: filterDq && !rows.length ? null : rows};
+  });
+
+  const tiles = dimResults.map(({label, rows}) =>
+    rows === null
+      ? `<div class="coverage-tile"><h3>${escape(label)}</h3><div class="empty">No data-quality-case field in this scenario export.</div></div>`
+      : heatTile(label, rows)
+  ).join('') + renderCoverageAnalysis(dimResults);
+
+  const legend = `<div class="ledger-legend">` +
+    batchIds.map(b => `<span><i style="background:rgba(${BATCH_RGB[String(b)] || '138,138,138'},0.85)"></i>Batch ${b}</span>`).join('') +
+    `</div>`;
+  gridEl.innerHTML = legend + `<div class="coverage-grid">${tiles}</div>`;
+}
+
+/* Deterministic, rule-based analysis -- not a model call. Aggregates the
+   same per-dimension rows the tiles already show into one prioritized list,
+   so spotting the worst gaps doesn't mean visually scanning all 7 tiles by
+   eye. Recomputed on every render, so it's always in sync with what's on
+   screen and costs nothing to keep live as review progresses. */
+function renderCoverageAnalysis(dimResults) {
+  const WARN = 0.25;
+  const zero = [];
+  const thin = [];
+  dimResults.forEach(({label, rows}) => {
+    if (!rows) return;
+    rows.forEach(r => {
+      if (r.reviewed === 0) zero.push({label, key: r.key, total: r.total});
+      else if (r.pct < WARN) thin.push({label, key: r.key, reviewed: r.reviewed, total: r.total, pct: r.pct});
+    });
+  });
+  thin.sort((a, b) => a.pct - b.pct);
+
+  const items = [];
+  if (zero.length) {
+    items.push(`<li><b>${zero.length} value${zero.length === 1 ? '' : 's'} with zero coverage:</b> ` +
+      zero.map(z => `${escape(z.label.toLowerCase())}=<strong>${escape(z.key)}</strong> (${z.total} in dataset)`).join(', ') + `</li>`);
+  }
+  if (thin.length) {
+    items.push(`<li><b>${thin.length} value${thin.length === 1 ? '' : 's'} under 25% covered:</b> ` +
+      thin.slice(0, 6).map(t => `${escape(t.label.toLowerCase())}=<strong>${escape(t.key)}</strong> (${t.reviewed}/${t.total})`).join(', ') +
+      (thin.length > 6 ? `, +${thin.length - 6} more` : '') + `</li>`);
+  }
+  if (!zero.length && !thin.length) {
+    items.push(`<li>No dimension value is under 25% covered -- no glaring gap to prioritize next.</li>`);
+  }
+
+  return `<div class="coverage-tile" style="grid-column: span 2;"><h3>Coverage analysis</h3>` +
+    `<ul class="notes" style="font-size:12px; line-height:1.6;">${items.join('')}</ul>` +
+    `<div class="cov-note" style="margin-top:8px;">Rule-based, recomputed from the tiles above on every render -- not a model call.</div></div>`;
+}
+
+function renderTreemap() {
+  const el = document.getElementById('treemap');
+  const modes = normalizePatterns(state.patterns);
+  if (!modes.length) { el.innerHTML = '<div class="empty">No modes yet. As you annotate, the agent groups your notes here.</div>'; return; }
+  // block area roughly proportional to count via flex-grow
+  modes.sort((a, b) => modeCount(b) - modeCount(a));
+  el.innerHTML = modes.map(m => {
+    // a live mode has free-text example_quotes; a final mode lists trace ids.
+    const ids = m.example_trace_ids || [];
+    const quotes = m.example_quotes || [];
+    const allVals = quotes.length ? quotes : ids;
+    const SHOWN_CAP = 12;
+    const items = allVals.slice(0, SHOWN_CAP).map((val, i) => {
+      const tid = quotes.length ? (ids[i] || '') : val;
+      return tid
+        ? `<li><a data-tid="${escape(tid)}">${escape(clip(val, 90))}</a></li>`
+        : `<li>${escape(clip(val, 90))}</li>`;
+    }).join('') + (allVals.length > SHOWN_CAP
+      ? `<li class="more-hint">+${allVals.length - SHOWN_CAP} more &mdash; see the Notes tab</li>`
+      : '');
+    const status = m.status || 'candidate';
+    const grow = Math.max(1, modeCount(m));
+    const sev = typeof m.severity === 'number' ? ` · sev ${m.severity}` : '';
+    // close negatives: a mode-specific "doesn't count as this failure" boundary
+    // example (Part D). Rendered dimmer and separately from positives so the
+    // two are never confused for each other.
+    const closeIds = m.close_negative_trace_ids || [];
+    const CLOSE_CAP = 8;
+    const closeSection = closeIds.length
+      ? `<div class="close-neg-label">close negatives (${closeIds.length})</div>` +
+        `<ul class="notes close-negs">` +
+        closeIds.slice(0, CLOSE_CAP).map(tid =>
+          `<li><a data-tid="${escape(tid)}">${escape(clip(tid, 90))}</a></li>`
+        ).join('') +
+        (closeIds.length > CLOSE_CAP
+          ? `<li class="more-hint">+${closeIds.length - CLOSE_CAP} more &mdash; see patterns.json</li>`
+          : '') +
+        `</ul>`
+      : '';
+    return `<div class="mode-block" style="flex-grow:${grow}">` +
+      `<h3><span class="mode-name">${escape(m.name)}</span>` +
+      `<span class="mode-meta"><span class="status ${status}">${status}</span>` +
+      `<span class="count">${modeCount(m)}${sev}</span></span></h3>` +
+      `<div class="def">${escape(m.definition || '')}</div>` +
+      `<ul class="notes">${items}</ul>${closeSection}</div>`;
+  }).join('');
+  el.querySelectorAll('li a[data-tid]').forEach(a => wireTraceLink(a, a.dataset.tid));
+}
+
+/* ------------------------------------------------------------------ *
+ * Progress tab, taxonomy section — the treemap, the mode-by-batch/    *
+ * close-negative table, and the depth-search suggestion accept/reject *
+ * accounting. Matches the reference interface's original Progress    *
+ * view ("Failure modes" + "Agent suggestions to review" together, no  *
+ * separate Taxonomy tab); the Ledger tab stays scenario-coverage only *
+ * -- "how well did I sample the dataset" is a different question from *
+ * "what did I find, and how well-evidenced is each mode."             *
+ * ------------------------------------------------------------------ */
+function renderTaxonomySection() {
+  renderTreemap();
+  const modesEl = document.getElementById('ledger-modes');
+  const batchIds = [...new Set(state.samples.map(s => s.batch).filter(b => b != null))].sort((a, b) => a - b);
+  const tidToBatch = new Map(state.samples.map(s => [s.trace_id, s.batch]));
+
+  // ---- mode table, positives + close negatives by batch ---------------
+  const modes = normalizePatterns(state.patterns).slice().sort((a, b) => modeCount(b) - modeCount(a));
+  const rows = modes.map(m => {
+    const ids = m.example_trace_ids || [];
+    const cnIds = m.close_negative_trace_ids || [];
+    const perBatch = {};
+    ids.forEach(tid => {
+      const b = tidToBatch.get(tid);
+      const key = b != null ? String(b) : 'other';
+      perBatch[key] = (perBatch[key] || 0) + 1;
+    });
+    const cnPerBatch = {};
+    cnIds.forEach(tid => {
+      const b = tidToBatch.get(tid);
+      const key = b != null ? String(b) : 'other';
+      cnPerBatch[key] = (cnPerBatch[key] || 0) + 1;
+    });
+    const cells = batchIds.map(b => {
+      const pos = perBatch[b] || 0;
+      const cn = cnPerBatch[b] || 0;
+      const cnSpan = cn ? `<span class="ledger-cn">+${cn}cn</span>` : '';
+      return `<td class="num${pos ? ' hit' : ''}">${pos || (cn ? '' : '&mdash;')}${cnSpan}</td>`;
+    }).join('');
+    const status = m.status || 'candidate';
+    return `<tr><td class="mode-name">${escape(m.name)}</td>` +
+      `<td><span class="status ${status}">${status}</span></td>` +
+      cells +
+      `<td class="num ledger-total">${modeCount(m)}${cnIds.length ? `<span class="ledger-cn">+${cnIds.length}cn</span>` : ''}</td></tr>`;
+  }).join('');
+  modesEl.innerHTML = `<div class="tbl-wrap"><table class="ledger-table"><thead><tr>` +
+    `<th>Mode</th><th>Status</th>` + batchIds.map(b => `<th class="num">B${b}</th>`).join('') + `<th class="num">Total</th>` +
+    `</tr></thead><tbody>${rows}</tbody></table>` +
+    `<div class="ledger-legend"><span><span class="ledger-cn">+Ncn</span> = close negatives from that batch</span></div></div>`;
+
+  // ---- depth-search suggestions: accept/reject, computed from whether -
+  // the suggested mode's tag actually shows up in the trace's saved note --
+  const suggEl = document.getElementById('ledger-suggestions');
+  if (!state.suggestions.length) {
+    suggEl.innerHTML = '<div class="empty">No suggestions on file.</div>';
+  } else {
+    const classified = state.suggestions.map(s => {
+      const tags = modeTagsFor(s.trace_id);
+      const hasAnnotation = state.annotations.some(a => a.trace_id === s.trace_id);
+      let status = 'pending';
+      if (hasAnnotation) status = tags.has(s.mode) ? 'accepted' : 'rejected';
+      return {...s, status};
+    });
+    const accepted = classified.filter(s => s.status === 'accepted');
+    const rejected = classified.filter(s => s.status === 'rejected');
+    const pending = classified.filter(s => s.status === 'pending');
+    suggEl.innerHTML =
+      `<div class="ledger-sugg-summary">` +
+      `<span class="pill accepted">${accepted.length} accepted</span>` +
+      `<span class="pill rejected">${rejected.length} rejected</span>` +
+      (pending.length ? `<span class="pill pending">${pending.length} pending</span>` : '') +
+      `</div>` +
+      `<ul class="notes ledger-sugg-list">` +
+      classified.map(s =>
+        `<li class="sugg-${s.status}"><a data-tid="${escape(s.trace_id)}">${escape(s.mode)}</a> ` +
+        `<span class="ledger-sugg-status">${s.status}</span></li>`
+      ).join('') +
+      `</ul>` +
+      `<div class="cov-note">suggestions.json still lists all ${state.suggestions.length} as un-actioned on disk -- these were resolved through direct annotation, not the Accept/Dismiss buttons, so the file itself hasn't caught up. Counts above are computed live from annotation content, not from the file's own state.</div>`;
+    suggEl.querySelectorAll('li a[data-tid]').forEach(a => wireTraceLink(a, a.dataset.tid));
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Notes view — every annotation across every session in one flat,   *
+ * searchable list, so reviewing "what have I already said" doesn't   *
+ * mean clicking back through 30+ trace cards one at a time.          *
+ * ------------------------------------------------------------------ */
+function sampleFor(traceId) {
+  return state.samples.find(s => s.trace_id === traceId);
+}
+
+/* ------------------------------------------------------------------ *
+ * Map view (canvas scatter of the trace feature-vector PCA projection,  *
+ * built by scripts/build_trace_graph.py into analysis/state/graph.json) *
+ * ------------------------------------------------------------------ */
+const MAP_HUES = ['#94a3b8', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24', '#f472b6', '#22d3ee', '#fb923c'];
+const mapView = {mode: 'detailed'};  // 'simple' (orange/gray, annotated-only) | 'detailed' (cluster fill + annotated ring)
+function renderMap() {
+  const canvas = document.getElementById('map');
+  const nodes = state.graph.nodes || [];
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = 560;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+  renderMapLegend();
+  renderMapModeToggle();
+  if (!nodes.length) {
+    ctx.fillStyle = '#9ca3af'; ctx.font = '13px sans-serif';
+    ctx.fillText('No projection yet -- run scripts/build_trace_graph.py.', 20, 30);
+    canvas._nodes = [];
+    return;
+  }
+  const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const pad = 30;
+  const sx = v => pad + (v - minX) / ((maxX - minX) || 1) * (w - 2 * pad);
+  const sy = v => pad + (v - minY) / ((maxY - minY) || 1) * (h - 2 * pad);
+  const inkColor = document.documentElement.dataset.theme === 'dark' ? '#ffffff' : '#000000';
+  const sampleIds = new Set(state.samples.map(s => s.trace_id));
+  const annIds = new Set(state.annotations.map(a => a.trace_id));
+  const simple = mapView.mode === 'simple';
+
+  nodes.forEach(n => {
+    const annotated = annIds.has(n.trace_id);
+    const sampled = sampleIds.has(n.trace_id);
+    ctx.beginPath();
+    ctx.arc(sx(n.x), sy(n.y), sampled ? 6 : 3.5, 0, Math.PI * 2);
+    if (simple) {
+      // simple mode: exactly two colors, annotated or not -- no cluster
+      // info at all, so it reads at a glance same as the reference's map.
+      ctx.fillStyle = annotated ? '#f97316' : '#9ca3af';
+      ctx.fill();
+    } else {
+      // detailed mode: fill always shows the cluster (structural shape),
+      // independent of review status; annotated/not is a ring instead, so
+      // cluster color stays legible even once everything is annotated.
+      ctx.fillStyle = MAP_HUES[(n.cluster || 0) % MAP_HUES.length];
+      ctx.fill();
+      if (annotated) { ctx.lineWidth = 1.6; ctx.strokeStyle = inkColor; ctx.stroke(); }
+    }
+  });
+
+  canvas._nodes = nodes.map(n => ({...n, px: sx(n.x), py: sy(n.y)}));
+}
+function renderMapModeToggle() {
+  const el = document.getElementById('map-zoom-controls');
+  if (!el) return;
+  const btnStyle = (active) =>
+    `font:inherit; font-size:12px; padding:3px 10px; border:1px solid var(--line); border-radius:6px; cursor:pointer;` +
+    (active ? ' background:var(--solid); color:#fff; border-color:var(--solid);' : ' background:var(--bg); color:var(--ink);');
+  el.innerHTML =
+    `<button id="map-mode-simple" style="${btnStyle(mapView.mode === 'simple')}">Simple</button>` +
+    `<button id="map-mode-detailed" style="${btnStyle(mapView.mode === 'detailed')}">Detailed</button>`;
+  document.getElementById('map-mode-simple').onclick = () => { mapView.mode = 'simple'; renderMap(); };
+  document.getElementById('map-mode-detailed').onclick = () => { mapView.mode = 'detailed'; renderMap(); };
+}
+function renderMapLegend() {
+  const el = document.getElementById('map-legend');
+  if (mapView.mode === 'simple') {
+    el.innerHTML = `<div style="display:flex; flex-direction:column; gap:6px; font-size:12.5px;">` +
+      `<div style="display:flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:50%; background:#f97316; flex-shrink:0;"></span><span>annotated</span></div>` +
+      `<div style="display:flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:50%; background:#9ca3af; flex-shrink:0;"></span><span>not annotated</span></div>` +
+      `</div>`;
+    return;
+  }
+  const clusters = state.graph.clusters || [];
+  if (!clusters.length || typeof clusters[0] !== 'object') {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div style="display:flex; flex-direction:column; gap:6px; font-size:12.5px;">` +
+    clusters.map(c => {
+      const hue = MAP_HUES[c.id % MAP_HUES.length];
+      return `<div style="display:flex; align-items:center; gap:8px;">` +
+        `<span style="width:10px; height:10px; border-radius:50%; background:${hue}; flex-shrink:0;"></span>` +
+        `<span><b>cluster ${c.id}</b> (n=${c.n}) &mdash; ${escape(c.description || '')}</span>` +
+        `</div>`;
+    }).join('') +
+    `<div style="display:flex; align-items:center; gap:8px; margin-top:2px; color:var(--muted);">` +
+    `<span style="width:10px; height:10px; border-radius:50%; border:1.6px solid var(--ink); flex-shrink:0;"></span>` +
+    `<span>ring = annotated</span></div></div>`;
+}
+document.getElementById('map').addEventListener('click', (e) => {
+  const canvas = document.getElementById('map');
+  const nodes = canvas._nodes || [];
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  let best = null, bestD = 1e9;
+  const sampleIds = new Set(state.samples.map(s => s.trace_id));
+  nodes.forEach(n => {
+    if (!sampleIds.has(n.trace_id)) return;
+    const d = (n.px - mx) ** 2 + (n.py - my) ** 2;
+    if (d < bestD) { bestD = d; best = n; }
+  });
+  if (best && bestD < 200) {
+    const i = state.samples.findIndex(s => s.trace_id === best.trace_id);
+    if (i >= 0) {
+      state.cur = i;
+      switchView('trace');
+      renderHeader(); renderStatusStrip(); renderTrace(); renderRail(); updatePos();
+    }
+  }
+});
+// The rows currently on screen in the Notes view (post-filter), so the
+// download button exports exactly what's visible rather than always
+// everything — filter to "dispute", download, get just those notes.
+let notesInView = [];
+const bucketLabels = {clean: 'passed cleanly', clean_notes: 'passed, with flagged notes', flagged: 'failed', unreviewed: 'not yet reviewed', excluded: 'excluded (invalid scenario)'};
+function filterNotesToBucket(bucket) {
+  state.notesBucketFilter = bucket;
+  switchView('notes'); // already calls renderNotes() once the view is active
+}
+function renderNotes() {
+  const el = document.getElementById('notes-list');
+  const q = (document.getElementById('notes-search').value || '').trim().toLowerCase();
+  const bucket = state.notesBucketFilter;
+
+  const bar = document.getElementById('notes-bucket-bar');
+  bar.innerHTML = bucket
+    ? `filtered to <strong>${escape(bucketLabels[bucket] || bucket)}</strong>` +
+      `<span class="rail-clear-filter" id="notes-clear-bucket">clear</span>`
+    : '';
+  const clearBtn = document.getElementById('notes-clear-bucket');
+  if (clearBtn) clearBtn.onclick = () => { state.notesBucketFilter = null; renderNotes(); };
+
+  // Order by the sample's position in the current batch (not save time), so
+  // the list reads in the same order as the rail/trace-nav.
+  const order = new Map(state.samples.map((s, i) => [s.trace_id, i]));
+  const rows = [...state.annotations]
+    .filter(a => a && a.trace_id)
+    .filter(a => !bucket || (sampleFor(a.trace_id) && reviewBucket(sampleFor(a.trace_id)) === bucket))
+    .sort((a, b) => (order.get(a.trace_id) ?? 1e9) - (order.get(b.trace_id) ?? 1e9));
+
+  const filtered = rows.filter(a => {
+    if (!q) return true;
+    const s = sampleFor(a.trace_id);
+    const scenario = (s && s.meta && s.meta.scenario_id) || '';
+    return (
+      (a.note || '').toLowerCase().includes(q) ||
+      (a.quote || '').toLowerCase().includes(q) ||
+      scenario.toLowerCase().includes(q) ||
+      a.trace_id.toLowerCase().includes(q)
+    );
+  });
+  notesInView = filtered;
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty">${rows.length ? 'No notes match that filter.' : 'No notes in this group.'}</div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(a => {
+    const s = sampleFor(a.trace_id);
+    const scenario = (s && s.meta && s.meta.scenario_id) || a.trace_id.slice(0, 8);
+    const role = s && s.meta && s.meta.role;
+    const isClean = a.kind === 'clean';
+    const quoteHtml = a.quote ? `<div class="note-quote">"${escape(clip(a.quote, 160))}"</div>` : '';
+    return (
+      `<a class="note-row" data-tid="${escape(a.trace_id)}">` +
+      `<div class="note-meta">` +
+      `<span class="note-scenario">${escape(scenario)}</span>` +
+      `${role ? `<span>${escape(role)}</span>` : ''}` +
+      `<span class="note-kind ${isClean ? 'clean' : 'quote'}">${isClean ? 'no failure' : 'note'}</span>` +
+      `<span>${escape((a.ts || '').slice(0, 10))}</span>` +
+      `</div>` +
+      quoteHtml +
+      `<div class="note-text">${escape(a.note || '')}</div>` +
+      `</a>`
+    );
+  }).join('');
+
+  el.querySelectorAll('.note-row').forEach(row => wireTraceLink(row, row.dataset.tid));
+}
+document.getElementById('notes-search').addEventListener('input', renderNotes);
+
+function notesToMarkdown(rows) {
+  const lines = [`# Cartwheel review notes`, '', `${rows.length} note(s), exported ${new Date().toISOString()}`, ''];
+  rows.forEach(a => {
+    const s = sampleFor(a.trace_id);
+    const scenario = (s && s.meta && s.meta.scenario_id) || a.trace_id;
+    const role = s && s.meta && s.meta.role;
+    lines.push(`## ${scenario}${role ? ` (${role})` : ''}`);
+    lines.push(`- trace: ${a.trace_id}`);
+    lines.push(`- kind: ${a.kind === 'clean' ? 'no failure observed' : 'note'}`);
+    if (a.ts) lines.push(`- date: ${a.ts}`);
+    if (a.quote) lines.push(`- quote: "${a.quote}"`);
+    lines.push('', a.note || '', '');
+  });
+  return lines.join('\n');
+}
+document.getElementById('download-notes').onclick = () => {
+  if (!notesInView.length) { toast('no notes to download'); return; }
+  const blob = new Blob([notesToMarkdown(notesInView)], {type: 'text/markdown'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cartwheel-notes-${new Date().toISOString().slice(0, 10)}.md`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+
+/* ------------------------------------------------------------------ *
+ * Map view (canvas scatter of the 2D projection)                     *
+ * ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ *
+ * Navigation + view switching                                        *
+ * ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ *
+ * URL routing: every view/trace is addressable (?view=X&trace=Y), so   *
+ * links to a mode's example traces are real <a href> elements --      *
+ * ctrl/cmd/middle-click opens a new tab landing on that exact trace,  *
+ * and the browser's own back/forward buttons move between views the  *
+ * same way clicking through the app does. skipPush avoids re-pushing *
+ * a history entry when restoring state FROM a popstate event.        *
+ * ------------------------------------------------------------------ */
+function traceHref(tid) { return `?trace=${encodeURIComponent(tid)}`; }
+function pushUrlState(view, tid) {
+  const params = new URLSearchParams();
+  params.set('view', view);
+  if (tid) params.set('trace', tid);
+  history.pushState({view, trace: tid || null}, '', '?' + params.toString());
+}
+/* Attach open-in-new-tab-capable navigation to an <a>: normal click does
+   the smooth in-page transition, ctrl/cmd/shift/middle-click falls through
+   to the browser's native "open in new tab" since preventDefault is skipped. */
+function wireTraceLink(el, tid) {
+  el.href = traceHref(tid);
+  el.onclick = (e) => {
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+    e.preventDefault();
+    gotoTrace(tid);
+  };
+}
+function gotoTrace(tid, skipPush) {
+  const i = state.samples.findIndex(s => s.trace_id === tid);
+  if (i < 0) { toast('that trace is not in the current sample'); return; }
+  state.cur = i;
+  switchView('trace', true);
+  if (!skipPush) pushUrlState('trace', tid);
+  renderHeader(); renderStatusStrip(); renderTrace(); renderRail(); updatePos();
+}
+window.addEventListener('popstate', (e) => {
+  const params = new URLSearchParams(location.search);
+  const view = params.get('view') || 'trace';
+  const tid = params.get('trace');
+  if (tid) gotoTrace(tid, true);
+  else switchView(view, true);
+});
+function updatePos() {
+  document.getElementById('pos').textContent =
+    state.samples.length ? `${state.cur + 1} / ${state.samples.length}` : '0 / 0';
+}
+document.getElementById('prev').onclick = () => {
+  if (state.cur > 0) {
+    state.cur--;
+    pushUrlState('trace', state.samples[state.cur].trace_id);
+    renderHeader(); renderStatusStrip(); renderTrace(); renderRail(); updatePos();
+  }
+};
+document.getElementById('next').onclick = () => {
+  if (state.cur < state.samples.length - 1) {
+    state.cur++;
+    pushUrlState('trace', state.samples[state.cur].trace_id);
+    renderHeader(); renderStatusStrip(); renderTrace(); renderRail(); updatePos();
+  }
+};
+
+/* Export the open conversation as a readable Markdown transcript, entirely
+   client-side from state already on the page — for sharing with someone who
+   doesn't have this app open, or pasting into a report. */
+function traceToMarkdown(s) {
+  const m = s.meta || {};
+  const lines = [
+    `# ${s.trace_id}`, '',
+    `- scenario: ${m.scenario_id || '—'}`,
+    `- role: ${m.role || '—'}`,
+    `- session: ${m.session_id || '—'}`,
+    `- prompt version: ${m.prompt_version || '—'}`,
+    `- timestamp: ${s.timestamp || '—'}`,
+    '', '---', '',
+  ];
+  let turn = 0;
+  (s.trace || []).forEach(msg => {
+    if (msg.role === 'turn_boundary') {
+      turn++;
+      lines.push(`## Turn ${turn} (trace ${msg.trace_id})`, '');
+    } else if (msg.role === 'user') {
+      lines.push(`**User:** ${msg.text}`, '');
+    } else if (msg.role === 'assistant') {
+      lines.push(`**Assistant:** ${msg.text}`, '');
+    } else if (msg.role === 'thinking') {
+      lines.push(`> _reasoning: ${msg.text}_`, '');
+    } else if (msg.role === 'tool_call') {
+      lines.push(`**Tool call:** \`${msg.name}(${JSON.stringify(msg.arguments)})\``, '');
+    } else if (msg.role === 'tool_result') {
+      const body = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content, null, 2);
+      lines.push('```json', body, '```', '');
+    } else if (msg.role === 'observation') {
+      lines.push(`_${msg.label || 'observation'}: ${msg.text}_`, '');
+    }
+  });
+  const notes = state.annotations.filter(a => a.trace_id === s.trace_id);
+  if (notes.length) {
+    lines.push('---', '', '## Reviewer notes', '');
+    notes.forEach(n => lines.push(
+      n.kind === 'clean' ? `- **No failure observed**` : `- **"${n.quote}"** — ${n.note}`
+    ));
+  }
+  return lines.join('\n');
+}
+document.getElementById('download-trace').onclick = () => {
+  const s = curTrace();
+  if (!s) return;
+  const blob = new Blob([traceToMarkdown(s)], {type: 'text/markdown'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${s.trace_id}.md`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+function updateThemeButton() {
+  // Icon shows the theme a click will switch TO, matching the usual convention.
+  document.getElementById('theme-toggle').textContent =
+    document.documentElement.dataset.theme === 'dark' ? '☀' : '☾';
+}
+document.getElementById('theme-toggle').onclick = () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('cartwheel_theme', next); } catch (e) {}
+  updateThemeButton();
+  if (document.getElementById('map-view').classList.contains('active')) renderMap();
+};
+updateThemeButton();
+document.addEventListener('keydown', (e) => {
+  // Any text-editing context: the new-annotation popover's <input>, the
+  // edit-annotation <textarea>, or (defensively) a future contentEditable —
+  // none of these should have arrow keys/j/k hijacked into trace navigation.
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+  if (e.key === 'j' || e.key === 'ArrowDown' || e.key === 'ArrowRight') document.getElementById('next').click();
+  if (e.key === 'k' || e.key === 'ArrowUp' || e.key === 'ArrowLeft') document.getElementById('prev').click();
+});
+
+// Refetches patterns/annotations/samples/suggestions and updates state, but
+// does NOT render -- callers render afterward. Used when landing on a view
+// (map/progress/notes) so it reflects the server's current content
+// immediately, rather than whatever this tab happened to have in memory
+// from its last poll tick (up to 2s stale, or longer if edits didn't touch
+// any array's length before the poll fix).
+async function refreshFromServer() {
+  try {
+    // scenarios is the full 250-record HW3 dataset -- static reference data,
+    // not workflow state, so fetch it once and cache rather than refetching
+    // on every poll/tab-switch like the four live files below.
+    const fetches = [
+      api.get('/api/samples'), api.get('/api/suggestions'),
+      api.get('/api/patterns'), api.get('/api/annotations'),
+    ];
+    if (!state.scenarios.length) fetches.push(api.get('/api/scenarios'));
+    const [samples, suggestions, patterns, annotations, scenarios] = await Promise.all(fetches);
+    if (Array.isArray(samples)) state.samples = samples;
+    if (Array.isArray(suggestions)) state.suggestions = suggestions;
+    if (patterns && typeof patterns === 'object') state.patterns = patterns;
+    state.annotations = mergeRemoteAnnotations(annotations);
+    if (Array.isArray(scenarios) && scenarios.length) state.scenarios = scenarios;
+  } catch (e) { /* offline; render whatever's already in memory */ }
+}
+function switchView(name, skipPush) {
+  document.querySelectorAll('.views button').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(name + '-view').classList.add('active');
+  document.getElementById('trace-nav').style.display = name === 'trace' ? 'flex' : 'none';
+  if (!skipPush) pushUrlState(name, name === 'trace' ? (state.samples[state.cur] || {}).trace_id : null);
+  if (name === 'progress') renderProgress();
+  if (name === 'notes') renderNotes();
+  if (name === 'ledger') renderLedger();
+  if (name === 'map') renderMap();
+  // Render once immediately with whatever's in memory (instant, no flash of
+  // empty), then again once fresh data arrives a moment later.
+  if (name === 'progress' || name === 'notes' || name === 'ledger') {
+    refreshFromServer().then(() => {
+      if (name === 'progress') { renderProgress(); renderRail(); }
+      if (name === 'notes') renderNotes();
+      if (name === 'ledger') renderLedger();
+      updateCounts();
+    });
+  }
+  // graph.json is a static build artifact (scripts/build_trace_graph.py),
+  // not workflow state, so fetch it once and cache rather than polling it
+  // on every switch -- same pattern as state.scenarios.
+  if (name === 'map' && !state.graph.nodes.length) {
+    api.get('/api/graph').then(g => {
+      if (g && Array.isArray(g.nodes) && g.nodes.length) { state.graph = g; renderMap(); }
+    });
+  }
+}
+document.querySelectorAll('.views button').forEach(b =>
+  b.onclick = () => switchView(b.dataset.view));
+
+/* Drag-to-reorder tabs -- a per-viewer convenience (which tab order you
+   like), not shared state, so it lives in localStorage rather than
+   patterns.json/server state. Reordering the DOM nodes is enough: each
+   button keeps its own listeners and dataset.view, so switchView/active
+   tracking work unchanged regardless of position. */
+function initTabReordering() {
+  const container = document.querySelector('.views');
+  if (!container) return;
+  const STORAGE_KEY = 'cartwheel_tab_order';
+  const buttons = () => [...container.querySelectorAll('button')];
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (Array.isArray(saved)) {
+      const known = new Map(buttons().map(b => [b.dataset.view, b]));
+      if (saved.length === known.size && saved.every(v => known.has(v))) {
+        saved.forEach(v => container.appendChild(known.get(v)));
+      }
+    }
+  } catch {}
+
+  function persist() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(buttons().map(b => b.dataset.view))); } catch {}
+  }
+
+  let dragging = null;
+  buttons().forEach(b => {
+    b.draggable = true;
+    b.addEventListener('dragstart', () => { dragging = b; b.classList.add('dragging'); });
+    b.addEventListener('dragend', () => { b.classList.remove('dragging'); dragging = null; persist(); });
+    b.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!dragging || dragging === b) return;
+      const rect = b.getBoundingClientRect();
+      const before = (e.clientX - rect.left) < rect.width / 2;
+      container.insertBefore(dragging, before ? b : b.nextSibling);
+    });
+  });
+}
+initTabReordering();
+
+function plural(n, word) { return `${n} ${word}${n === 1 ? '' : 's'}`; }
+function updateCounts() {
+  document.getElementById('counts').textContent =
+    `${plural(state.samples.length, 'session')} · ${plural(state.annotations.length, 'note')} · ` +
+    `${plural(normalizePatterns(state.patterns).length, 'mode')} · ${plural(state.suggestions.length, 'suggestion')}`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Polling: pick up agent pushes (samples, suggestions, patterns) and *
+ * replayed annotations. Compare-and-render, ~2s, like the watcher.   *
+ * ------------------------------------------------------------------ */
+let lastSig = '';
+async function poll() {
+  try {
+    const [samples, suggestions, patterns, annotations] = await Promise.all([
+      api.get('/api/samples'), api.get('/api/suggestions'),
+      api.get('/api/patterns'), api.get('/api/annotations'),
+    ]);
+    const newSampleCount = Array.isArray(samples) ? samples.length : 0;
+    const grewSamples = newSampleCount > state.samples.length;
+    const newSuggCount = Array.isArray(suggestions) ? suggestions.length : 0;
+    const grewSugg = newSuggCount > state.suggestions.length;
+
+    const merged = mergeRemoteAnnotations(annotations);
+
+    // Content-sensitive, not just length-sensitive: an in-place edit to an
+    // existing mode's status/count, a retagged annotation's note text, or a
+    // sample's batch field never changes any array's length, so a
+    // length-only signature would silently skip re-rendering forever until
+    // a hard reload forced a fresh loadAll(). patterns/annotations/
+    // suggestions are small, so fully stringify them; samples carries full
+    // trace transcripts, so fingerprint lightly (id+batch+reason) instead
+    // of stringifying the whole thing every 2s.
+    const sampleFingerprint = Array.isArray(samples)
+      ? samples.map(s => `${s.trace_id}:${s.batch}:${s.reason}`).join('|')
+      : '';
+    const sig = JSON.stringify(patterns) + '\u0001' +
+      JSON.stringify(merged) + '\u0001' +
+      JSON.stringify(suggestions) + '\u0001' +
+      sampleFingerprint;
+    if (sig === lastSig) return;
+    lastSig = sig;
+
+    state.samples = Array.isArray(samples) ? samples : state.samples;
+    state.suggestions = Array.isArray(suggestions) ? suggestions : state.suggestions;
+    state.patterns = patterns && typeof patterns === 'object' ? patterns : state.patterns;
+    state.annotations = merged;
+
+    if (grewSamples) toast(`new sessions added to your batch (${newSampleCount})`);
+    if (grewSugg) toast(`new agent suggestions to review (${newSuggCount})`);
+
+    renderHeader(); renderStatusStrip(); renderTrace(); renderRail(); renderProgress(); renderNotes(); renderLedger(); updatePos(); updateCounts();
+  } catch (e) { /* server not up yet; keep trying */ }
+}
+
+/* ------------------------------------------------------------------ *
+ * Utilities                                                          *
+ * ------------------------------------------------------------------ */
+function escape(s) {
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function md(s) {
+  return escape(s)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+}
+function pretty(v) {
+  if (typeof v === 'string') return v;
+  try { return JSON.stringify(v, null, 2); } catch (e) { return String(v); }
+}
+function clip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+/* Matches the 6s window in deleteAnnotation/commitPendingDelete — the toast
+   stays up exactly as long as undo is actually possible. */
+function toastWithUndo(msg, onUndo) {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${escape(msg)} <button class="toast-undo">undo</button>`;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 6000);
+  t.querySelector('.toast-undo').onclick = () => {
+    onUndo();
+    clearTimeout(t._timer);
+    t.classList.remove('show');
+  };
+}
+window.addEventListener('resize', () => {
+  layoutMargin();
+  if (document.getElementById('map-view').classList.contains('active')) renderMap();
+});
+
+/* ------------------------------------------------------------------ *
+ * Boot                                                               *
+ * ------------------------------------------------------------------ */
+(async function boot() {
+  await loadAll();
+  const params = new URLSearchParams(location.search);
+  const initialTrace = params.get('trace');
+  const initialView = params.get('view') || 'trace';
+  if (initialTrace && state.samples.some(s => s.trace_id === initialTrace)) {
+    gotoTrace(initialTrace, true);
+  } else {
+    switchView(initialView, true);
+  }
+  renderHeader(); renderStatusStrip(); renderTrace(); renderRail(); renderProgress(); renderNotes(); updatePos(); updateCounts();
+  setInterval(poll, 2000);
+})();
+</script>
+</body>
+</html>

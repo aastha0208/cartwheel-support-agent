@@ -12,6 +12,14 @@ data/cartwheel.db
 scenarios/results/
 replay/results/
 
+# Rolling per-save backups of annotations.json (analysis/review_app/server.py) —
+# local recovery safety net, not meant to be committed.
+analysis/state/.annotation_backups/
+
+# Scratch/debug files (dumps, one-off check scripts, artifact preview copies) —
+# session working files, not deliverables.
+.tmp/
+
 # Python
 __pycache__/
 *.pyc

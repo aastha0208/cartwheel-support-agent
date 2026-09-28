@@ -31,7 +31,7 @@ import os
 import re
 from typing import Any
 
-from .normalization import normalize_trace
+from .normalization import merge_traces, normalize_trace
 
 # Optional tag used by the committed demonstration seed. Module 1 scenario
 # traces are selected by their scenario metadata instead.
@@ -102,11 +102,23 @@ def fetch_traces(
     limit: int = 1000,
     client: Any | None = None,
 ) -> list[dict[str, Any]]:
-    """Pull full traces from Langfuse and normalize them for Module 2.
+    """Pull full traces from Langfuse, normalize, and merge multi-turn conversations.
 
-    The original Langfuse identifier remains the trace identifier, so labels
-    written as scores preserve the correct join. Scenario identifiers remain
-    metadata and are not substituted for the Langfuse identifier.
+    Cartwheel records one Langfuse trace per user turn, so a multi-turn
+    conversation is split across several trace records linked by
+    ``cartwheel.session_id``. This merges those into one record per
+    conversation (see :func:`analysis.helpers.normalization.merge_traces`),
+    matching what "a trace" means everywhere else in the Module 2 homework
+    (e.g. the 250 final scenario identifiers from Homework 3, not the larger
+    number of raw per-turn spans). The offline fallback
+    (``analysis.helpers.normalization.normalize_traces``, used when Langfuse
+    is not configured) already merged multi-turn conversations; this keeps
+    the live path consistent with it.
+
+    The original Langfuse identifier of a conversation's first turn remains
+    its trace identifier, so labels written as scores preserve the correct
+    join. Scenario identifiers remain metadata and are not substituted for
+    the Langfuse identifier.
 
     Args:
         tag: optionally restrict traces to a Langfuse tag. With no tag, retain
@@ -115,9 +127,10 @@ def fetch_traces(
         client: an existing Langfuse client (tests/seeds reuse one).
 
     Returns:
-        Normalized trace dictionaries sorted by Langfuse identifier. Each
-        record retains its timestamp, observed models, trace input and output,
-        and the observation fields needed by later monitoring jobs.
+        Normalized, conversation-merged trace dictionaries sorted by Langfuse
+        identifier. Each record retains its timestamp, observed models, trace
+        input and output, and the observation fields needed by later
+        monitoring jobs.
     """
     lf = client or _client()
     tags = [tag] if tag else None
@@ -139,19 +152,22 @@ def fetch_traces(
 
     # Fetch complete records because list responses do not reliably include
     # observations, tool results, or full inputs and outputs.
-    seen: dict[str, dict[str, Any]] = {}
+    seen_ids: set[str] = set()
+    normalized: list[dict[str, Any]] = []
     for summary in collected:
         full = lf.api.trace.get(summary.id)
         trace_id = str(full.id)
-        if trace_id in seen:
+        if trace_id in seen_ids:
             continue
-        normalized = normalize_trace(full)
-        if tag is None and not normalized.get("meta", {}).get("scenario_id"):
+        seen_ids.add(trace_id)
+        record = normalize_trace(full)
+        if tag is None and not record.get("meta", {}).get("scenario_id"):
             continue
-        seen[trace_id] = normalized
-    out = list(seen.values())
-    out.sort(key=lambda trace: trace["trace_id"])
-    return out
+        normalized.append(record)
+
+    merged = merge_traces(normalized)
+    merged.sort(key=lambda trace: trace["trace_id"])
+    return merged
 
 
 # ---------------------------------------------------------------------------

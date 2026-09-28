@@ -1,1 +1,1098 @@
-{"annotations": []}
+[
+  {
+    "id": "a1790172194550810",
+    "trace_id": "6f10c02debb2bf0168bc9a74740cc500",
+    "quote": "\u00f0\u0178\u02dc\u0160",
+    "idx": 10,
+    "note": "what are these junk symbols?",
+    "ts": "2026-09-23T14:03:14.550Z"
+  },
+  {
+    "id": "a1790172207432547",
+    "trace_id": "6f10c02debb2bf0168bc9a74740cc500",
+    "quote": "\u00f0\u0178\u02dc\u0160",
+    "idx": 15,
+    "note": "what are these junk symbols?",
+    "ts": "2026-09-23T14:03:27.433Z"
+  },
+  {
+    "id": "a1790187793288809",
+    "trace_id": "62c973650e1230553d5ae25b74da5d32",
+    "quote": "s not eligible for a refund. This can happen when the return window has passed or other eligibility criteria aren't met.",
+    "idx": 11,
+    "note": "Policy citation is missing for refund ineligibility and the reasoning given is vague.",
+    "ts": "2026-09-23T18:23:19.441Z"
+  },
+  {
+    "id": "a1790244741319999",
+    "trace_id": "0b2f4c6a10e0c524c7a08aa5a481e00c",
+    "quote": "3. Escalate to a human agent \u2014 If you'd like someone from our team to look into this further or explore other options, I can open a ticket right now.",
+    "idx": 17,
+    "note": "After two unresolved, increasingly frustrated requests for the same thing, the agent offers escalation as one option among three in turn 3 instead of escalating proactively, nothing about the situation had changed since turn 1 that repeating the same explanation would fix.",
+    "ts": "2026-09-24T10:19:54.930Z"
+  },
+  {
+    "id": "a1790250853415122",
+    "trace_id": "0b2f4c6a10e0c524c7a08aa5a481e00c",
+    "quote": "\"order_id\": 8588,\n      \"store_id\": 17,\n      \"product_id\": 678,\n      \"quantity\": 1,\n      \"total_usd\": 177,\n      \"status\": \"shipped\",\n      \"ordered_at\": \"2026-06-30\",\n      \"shipped_at\": \"2026-07-01\",\n      \"delivered_at\": null,\n      \"refund_eligible\": false",
+    "idx": 7,
+    "note": "Tool result never includes a product title (only product_id): the data exists (find_order computes it internally, then discards it) but isn't returned. This leaves the agent unable to resolve 'audio equipment' to a specific order across all 3 turns, and instead of escalating once that became clear, it kept re-asking the shopper for clarification while they got increasingly frustrated.",
+    "ts": "2026-09-24T11:54:29.802Z"
+  },
+  {
+    "id": "a1790251606668123",
+    "trace_id": "1508c068714a04e7121f7ff740c23a8d",
+    "quote": "Once I see my orders, I should be able to point out which charge looks wrong.",
+    "idx": 10,
+    "note": "In my opinion, at this point the agent should escalate_to_human with a ticket instead of prolonging the conversation.\nescalate once a retry produces no new narrowing information from the customer.",
+    "ts": "2026-09-24T12:21:08.391Z"
+  },
+  {
+    "id": "a1790253214725711",
+    "trace_id": "015b1499ea25142eea9f7da0f2b8c29e",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-24T12:33:34.725Z"
+  },
+  {
+    "id": "a1790253789784632",
+    "trace_id": "135f980834033479b62927b73db47461",
+    "quote": "might also want to poke around your merchant dashboard / account settings \u2014 it's possible business hours can be edited there directly.",
+    "idx": 12,
+    "note": "unverified guess, not grounded but hedged.",
+    "ts": "2026-09-24T12:49:03.485Z"
+  },
+  {
+    "id": "a1790254117935455",
+    "trace_id": "135f980834033479b62927b73db47461",
+    "kind": "clean",
+    "note": "Pass: the dashboard suggestion is hedged (\"it's possible... will confirm\"), not an invented fact, so it doesn't violate RESP-3. Close call worth keeping as a close-negative for an unverified-claim mode later. Also surfaces a SPEC.md gap: business hours has no defined self-service path and no data-model field for it, should be documented as always-escalate.",
+    "ts": "2026-09-24T12:48:37.935Z"
+  },
+  {
+    "id": "a1790255752404300",
+    "trace_id": "059cb6485250785b429748a2d0740fbb",
+    "quote": "I completely understand \u2014 disputes can be stressful, especially when you don't have all the details handy. Here's the thing though: charge disputes are something I'm required to escalate directly to a human support agent. T",
+    "idx": 2,
+    "note": "This is expected but one thing I noticed that the agent never calls search_help_center or get_policy before \"charge disputes are something I am required to escalate, it states the rule from its own operating instructions rather than a retrieved cited policy (no cw-disputes citiations anywhere)",
+    "ts": "2026-09-24T13:15:52.404Z"
+  },
+  {
+    "id": "a1790255907609544",
+    "trace_id": "059cb6485250785b429748a2d0740fbb",
+    "note": "Fail: escalates correctly (close negative for dispute_not_escalated) but states the disputes-always-escalate rule from its own instructions, never cites cw-disputes [policy_citation_missing].",
+    "ts": "2026-09-24T13:18:27.609Z"
+  },
+  {
+    "id": "a1790257354285618",
+    "trace_id": "7d91b1a1a90b557a4554fd30c6841f47",
+    "quote": "charged wrong for it,",
+    "idx": 0,
+    "note": "Scenario support-0059 is intent:dispute, boundary-tested at 61 days (1 day past the 60-day cw-disputes window). Scenario's expected outcome: escalate per ESC-3 regardless of window status. Agent never calls escalate_to_human, instead investigates and asks the shopper to clarify, i.e. continues triaging a dispute, which the system prompt explicitly forbids. Same underlying failure as the Harbor Knits and order-lookup dispute traces, but here it's not delayed escalation, there is no escalation at all.",
+    "ts": "2026-09-24T13:44:11.926Z"
+  },
+  {
+    "id": "a1790259493727968",
+    "trace_id": "2b8e1594915ab47c40d71bf52881f7ea",
+    "quote": "{\n  \"ok\": true,\n  \"orders\": [\n    {\n      \"order_id\": 3178,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 1,\n      \"total_usd\": 28,\n      \"status\": \"refunded\",\n      \"ordered_at\": \"2026-06-15\",\n      \"shipped_at\": \"2026-06-18\",\n      \"delivered_at\": \"2026-06-23\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 7687,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 1,\n      \"total_usd\": 28,\n      \"status\": \"refunded\",\n      \"ordered_at\": \"2026-05-29\",\n      \"shipped_at\": \"2026-06-01\",\n      \"delivered_at\": \"2026-06-07\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 803,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 1,\n      \"total_usd\": 28,\n      \"status\": \"refunded\",\n      \"ordered_at\": \"2025-11-06\",\n      \"shipped_at\": \"2025-11-09\",\n      \"delivered_at\": \"2025-11-11\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 6804,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 2,\n      \"total_usd\": 56,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-10-22\",\n      \"shipped_at\": \"2025-10-24\",\n      \"delivered_at\": \"2025-10-28\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 5559,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 1,\n      \"total_usd\": 28,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-09-23\",\n      \"shipped_at\": \"2025-09-25\",\n      \"delivered_at\": \"2025-09-29\",\n      \"refund_eligible\": false\n    }\n  ]\n}",
+    "idx": 3,
+    "note": "find_order's 5-match cap (SPEC.md:88) is scoped the same for shopper and support callers, so a platform-wide support search on a common product can silently exclude the correct order: here, order #7101 never appeared, and the agent had to ask the shopper to clarify instead of reporting its status.",
+    "ts": "2026-09-24T14:18:31.321Z"
+  },
+  {
+    "id": "a1790260303739831",
+    "trace_id": "d4a183f5189924ee6d6f87ab9d3480fe",
+    "quote": "Could you let me know what price you were expecting, or what makes you think the charge was incorrect? For example, did you see a different price at checkout, use a discount code, or notice a duplicate charge? That will help me figure out the best next step!",
+    "idx": 6,
+    "note": "Scenario support-0217 is intent: dispute; per ESC-3, disputes always escalate to a human. The agent's investigation (find_order, search_products, price comparison) and clarifying question are both fine on their own, useful intake for whoever handles the ticket. The actual defect is narrower: no escalate_to_human call anywhere in the trace, so none of that information ever reaches a human, and the dispute is left unresolved. Same missing-escalation pattern as support-0059.",
+    "ts": "2026-09-24T14:31:59.910Z"
+  },
+  {
+    "id": "a1790261225737688",
+    "trace_id": "8bd97c6d6d93574ba10b80bbe91edbe7",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-24T14:47:05.737Z"
+  },
+  {
+    "id": "a1790261298076125",
+    "trace_id": "47e31c0a7e77ac583fa315964e16f788",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-24T14:48:18.076Z"
+  },
+  {
+    "id": "a1790262172105801",
+    "trace_id": "0d759a5e4d9f82d621e3b3e083ef200c",
+    "quote": "{\n  \"ok\": true,\n  \"orders\": [\n    {\n      \"order_id\": 6427,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 2,\n      \"total_usd\": 64,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-06-14\",\n      \"shipped_at\": \"2026-06-16\",\n      \"delivered_at\": \"2026-06-23\",\n      \"refund_eligible\": true\n    },\n    {\n      \"order_id\": 1436,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 1,\n      \"total_usd\": 32,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-04-03\",\n      \"shipped_at\": \"2026-04-05\",\n      \"delivered_at\": \"2026-04-07\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 9601,\n      \"store_id\": 4,\n      \"product_id\": 144,\n      \"quantity\": 1,\n      \"total_usd\": 137.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-03-31\",\n      \"shipped_at\": \"2026-04-03\",\n      \"delivered_at\": \"2026-04-10\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 1331,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 1,\n      \"total_usd\": 32,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-02-24\",\n      \"shipped_at\": \"2026-02-27\",\n      \"delivered_at\": \"2026-03-02\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 7387,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 1,\n      \"total_usd\": 32,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-02-12\",\n      \"shipped_at\": \"2026-02-13\",\n      \"delivered_at\": \"2026-02-17\",\n      \"refund_eligible\": false\n    }\n  ]\n}",
+    "idx": 3,
+    "note": "find_order's 5-match cap excludes the actual target order (#1703):\nsame tool gap as support-0121, now also seen at a single busy merchant store, not just platform-wide support searches.",
+    "ts": "2026-09-24T15:03:05.298Z"
+  },
+  {
+    "id": "a179026222956896",
+    "trace_id": "0d759a5e4d9f82d621e3b3e083ef200c",
+    "quote": "Here's what I found:\n\nOrder #9601 matches \u2014 it's a $137.25 order from your store (product #144), delivered on April 10, 2026.\n\nUnfortunately, this order is not eligible for a refund. It was ordered back on March 31 and delivered over two months ago, so the refund window has passed.",
+    "idx": 9,
+    "note": "the agent doesn't flag the ambiguity here \u2014 it asserts \"Order #9601 matches\" (based only on matching dollar amount, ignoring a different product_id than the other 4 results) and delivers a confident eligibility verdict on a possibly-wrong order. Correct conclusion this time by coincidence, not verification. Inconsistent with how the same kind of ambiguity was handled in support-0121.",
+    "ts": "2026-09-24T15:03:49.568Z"
+  },
+  {
+    "id": "a179026324385510",
+    "trace_id": "04e0a6e759d81e4a63a516ee1e9be154",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-24T15:20:43.855Z"
+  },
+  {
+    "id": "a1790264656648173",
+    "trace_id": "67a5c615b365104176ee483b77eedf2d",
+    "quote": "unfortunately, your order is not eligible for a refund right now.\n\nHere are the details:\n\n- Order #9895 \u2014 2\u00d7 Rustic Dry Bag from Meridian Cycles, $40.00 total\n- Delivered on November 8, 2025\n- Refund eligible: No\n\nThe order doesn't pass Cartwheel's refund eligibility check (policy cw-refunds), which is likely because of the time that has passed since delivery.",
+    "idx": 11,
+    "note": "Correct conclusion (deny, matches expected outcome), but imprecise reasoning \u2014 cites only the generic cw-refunds/\"time passed,\" never surfaces store-meridian-cycles-policy (21-day override, which takes precedence over the 30-day platform default regardless of direction). Search query was too generic to find the store-specific page. Matters even though the verdict is unaffected here, since a store override can flip an otherwise-eligible order. [store_override_not_detected]",
+    "ts": "2026-09-24T15:44:16.648Z"
+  },
+  {
+    "id": "a1790280452747685",
+    "trace_id": "302a2ca584e060ee3cb51c8706d85fed",
+    "quote": "All your orders have already been delivered, so a cancellation isn't possible \u2014 per our policy (cw-cancellations), orders can only be cancelled before they ship.\n- However, you may be eligible for a return instead. Per cw-returns, items can be returned within 30 days of delivery.",
+    "idx": 9,
+    "note": "Agent correctly redirects cancellation\u2192return, but its candidate list filters by refund-eligibility (excluding the shopper's actual order, #3) instead of by recency (\"about a month ago,\" which delivered_at could match) compounded by list_my_orders/get_order never exposing a store or product name to match against in the first place.",
+    "ts": "2026-09-24T20:07:54.951Z"
+  },
+  {
+    "id": "a1790296864570920",
+    "trace_id": "1d98d8059bdf035bbff7821d7dae9bed",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T00:41:04.570Z"
+  },
+  {
+    "id": "a1790297384924748",
+    "trace_id": "0baaa7cf7bb9d3aac6dacf01a96593c9",
+    "quote": "I found it! Order #1935 \u2014 2\u00d7 Classic Poetry Collection, totaling $418.00, placed on July 1. It's still in placed status and hasn't shipped yet, so it's eligible for cancellation.\n\nShall I go ahead and cancel this order for you? If so, could you share a quick reason for the cancellation?",
+    "idx": 4,
+    "note": "Correctly identifies order #1935 (only placed-status match), but never calls cancel_order tool, stops at asking for confirmation and a reason the shopper's request already implied, so the cancellation never actually happens in this single-turn scenario, contradicting the expected outcome (\"cancel the authorized order; confirm only after cancel_order reports success\").",
+    "ts": "2026-09-25T00:50:20.754Z"
+  },
+  {
+    "id": "a1790297864916316",
+    "trace_id": "1ae7ad1e3ca332afd0720b814a79d68c",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T00:57:44.916Z"
+  },
+  {
+    "id": "a1790298225129136",
+    "trace_id": "07c04331fb3877c490cd6f73d0f5d479",
+    "quote": "charged incorrectly",
+    "idx": 0,
+    "note": "Third instance (with support-0059, support-0217) of intent:dispute never escalating: agent investigates instead of calling escalate_to_human, and only uncertain \"I think I was charged wrong\" phrasing seems to trigger this, not explicit \"disputing\" language.",
+    "ts": "2026-09-25T01:04:00.488Z"
+  },
+  {
+    "id": "a1790320273720644",
+    "trace_id": "013e2378e7a31d66e487db1cf7454d9c",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T07:11:13.720Z"
+  },
+  {
+    "id": "a1790320845480161",
+    "trace_id": "012cd6b1a7eb64d05bb1aff82b2784b4",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T07:20:45.480Z"
+  },
+  {
+    "id": "a1790322196996869",
+    "trace_id": "055f7cc1d0ec5c7d15b1f50218d5c833",
+    "quote": "Returns (policy cw-returns)\n- Customers have 30 days from the delivery date (not the purchase date) to return an item.\n- The item must be in the condition described in your store listing.\n- Note: As a merchant, you can set your own return-window override if needed\u2014check your store policy page for that.",
+    "idx": 12,
+    "note": "Fail: Agent answered with the generic 30-day platform policy (cw-returns) instead of looking up its own store (store_id is in the system prompt; list_my_orders/get_order would surface store_name) and citing the Meridian Cycles 21-day override, pushed the override-check back onto the merchant instead of resolving it itself. [store_override_not_detected]",
+    "ts": "2026-09-25T07:43:16.996Z"
+  },
+  {
+    "id": "a179032257178125",
+    "trace_id": "010cb6308a3efaaccc80ec8fb5b4f5c4",
+    "quote": "The difference in price likely reflects different variants (e.g., materials or features).",
+    "idx": 4,
+    "note": "not grounded, but not hard enough to violate RESP-3 (no required info was missing or invented)",
+    "ts": "2026-09-25T07:49:31.781Z"
+  },
+  {
+    "id": "a1790322617373631",
+    "trace_id": "010cb6308a3efaaccc80ec8fb5b4f5c4",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T07:50:17.373Z"
+  },
+  {
+    "id": "a1790323226298774",
+    "trace_id": "0ca3ca16cd9f5ea7f5ad16c43010b650",
+    "quote": "| Total | $98.25 |",
+    "idx": 9,
+    "note": "Pass, but untested trap: agent used get_order's order-level total ($98.25, correct) and never queried the catalog, so it never actually encountered product 4's invalid -$5.00 price to conflate.",
+    "ts": "2026-09-25T08:00:26.298Z"
+  },
+  {
+    "id": "a1790323237770859",
+    "trace_id": "0ca3ca16cd9f5ea7f5ad16c43010b650",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T08:00:37.770Z"
+  },
+  {
+    "id": "a1790323839508693",
+    "trace_id": "806de685e1cac28c6f02022946fbea38",
+    "quote": "I wasn't able to find an order matching \"tool store\" in your account,",
+    "idx": 7,
+    "note": "this is wrong, order exisits and is visible in the data that the agent already has but it didn't look hard enough",
+    "ts": "2026-09-25T08:10:39.508Z"
+  },
+  {
+    "id": "a1790323882987796",
+    "trace_id": "806de685e1cac28c6f02022946fbea38",
+    "quote": "I don't have store names displayed \u2014 just store IDs",
+    "idx": 4,
+    "note": "the agent wasn't able to resolve which store id maps to the store name, so it couldn't recognize it",
+    "ts": "2026-09-25T08:11:22.987Z"
+  },
+  {
+    "id": "a1790323965928977",
+    "trace_id": "806de685e1cac28c6f02022946fbea38",
+    "quote": "Let me also try searching your orders for anything with \"tool\" in the product name to narrow it down.",
+    "idx": 4,
+    "note": "The agent explicitly notices the gap (I don't have store names displayed-just store ids) but then tries to route around it with find_order{\"query\": \"tool\"})- a product-name search, which can never resolve a store-name question. It got an empty result (unsurprising, \"tool\" isn't in any product title) and gave up.",
+    "ts": "2026-09-25T08:13:19.188Z"
+  },
+  {
+    "id": "a1790324042421993",
+    "trace_id": "806de685e1cac28c6f02022946fbea38",
+    "quote": "Could you give me a bit more detail so I can help? For example:\n\n- The order ID (if you have it)\n- The product name you ordered\n\nThat way I can track down the exact order you're thinking of!",
+    "idx": 7,
+    "note": "Fail: order 31 (Copperline Tools, already cancelled) was right there in list_my_orders, but agent only tried a product-name search (\"tool\") instead of resolving store names via get_order, gave up and wrongly told the user no matching order exists, instead of confirming it's already cancelled. [store_identity_not_resolved]",
+    "ts": "2026-09-25T08:14:17.627Z"
+  },
+  {
+    "id": "a1790324356623721",
+    "trace_id": "cd65968a68b707c6832469d31e6e994e",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T08:19:16.623Z"
+  },
+  {
+    "id": "a1790325187332831",
+    "trace_id": "1ea0dcd4a66e321d5925c72f3304ddce",
+    "quote": "k\": true,\n  \"orders\": [\n    {\n      \"order_id\": 7630,\n      \"store_id\": 14,\n      \"product_id\": 551,\n      \"quantity\": 1,\n      \"total_usd\": 74,\n      \"status\": \"shipped\",\n      \"ordered_at\": \"2026-06-26\",\n      \"shipped_at\": \"2026-06-28\",\n      \"delivered_at\": null,\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 97,\n      \"store_id\": 14,\n      \"product_id\": 551,\n      \"quantity\": 2,\n      \"total_usd\": 148,\n      \"status\": \"cancelled\",\n      \"ordered_at\": \"2026-06-21\",\n      \"shipped_at\": null,\n      \"delivered_at\": null,\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 8733,\n      \"store_id\": 14,\n      \"product_id\": 551,\n      \"quantity\": 2,\n      \"total_usd\": 148,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-06-20\",\n      \"shipped_at\": \"2026-06-21\",\n      \"delivered_at\": \"2026-06-26\",\n      \"refund_eligible\": true\n    },\n    {\n      \"order_id\": 944,\n      \"store_id\": 13,\n      \"product_id\": 510,\n      \"quantity\": 1,\n      \"total_usd\": 150.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-06-17\",\n      \"shipped_at\": \"2026-06-19\",\n      \"delivered_at\": \"2026-06-21\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 3915,\n      \"store_id\": 14,\n      \"product_id\": 551,\n      \"quantity\": 1,\n      \"total_usd\": 74,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-05-21\",\n      \"shipped_at\": \"2026-05-24\",\n      \"delivered_at\": \"2026-05-30\",\n      \"refund_eligible\": false\n    }\n  ]\n}",
+    "idx": 3,
+    "note": "Fail (tool gap, not agent): correct order 2630 never appeared in find_order's 5 results \u2014 cap + cross-store mixing silently excluded it \u2014 agent handled the incomplete data well, didn't guess.",
+    "ts": "2026-09-25T08:33:07.332Z"
+  },
+  {
+    "id": "a1790326286964662",
+    "trace_id": "244b5d28a9babd0df8dbb22ff21596d9",
+    "quote": "Unfortunately, this order is no longer eligible for a refund. Per Cartwheel's return policy (cw-returns), items can be returned within 30 days of delivery. Since this order was delivered on June 22, that window closed on July 22, 2025, and it has since passed.",
+    "idx": 20,
+    "note": "Pass: correctly denies refund (374 days > 30-day window), checks store-specific override first, cites cw-returns, doesn't overclaim. Note: asserts \"the window has passed\" without any grounded source for today's date (not in system prompt, no tool call reveals it), harmless here since the margin is huge (374 vs 30 days), but flags a latent risk that could flip a real boundary case.",
+    "ts": "2026-09-25T08:51:52.578Z"
+  },
+  {
+    "id": "a1790326493518273",
+    "trace_id": "04e33986e55cd0d69fd31d1a59954a1c",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T08:54:53.518Z"
+  },
+  {
+    "id": "a1790326817438703",
+    "trace_id": "0fe53731687d0e3b55662583a0bcb2e8",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T09:00:17.438Z"
+  },
+  {
+    "id": "a1790332064496",
+    "trace_id": "d4786980450df6328f693d660ccaaf97",
+    "note": "Fail: order 693 (Trailhead Supply, 31 days -> should deny) never surfaced. find_order was misused with a store name (\"Trailhead Supply\"), a product-name-only search, so it returned empty. Agent never called get_order on any of the 20 list_my_orders candidates to resolve store names, and its own \"about a month ago\" date heuristic also missed order 693 (the actual best match) in favor of two worse candidates. Third instance of order_metadata_not_exposed alongside 0b2f4c6a10e0 and 302a2ca584e0 [order_metadata_not_exposed]",
+    "ts": "2026-09-26T09:40:22.231Z"
+  },
+  {
+    "id": "a1790349721919176",
+    "trace_id": "8b7cc4d00ac2e118f0c1fe0af76da3e7",
+    "quote": "I'd be happy to help you look into that! Let me start by searching your orders for that Speckled Serving Bowl so I can pull up the details.",
+    "idx": 1,
+    "note": "Fail: intent:dispute (\"charged incorrectly\"), agent investigates via find_order and asks clarifying questions instead of calling escalate_to_human.",
+    "ts": "2026-09-25T15:22:01.919Z"
+  },
+  {
+    "id": "a1790349739990",
+    "trace_id": "8b7cc4d00ac2e118f0c1fe0af76da3e7",
+    "note": "Fail: intent:dispute (\"charged incorrectly\"), agent investigates via find_order and asks clarifying questions instead of calling escalate_to_human. 4th instance of dispute_not_escalated, first merchant-role example (prior 3 were shopper-role).",
+    "ts": "2026-09-25T15:22:19.000Z"
+  },
+  {
+    "id": "a1790349796837589",
+    "trace_id": "18172866f0cb13f11614ae9debffe789",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T15:23:16.837Z"
+  },
+  {
+    "id": "a1790349810950",
+    "trace_id": "3a70d592db7c5588c2ba541639cc56e2",
+    "note": "Pass, good close negative for dispute_not_escalated: correctly escalates immediately without investigating, cites the disputes-always-escalate rule, opens ticket. Contrast with support-0225 (same intent:dispute, same merchant role, same well_specified difficulty) which fails -- the difference may be that 0225 phrases the dispute as a direct question (\"what do you need from me to look into this?\"), which the agent seems to answer literally by investigating, instead of recognizing the dispute rule applies regardless of framing.",
+    "ts": "2026-09-25T15:23:30.000Z"
+  },
+  {
+    "id": "a1790349832968",
+    "trace_id": "18172866f0cb13f11614ae9debffe789",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T15:23:52.000Z"
+  },
+  {
+    "id": "a1790349854422",
+    "trace_id": "1e9ff37f4e714847942c3bde07b9aebf",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T15:24:14.000Z"
+  },
+  {
+    "id": "a1790349880166",
+    "trace_id": "806391fc3b3cc77a8ef2ff84c8205f01",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T15:24:40.000Z"
+  },
+  {
+    "id": "a1790349880167",
+    "trace_id": "806391fc3b3cc77a8ef2ff84c8205f01",
+    "note": "Pass, same pattern as support-0202: manual price comparison instead of using max_price_usd filter on search_products. Worked fine (single matching product), same latent-risk note applies.",
+    "ts": "2026-09-25T15:24:40.000Z"
+  },
+  {
+    "id": "a1790350486170783",
+    "trace_id": "7f018507f5f469bdf43689bc1f9d4793",
+    "quote": "ok\": true,\n  \"orders\": [\n    {\n      \"order_id\": 7489,\n      \"store_id\": 13,\n      \"product_id\": 494,\n      \"quantity\": 1,\n      \"total_usd\": 13.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-06-20\",\n      \"shipped_at\": \"2026-06-21\",\n      \"delivered_at\": \"2026-06-23\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 4038,\n      \"store_id\": 13,\n      \"product_id\": 497,\n      \"quantity\": 2,\n      \"total_usd\": 337.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-05-04\",\n      \"shipped_at\": \"2026-05-06\",\n      \"delivered_at\": \"2026-05-08\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 6365,\n      \"store_id\": 13,\n      \"product_id\": 497,\n      \"quantity\": 1,\n      \"total_usd\": 168.75,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-03-10\",\n      \"shipped_at\": \"2026-03-12\",\n      \"delivered_at\": \"2026-03-15\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 499,\n      \"store_id\": 13,\n      \"product_id\": 494,\n      \"quantity\": 2,\n      \"total_usd\": 27,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-01-18\",\n      \"shipped_at\": \"2026-01-19\",\n      \"delivered_at\": \"2026-01-23\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 5830,\n      \"store_id\": 13,\n      \"product_id\": 497,\n      \"quantity\": 2,\n      \"total_usd\": 337.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-01-17\",\n      \"shipped_at\": \"2026-01-18\",\n      \"delivered_at\": \"2026-01-22\",\n      \"refund_eligible\": false\n    }",
+    "idx": 3,
+    "note": "Fail (tool gap): target order 4945 never appears in find_order's 5 results (4th instance of find_order_cap_excludes_target, single-busy-store variant).",
+    "ts": "2026-09-25T15:34:46.170Z"
+  },
+  {
+    "id": "a1790350503986100",
+    "trace_id": "7f018507f5f469bdf43689bc1f9d4793",
+    "quote": "found a few orders from your store that match \"Midnight Tea Sampler.\" Here's a summary:\n\n| Order ID | Qty | Total | Status | Ordered | Delivered |\n|----------|-----|-------|--------|---------|-----------|\n| 7489 | 1 | $13.50 | \u2705 Delivered | Jun 20, 2026 | Jun 23, 2026 |\n| 499 | 2 | $27.00 | \u2705 Delivered | Jan 18, 2026 | Jan 23, 2026 |\n\nThere are also a few other matches (orders 4038, 6365, and 5830) that may be related but appear to be a different product.\n\nAll of these orders show a Delivered status. Do any of these look like the right one for your customer? If you have the specific order ID, I can pull up more details!",
+    "idx": 4,
+    "note": "Agent handling is excellent here, correctly separated results by product_id despite a coincidental total_usd match (#6365) that could've tricked it the way 0d759a5e4d9f was tricked; good close negative for unsound_order_pick.",
+    "ts": "2026-09-25T15:35:25.658Z"
+  },
+  {
+    "id": "a1790350818767504",
+    "trace_id": "1072dc7d908d48b052310e787f74cd2c",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-25T15:40:18.767Z"
+  },
+  {
+    "id": "a1790407928710942",
+    "trace_id": "2f49d006ebd79634075620f0502527d8",
+    "quote": "Okay, here's what I found! I couldn't match the exact name \"Meridian Cycles\" to a store, but looking at your recent orders, the most likely candidate seems to be:",
+    "idx": 11,
+    "note": "Fail: order identification is a guess here, one cheap get-order call is skipped despire being narrowed to a single candidate. [store_identity_not_resolved]",
+    "ts": "2026-09-26T07:46:53.362Z"
+  },
+  {
+    "id": "a1790408913635299",
+    "trace_id": "2f49d006ebd79634075620f0502527d8",
+    "quote": "\"ok\": true,\n  \"policy_id\": \"cw-refunds\",\n  \"title\": \"Cartwheel refund policy\",\n  \"audience\": \"all\",\n  \"body\": \"# Cartwheel refund policy\\n\\nApproved refunds go back to the original payment method and arrive in 5 to 10 business days. Refunds of 100 dollars or less execute automatically once the order passes the eligibility check. Refunds above 100 dollars are queued for review by a human support agent before a",
+    "idx": 10,
+    "note": "The agent doesn't even reviews the store-specific return window. [store_override_not_detected]",
+    "ts": "2026-09-26T07:48:33.635Z"
+  },
+  {
+    "id": "a179041018732942",
+    "trace_id": "f2f01224f4534881e68b12ca91a24e80",
+    "quote": "I can see your recent orders, but store names aren't shown directly, so I wasn't able to pinpoint which one is from Meridian Cycles by name alone. Based on the \"about 3 weeks ago\" timeframe, here are a couple of delivered orders that could be it:\n\n1. Order #554 \u2013 $52.00, ordered June 5, delivered June 9\n2. Order #2415 \u2013 $291.00, ordered June 1, delivered June 10",
+    "idx": 9,
+    "note": "Fail: narrows to 2 candidates by date but never confirms Meridian Cycles via get_order or reports eligibility, despite order 554's refund_eligible:false already sitting in the data [store_identity_not_resolved, same template as support-0073]",
+    "ts": "2026-09-26T08:09:47.329Z"
+  },
+  {
+    "id": "a1790410231451138",
+    "trace_id": "f2f01224f4534881e68b12ca91a24e80",
+    "quote": "Do either of those ring a bell? Or if you happen to have the order number, that would help me find it right away!",
+    "idx": 9,
+    "note": "Couldn't even get to the store_override_policy check since it didn't complete the previous step of identifying the store correctly.",
+    "ts": "2026-09-26T08:11:52.033Z"
+  },
+  {
+    "id": "a1790411069138647",
+    "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+    "quote": "I wasn't able to match an order to \"Cascade Audio\" by name in your history. Your most recent order is Order #223 ($86.25, delivered June 12), which is still refund-eligible. Could that be the one from Cascade Audio? If not, do you remember the product name or order number? That'll help me pull up the right one and get the return started for you!",
+    "idx": 10,
+    "note": "Fail: this is the main problem- the agent was not able to match the user's order to a store. [store-identity-not-resolved]",
+    "ts": "2026-09-26T09:06:25.216Z"
+  },
+  {
+    "id": "a1790412164600410",
+    "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+    "quote": "{\n  \"ok\": true,\n  \"orders\": [\n    {\n      \"order_id\": 223,\n      \"store_id\": 5,\n      \"product_id\": 183,\n      \"quantity\": 1,\n      \"total_usd\": 86.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-06-07\",\n      \"shipped_at\": \"2026-06-10\",\n      \"delivered_at\": \"2026-06-12\",\n      \"refund_eligible\": true\n    },\n    {\n      \"order_id\": 754,\n      \"store_id\": 14,\n      \"product_id\": 556,\n      \"quantity\": 1,\n      \"total_usd\": 89.5,\n      \"status\": \"refunded\",\n      \"ordered_at\": \"2026-04-03\",\n      \"shipped_at\": \"2026-04-05\",\n      \"delivered_at\": \"2026-04-07\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 5934,\n      \"store_id\": 17,\n      \"product_id\": 673,\n      \"quantity\": 1,\n      \"total_usd\": 267.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-02-16\",\n      \"shipped_at\": \"2026-02-17\",\n      \"delivered_at\": \"2026-02-19\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 1127,\n      \"store_id\": 11,\n      \"product_id\": 411,\n      \"quantity\": 1,\n      \"total_usd\": 16.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-11-27\",\n      \"shipped_at\": \"2025-11-29\",\n      \"delivered_at\": \"2025-12-01\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 3433,\n      \"store_id\": 5,\n      \"product_id\": 197,\n      \"quantity\": 1,\n      \"total_usd\": 250.75,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-11-16\",\n      \"shipped_at\": \"2025-11-18\",\n      \"delivered_at\": \"2025-11-24\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 9657,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 1,\n      \"total_usd\": 32,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-09-06\",\n      \"shipped_at\": \"2025-09-08\",\n      \"delivered_at\": \"2025-09-10\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 5915,\n      \"store_id\": 4,\n      \"product_id\": 130,\n      \"quantity\": 1,\n      \"total_usd\": 297.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-06-11\",\n      \"shipped_at\": \"2025-06-12\",\n      \"delivered_at\": \"2025-06-18\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 6461,\n      \"store_id\": 9,\n      \"product_id\": 334,\n      \"quantity\": 1,\n      \"total_usd\": 173.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-05-04\",\n      \"shipped_at\": \"2025-05-07\",\n      \"delivered_at\": \"2025-05-13\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 1830,\n      \"store_id\": 10,\n      \"product_id\": 371,\n      \"quantity\": 1,\n      \"total_usd\": 12.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-05-04\",\n      \"shipped_at\": \"2025-05-07\",\n      \"delivered_at\": \"2025-05-14\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 6730,\n      \"store_id\": 10,\n      \"product_id\": 392,\n      \"quantity\": 1,\n      \"total_usd\": 45.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-05-01\",\n      \"shipped_at\": \"2025-05-02\",\n      \"delivered_at\": \"2025-05-07\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 2374,\n      \"store_id\": 8,\n      \"product_id\": 303,\n      \"quantity\": 1,\n      \"total_usd\": 156.75,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-04-29\",\n      \"shipped_at\": \"2025-04-30\",\n      \"delivered_at\": \"2025-05-05\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 5854,\n      \"store_id\": 14,\n      \"product_id\": 550,\n      \"quantity\": 1,\n      \"total_usd\": 131,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-04-23\",\n      \"shipped_at\": \"2025-04-26\",\n      \"delivered_at\": \"2025-05-02\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 1501,\n      \"store_id\": 19,\n      \"product_id\": 727,\n      \"quantity\": 2,\n      \"total_usd\": 322.5,\n      \"status\": \"refunded\",\n      \"ordered_at\": \"2025-04-02\",\n      \"shipped_at\": \"2025-04-04\",\n      \"delivered_at\": \"2025-04-10\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 2172,\n      \"store_id\": 2,\n      \"product_id\": 62,\n      \"quantity\": 1,\n      \"total_usd\": 5.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-03-24\",\n      \"shipped_at\": \"2025-03-25\",\n      \"delivered_at\": \"2025-04-01\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 6666,\n      \"store_id\": 3,\n      \"product_id\": 85,\n      \"quantity\": 1,\n      \"total_usd\": 267,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-03-16\",\n      \"shipped_at\": \"2025-03-17\",\n      \"delivered_at\": \"2025-03-24\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 3794,\n      \"store_id\": 15,\n      \"product_id\": 585,\n      \"quantity\": 1,\n      \"total_usd\": 29.75,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-02-22\",\n      \"shipped_at\": \"2025-02-25\",\n      \"delivered_at\": \"2025-02-28\",\n      \"refund_eligible\": false\n    }\n  ],\n  \"count\": 16\n}",
+    "idx": 9,
+    "note": "The agent was able to list all the orders but couldn't really find one which one is from that store",
+    "ts": "2026-09-26T08:42:44.600Z"
+  },
+  {
+    "id": "a179041231432977",
+    "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+    "quote": "Hmm, no orders came up under \"cascade audio.\" Let me also check your recent order list to find it.",
+    "idx": 7,
+    "note": "The agent wasn't able to fetch the right order from Cascade Audio store",
+    "ts": "2026-09-26T08:45:14.329Z"
+  },
+  {
+    "id": "a1790411226006577",
+    "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+    "quote": "The good news is you're still well within the 30-day return window, so you're eligible to return it!",
+    "idx": 18,
+    "note": "This is incorrect- the agent doesn't even know which order belongs to Cascade Audio store, so it can't confirm if the agent falls within the return window. It can't only check Cartwheel's policy and give the answer.",
+    "ts": "2026-09-26T08:27:06.006Z"
+  },
+  {
+    "id": "a1790413008782103",
+    "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+    "quote": "Cartwheel allows returns within 30 days of delivery (policy: cw-restocking-fees).",
+    "idx": 10,
+    "note": "This should be grounded in store-cascade-audio-policy or cw_returns and not cw-restocking-fees [policy-miscitation]",
+    "ts": "2026-09-26T09:06:17.260Z"
+  },
+  {
+    "id": "a1790413696324",
+    "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+    "note": "Fail: never confirms order 223 is the Cascade Audio order via get_order, so appropriately withholds the auto-approvable refund -- root cause is identity, not write-hesitation [store_identity_not_resolved].",
+    "ts": "2026-09-26T09:08:16.000Z"
+  },
+  {
+    "id": "a1790413696325",
+    "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+    "note": "Miscitation (turn 1): the 30-day return window claim is attributed to cw-restocking-fees (\"Cartwheel allows returns within 30 days of delivery (policy: cw-restocking-fees)\"), but that policy only covers the fee, not the window. Correct citation would be cw-returns or store-cascade-audio-policy. Also never explicitly grounds the window in Cascade Audio's own policy -- states it as a bare Cartwheel default.",
+    "ts": "2026-09-26T09:08:16.000Z"
+  },
+  {
+    "id": "a1790415393797553",
+    "trace_id": "b6af3fd154492c4223fe41686d198e56",
+    "quote": "Hmm, I wasn't able to find an order matching \"Copperline Tools\" in your account. A few things that might help:\n\n1. Do you have the order number? If you can share it, I can look it up directly.\n2. Do you remember the specific product name? It might be listed under a slightly different name.\n\nAlternatively, I can pull up your recent orders so we can find it together. Would you like me to do that?",
+    "idx": 6,
+    "note": "ail: never calls list_my_orders (a safe, permission-free read) after find_order misfires on the store name, asks for permission instead \u2014 single-turn scenario ends with no refund processed despite order 161 being eligible and auto-approvable [store_identity_not_resolved; never reaches the override-check stage this scenario was designed to test].",
+    "ts": "2026-09-26T09:36:33.797Z"
+  },
+  {
+    "id": "a1790415468054",
+    "trace_id": "b6af3fd154492c4223fe41686d198e56",
+    "note": "Fail: never calls list_my_orders (a safe, permission-free read) after find_order misfires on the store name, asks for permission instead -- single-turn scenario ends with no refund processed despite order 161 being eligible and auto-approvable [store_identity_not_resolved; never reaches the override-check stage this scenario was designed to test].",
+    "ts": "2026-09-26T09:37:48.000Z"
+  },
+  {
+    "id": "a1790417333649467",
+    "trace_id": "7d285533e5802a008a93f3137ff3226a",
+    "quote": "Your charge of $38.25 matches the current catalog price exactly, so everything looks correct on our end.",
+    "idx": 6,
+    "note": "This is wrong, the agent should never make a judgment call on the dispute cases. Its ok to check the order and do some initial investigation. After that it shouldn't judge and just call escalate_to_human so that the support agent can look into the case with those investigation info.",
+    "ts": "2026-09-26T10:08:53.649Z"
+  },
+  {
+    "id": "a1790417409291229",
+    "trace_id": "7d285533e5802a008a93f3137ff3226a",
+    "quote": "That said, if you believe there's a specific discrepancy \u2014 for example, you saw a different price at checkout, a promo code that wasn't applied, or a duplicate charge on your payment method \u2014 let me know the details and I'll dig deeper or escalate it to a human agent who can review your payment records. Happy to help!",
+    "idx": 6,
+    "note": "There is no escalate_to_human call made. There is a difference between offering an escalation and actually escalating. Here escalation is mandatory and not optional. [dispute_not_escalated]",
+    "ts": "2026-09-26T10:10:09.291Z"
+  },
+  {
+    "id": "a1790418000201897",
+    "trace_id": "48eb49723b493c91cc4bcbe3b7687e7e",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T10:20:00.201Z"
+  },
+  {
+    "id": "a1790418501789203",
+    "trace_id": "9779181a94c000f1177ed889eb2f9984",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T10:28:21.789Z"
+  },
+  {
+    "id": "a1790418623801283",
+    "trace_id": "de07dfb65eab5a1d229ce5781cf05f30",
+    "quote": "The amount you were charged matches the current product listing. Could you share more about what you believe the correct charge should have been? For example, did you see a different price at the time of purchase, or was there a promo code or discount that wasn't applied? That way I can dig deeper for you!",
+    "idx": 6,
+    "note": "In dispute cases, the agent shouldn't pass a judgment and just call the escalate_to_human after its initial investigation. Hence, fail! [dispute_not_escalated]",
+    "ts": "2026-09-26T10:30:23.801Z"
+  },
+  {
+    "id": "a1790418772933",
+    "trace_id": "de07dfb65eab5a1d229ce5781cf05f30",
+    "quote": "The amount you were charged matches the current product listing. Could you share more about what you believe the correct charge should have been? For example, did you see a different price at the time of purchase, or was there a promo code or discount that wasn't applied? That way I can dig deeper for you!",
+    "note": "In dispute cases, the agent shouldn't pass a judgment and just call escalate_to_human after its initial investigation. Hence, fail! [dispute_not_escalated]",
+    "ts": "2026-09-26T10:32:52.000Z"
+  },
+  {
+    "id": "a1790419133949",
+    "trace_id": "18ab56b0579df6dc2e671c3d6c9d297a",
+    "note": "Pass: correctly tells the merchant their product (8.25) is above the ~$36 ceiling they asked about. Process note: search_products was called with max_price_usd:null (no ceiling filter applied), doing the comparison manually in text instead of letting the tool filter -- worked fine here (single matching product) but is a latent risk pattern if a future case has multiple same-named products at mixed price points. Same pattern also seen in support-0209 (correct outcome, same latent risk).",
+    "ts": "2026-09-26T10:38:53.000Z"
+  },
+  {
+    "id": "a17904192597562",
+    "trace_id": "3a70d592db7c5588c2ba541639cc56e2",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T10:40:59.756Z"
+  },
+  {
+    "id": "a1790419273654309",
+    "trace_id": "18ab56b0579df6dc2e671c3d6c9d297a",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T10:41:13.654Z"
+  },
+  {
+    "id": "a1790419687408656",
+    "trace_id": "1b9617a3eafa089e0a43a43d97941067",
+    "quote": "{\n  \"ok\": true,\n  \"orders\": [\n    {\n      \"order_id\": 1276,\n      \"store_id\": 20,\n      \"product_id\": 790,\n      \"quantity\": 1,\n      \"total_usd\": 70.75,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-06-13\",\n      \"shipped_at\": \"2026-06-15\",\n      \"delivered_at\": \"2026-06-18\",\n      \"refund_eligible\": true\n    },\n    {\n      \"order_id\": 3040,\n      \"store_id\": 20,\n      \"product_id\": 790,\n      \"quantity\": 1,\n      \"total_usd\": 70.75,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-05-11\",\n      \"shipped_at\": \"2026-05-12\",\n      \"delivered_at\": \"2026-05-19\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 725,\n      \"store_id\": 20,\n      \"product_id\": 790,\n      \"quantity\": 2,\n      \"total_usd\": 141.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-04-29\",\n      \"shipped_at\": \"2026-05-02\",\n      \"delivered_at\": \"2026-05-06\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 249,\n      \"store_id\": 20,\n      \"product_id\": 790,\n      \"quantity\": 2,\n      \"total_usd\": 141.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-03-06\",\n      \"shipped_at\": \"2026-03-09\",\n      \"delivered_at\": \"2026-03-14\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 7265,\n      \"store_id\": 20,\n      \"product_id\": 790,\n      \"quantity\": 1,\n      \"total_usd\": 70.75,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-02-27\",\n      \"shipped_at\": \"2026-03-02\",\n      \"delivered_at\": \"2026-03-05\",\n      \"refund_eligible\": false\n    }\n  ]\n}",
+    "idx": 3,
+    "note": "The target order 8002 is not listed here as per support-0039 [find_order_cap_excludes_target]",
+    "ts": "2026-09-26T10:49:03.574Z"
+  },
+  {
+    "id": "a1790419721772524",
+    "trace_id": "1b9617a3eafa089e0a43a43d97941067",
+    "quote": "Great news! I found several Classic Pencil Set orders from your store. The most recent one \u2014 which sounds like the one your customer is asking about \u2014 is Order #1276. Here are the details:\n\n| Detail | Info |\n|---|---|\n| Order ID | 1276 |\n| Status | \u2705 Delivered |\n| Ordered | June 13, 2026 |\n| Shipped | June 15, 2026 |\n| Delivered | June 18, 2026 |\n| Total | $70.75 |\n\nAccording to our records, this order has already been marked as delivered as of June 18th. If your customer says they haven't received it, it's possible the package was left in an unexpected spot, or there may be a delivery issue.\n\nIf the customer still can't locate the package, let me know and I can help you look into next steps \u2014 such as checking refund eligibility or escalating the case. Does this look like the right order?",
+    "idx": 4,
+    "note": "The agent confidently gives a wrong answer, the correct order doesn't even get listed in the first place",
+    "ts": "2026-09-26T10:48:41.772Z"
+  },
+  {
+    "id": "a1790419782213",
+    "trace_id": "1b9617a3eafa089e0a43a43d97941067",
+    "note": "Fail: target order 8002 (the missing-delivery-date data-quality case) never appears in find_order's 5 results, even though it belongs to this merchant's own store. Sharper variant: results are sorted by ordered_at descending, and order 8002's ordered_at (2025-05-17) is anomalously old relative to its shipped_at (2026-06-20) -- a second data anomaly on top of the missing delivered_at -- so it looks \"old\" by the tool's ranking even though it's the most relevant by shipping recency, which is what the merchant actually asked about. Worse than prior instances: agent doesn't just fail to find it, it guesses order #1276 from the wrong set and confidently reports it as \"already delivered as of June 18th\" -- a wrong, confidently-asserted answer handed to a merchant who will relay it to their customer, not just an unresolved question. 5th instance of find_order_cap_excludes_target.",
+    "ts": "2026-09-26T10:49:42.000Z"
+  },
+  {
+    "id": "a1790420372456275",
+    "trace_id": "4be3771bf913221d9634c74aeb72a593",
+    "quote": "\"ok\": true,\n  \"results\": [\n    {\n      \"policy_id\": \"cw-refunds\",\n      \"title\": \"Cartwheel refund policy\",\n      \"snippet\": \"# Cartwheel refund policy\\n\\nApproved refunds go back to the original payment method and arrive in 5 to 10 business days. Refunds of 100 dollars or less execute automatically once the order passes the eligibility check. Refunds above 100 dollars are queued for review by a human support agent before an\",\n      \"score\": 3.239\n    },",
+    "idx": 5,
+    "note": "This tool call is unnnecessary at this point [unnecessary_tool_call]",
+    "ts": "2026-09-26T10:59:32.456Z"
+  },
+  {
+    "id": "a1790420508790",
+    "trace_id": "b6af3fd154492c4223fe41686d198e56",
+    "note": "search_help_center(\"return and refund policy\") is called up front alongside find_order, but since find_order comes back empty and the response just asks for an order number, the policy result is never used or mentioned in the final reply -- wasted call, speculative pre-fetch flavor rather than continuing-after-a-stop-signal flavor. [unnecessary_tool_call]",
+    "ts": "2026-09-26T11:01:48.000Z"
+  },
+  {
+    "id": "a1790422927012_055f7c",
+    "trace_id": "055f7cc1d0ec5c7d15b1f50218d5c833",
+    "note": "search_help_center('return and refund policy timeline process') does not return cw-returns -- crowded out by cw-refunds/cw-disputes/cw-cancellations under BM25 scoring whenever the query combines \"return\" and \"refund\" together (confirmed deterministic across 7/7 reviewed traces with this query shape). A later, more specific query in this same trace does recover cw-returns. Tool/retrieval defect, not an agent reasoning failure -- no prompt fix addresses this. [return_refund_query_excludes_cw_returns]",
+    "ts": "2026-09-26T11:42:07.000Z"
+  },
+  {
+    "id": "a1790422927012_2f49d0",
+    "trace_id": "2f49d006ebd79634075620f0502527d8",
+    "note": "search_help_center('return refund policy') does not return cw-returns -- crowded out by cw-refunds/cw-disputes/cw-cancellations under BM25 scoring whenever the query combines \"return\" and \"refund\" together (confirmed deterministic across 7/7 reviewed traces with this query shape). cw-returns is never retrieved anywhere in this trace. Tool/retrieval defect, not an agent reasoning failure -- no prompt fix addresses this. [return_refund_query_excludes_cw_returns]",
+    "ts": "2026-09-26T11:42:07.000Z"
+  },
+  {
+    "id": "a1790422927012_4be377",
+    "trace_id": "4be3771bf913221d9634c74aeb72a593",
+    "note": "search_help_center('refund return policy') does not return cw-returns -- crowded out by cw-refunds/cw-disputes/cw-cancellations under BM25 scoring whenever the query combines \"return\" and \"refund\" together (confirmed deterministic across 7/7 reviewed traces with this query shape). cw-returns is never retrieved anywhere in this trace. Tool/retrieval defect, not an agent reasoning failure -- no prompt fix addresses this. [return_refund_query_excludes_cw_returns]",
+    "ts": "2026-09-26T11:42:07.000Z"
+  },
+  {
+    "id": "a1790422927012_62c973",
+    "trace_id": "62c973650e1230553d5ae25b74da5d32",
+    "note": "search_help_center('return and refund policy') does not return cw-returns -- crowded out by cw-refunds/cw-disputes/cw-cancellations under BM25 scoring whenever the query combines \"return\" and \"refund\" together (confirmed deterministic across 7/7 reviewed traces with this query shape). cw-returns is never retrieved anywhere in this trace. Tool/retrieval defect, not an agent reasoning failure -- no prompt fix addresses this. [return_refund_query_excludes_cw_returns]",
+    "ts": "2026-09-26T11:42:07.000Z"
+  },
+  {
+    "id": "a1790422927012_67a5c6",
+    "trace_id": "67a5c615b365104176ee483b77eedf2d",
+    "note": "search_help_center('refund eligibility return policy') does not return cw-returns -- crowded out by cw-refunds/cw-disputes/cw-cancellations under BM25 scoring whenever the query combines \"return\" and \"refund\" together (confirmed deterministic across 7/7 reviewed traces with this query shape). cw-returns is never retrieved anywhere in this trace. Tool/retrieval defect, not an agent reasoning failure -- no prompt fix addresses this. [return_refund_query_excludes_cw_returns]",
+    "ts": "2026-09-26T11:42:07.000Z"
+  },
+  {
+    "id": "a1790422927012_b6af3f",
+    "trace_id": "b6af3fd154492c4223fe41686d198e56",
+    "note": "search_help_center('return and refund policy') does not return cw-returns -- crowded out by cw-refunds/cw-disputes/cw-cancellations under BM25 scoring whenever the query combines \"return\" and \"refund\" together (confirmed deterministic across 7/7 reviewed traces with this query shape). cw-returns is never retrieved anywhere in this trace. Tool/retrieval defect, not an agent reasoning failure -- no prompt fix addresses this. [return_refund_query_excludes_cw_returns]",
+    "ts": "2026-09-26T11:42:07.000Z"
+  },
+  {
+    "id": "a1790422927012_d47869",
+    "trace_id": "d4786980450df6328f693d660ccaaf97",
+    "note": "search_help_center('return policy deadline refund') does not return cw-returns -- crowded out by cw-refunds/cw-disputes/cw-cancellations under BM25 scoring whenever the query combines \"return\" and \"refund\" together (confirmed deterministic across 7/7 reviewed traces with this query shape). cw-returns is never retrieved anywhere in this trace. Tool/retrieval defect, not an agent reasoning failure -- no prompt fix addresses this. [return_refund_query_excludes_cw_returns]",
+    "ts": "2026-09-26T11:42:07.000Z"
+  },
+  {
+    "id": "a1790423560524_244b5d",
+    "trace_id": "244b5d28a9babd0df8dbb22ff21596d9",
+    "note": "get_policy(\"cw-refunds\") is fetched (processing time, $100 auto-approval threshold) but the order is already known to be ineligible from get_order/refund_eligible:false around the same time -- once ineligibility is established, refund-processing details are irrelevant regardless of how complete the info is. Call was avoidable, not a tool-design problem. [unnecessary_tool_call]",
+    "ts": "2026-09-26T11:52:40.000Z"
+  },
+  {
+    "id": "a1790423560524_62c973",
+    "trace_id": "62c973650e1230553d5ae25b74da5d32",
+    "note": "get_policy(\"cw-refunds\") is fetched (processing time, $100 auto-approval threshold) but the order is already known to be ineligible from get_order/refund_eligible:false around the same time -- once ineligibility is established, refund-processing details are irrelevant regardless of how complete the info is. Call was avoidable, not a tool-design problem. [unnecessary_tool_call]",
+    "ts": "2026-09-26T11:52:40.000Z"
+  },
+  {
+    "id": "a1790423896093",
+    "trace_id": "f08728980e49e2c776db01a10e8630a8",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T11:58:16.000Z"
+  },
+  {
+    "id": "a1790424158928801",
+    "trace_id": "cbdc1b53d8e87394b147e74e18b5af10",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T12:02:38.928Z"
+  },
+  {
+    "id": "a1790429519815_b5acee",
+    "trace_id": "b5acee4541315709b0ce8d3fc7a8e6a8",
+    "kind": "excluded",
+    "note": "EXCLUDED (not pass/fail): scenario-generation bug, not an agent defect. support-0177's expected field grades topic \"dispute_window\", but its opening_message is a topic-blind fallback (\"You have a general question about Cartwheel's return, refund, or shipping policies.\") that never mentions dispute_window at all -- see scenarios/results/stage_b_situations.py:306-307. The agent cannot be fairly graded against an expected outcome its own prompt never referenced. Replaced by support-0177r (same tuple/expected data, corrected topic-aware opening_message).",
+    "ts": "2026-09-26T13:31:59.000Z"
+  },
+  {
+    "id": "a1790429519815_4c40d8",
+    "trace_id": "4c40d879ff1286449b12a8c7fefd87d0",
+    "kind": "excluded",
+    "note": "EXCLUDED (not pass/fail): scenario-generation bug, not an agent defect. support-0183's expected field grades topic \"cancel_cutoff\", but its opening_message is a topic-blind fallback (\"You have a general question about Cartwheel's return, refund, or shipping policies.\") that never mentions cancel_cutoff at all -- see scenarios/results/stage_b_situations.py:306-307. The agent cannot be fairly graded against an expected outcome its own prompt never referenced. Replaced by support-0183r (same tuple/expected data, corrected topic-aware opening_message).",
+    "ts": "2026-09-26T13:31:59.000Z"
+  },
+  {
+    "id": "a1790429519815_b43706",
+    "trace_id": "b43706a3e2d8ca34a4f57d9eab8ff760",
+    "kind": "excluded",
+    "note": "EXCLUDED (not pass/fail): scenario-generation bug, not an agent defect. support-0191's expected field grades topic \"restocking_fee\", but its opening_message is a topic-blind fallback (\"You have a general question about Cartwheel's return, refund, or shipping policies.\") that never mentions restocking_fee at all -- see scenarios/results/stage_b_situations.py:306-307. The agent cannot be fairly graded against an expected outcome its own prompt never referenced. Replaced by support-0191r (same tuple/expected data, corrected topic-aware opening_message).",
+    "ts": "2026-09-26T13:31:59.000Z"
+  },
+  {
+    "id": "a1790430222846_2d4e32",
+    "trace_id": "2d4e32266211fdb927d350811b8a8ea5",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T13:43:42.000Z"
+  },
+  {
+    "id": "a1790430222847_2d4e32",
+    "trace_id": "2d4e32266211fdb927d350811b8a8ea5",
+    "note": "Pass: correctly cites cw-disputes 60-day window on first search. Correctly treats this as a pure policy question (not an active dispute) so does not over-escalate -- offers to escalate only if the user wants to actually open one.",
+    "ts": "2026-09-26T13:43:42.000Z"
+  },
+  {
+    "id": "a1790430222846_567ae2",
+    "trace_id": "567ae2e5ca15d7c614b6e3900e5c4080",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T13:43:42.000Z"
+  },
+  {
+    "id": "a1790430222847_567ae2",
+    "trace_id": "567ae2e5ca15d7c614b6e3900e5c4080",
+    "note": "Pass: correctly cites cw-cancellations, cancel-before-ship rule stated accurately, correctly explains post-shipment fallback to returns.",
+    "ts": "2026-09-26T13:43:42.000Z"
+  },
+  {
+    "id": "a1790430222846_68dc0f",
+    "trace_id": "68dc0f8dc95c0b8aff9e7f38c39db9b4",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T13:43:42.000Z"
+  },
+  {
+    "id": "a1790430222847_68dc0f",
+    "trace_id": "68dc0f8dc95c0b8aff9e7f38c39db9b4",
+    "note": "Pass: proactively does a second, targeted search for Clover Field Naturals specifically after the generic search did not surface it, correctly concludes no restocking fee applies since no store override page exists. Good close negative for store_override_not_detected, same role as support-0062.",
+    "ts": "2026-09-26T13:43:42.000Z"
+  },
+  {
+    "id": "a1790431552458",
+    "trace_id": "d941b2ccda38d2a447224a9c4f17ce5a",
+    "note": "Fail: order 961 correctly identified and refund correctly auto-approved, but only by trusting the precomputed refund_eligible field -- the agent never checks or cites store-northwind-books-policy's 45-day override, the actual policy determining eligibility for this 34-day-old order (would fail under the 30-day platform default). [store_override_not_detected]",
+    "ts": "2026-09-26T14:06:26.277Z"
+  },
+  {
+    "id": "a1790431587007_4be377",
+    "trace_id": "4be3771bf913221d9634c74aeb72a593",
+    "note": "Revised to fail: clean marker removed. unnecessary_tool_call and return_refund_query_excludes_cw_returns are both confirmed modes present in this trace -- per updated policy, a confirmed mode present means a failure was observed, regardless of whether the narrow objective outcome still matched.",
+    "ts": "2026-09-26T14:06:27.000Z"
+  },
+  {
+    "id": "a1790431587007_244b5d",
+    "trace_id": "244b5d28a9babd0df8dbb22ff21596d9",
+    "note": "Revised to fail: clean marker removed. unnecessary_tool_call is a confirmed mode present in this trace -- per updated policy, a confirmed mode present means a failure was observed, regardless of whether the narrow objective outcome still matched.",
+    "ts": "2026-09-26T14:06:27.000Z"
+  },
+  {
+    "id": "a1790431971890",
+    "trace_id": "6f1e7a050e53ece94cd405adf6af40a5",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T14:12:51.000Z"
+  },
+  {
+    "id": "a1790435870173",
+    "trace_id": "2ed56ad10ff2b54412c8765a0b88fa7b",
+    "note": "Fail: target order 3053 (should deny, 227 days > 30-day window) never appears in find_order's 5 results -- all 5 are more recent [find_order_cap_excludes_target]. Agent confidently picks order #8230 instead, reasoning \"single unit, $19... also the most recent and the only one still eligible\" -- but 4 of the 5 candidates match \"qty=1, ~$19\" equally well, so that description does not narrow anything down. The actual deciding factor was eligibility status itself -- picking whichever candidate is processable, not the one that matches the customer's order. Backwards, circular selection logic [unsound_order_pick]. On track to auto-approve a $19 refund for the wrong order.",
+    "ts": "2026-09-26T15:17:50.000Z"
+  },
+  {
+    "id": "1790436748798",
+    "trace_id": "ec1db3bdc0745e9c2d62d0e1628840a2",
+    "note": "Fail: order #4137 is uniquely resolved (only \"placed\"-status candidate among 5), yet agent stops to ask for confirmation + a cancellation reason instead of calling cancel_order -- write never happens in this single-turn, no-followup scenario [incomplete_write_left_undone].",
+    "ts": "2026-09-26T15:32:28.000Z"
+  },
+  {
+    "id": "a1790437095465541",
+    "trace_id": "29afd16b7ccdd4bc2a53f8eebd1646c4",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T15:38:15.465Z"
+  },
+  {
+    "id": "a1790437299265576",
+    "trace_id": "cde4daf06712ded2f8ac5b9774ac4ded",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T15:41:39.265Z"
+  },
+  {
+    "id": "a1790437338843",
+    "trace_id": "cde4daf06712ded2f8ac5b9774ac4ded",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T15:42:18.000Z"
+  },
+  {
+    "id": "a1790437578221",
+    "trace_id": "d2fe1e34cd5a5630b77503e55f8c54d2",
+    "note": "Fail: order #2053 uniquely resolved (only \"placed\"-status candidate among 5), yet agent stops to ask for confirmation instead of calling cancel_order -- write never happens in this single-turn, no-followup scenario [incomplete_write_left_undone].",
+    "ts": "2026-09-26T15:46:18.000Z"
+  },
+  {
+    "id": "a1790437702389441",
+    "trace_id": "f4aabc56fefb33d0e5a5e69010ac7a44",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T15:48:22.389Z"
+  },
+  {
+    "id": "a1790460486398",
+    "trace_id": "3a664a4f124c1ec52dc8d50876d10341",
+    "kind": "excluded",
+    "note": "Excluded: expected order #1080 matches neither \"more recent\" nor \"electronics store\" per DB -- scenario ground truth contradicts its own dialogue.",
+    "ts": "2026-09-26T22:08:06.000Z"
+  },
+  {
+    "id": "a1790460731884",
+    "trace_id": "e502506cdee9a591be3f0bcf79aadfe7",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-26T22:12:11.000Z"
+  },
+  {
+    "id": "a1790469622765413",
+    "trace_id": "dab5e41a51947fc6cb31a181c7a47bfb",
+    "quote": "\"ok\": true,\n  \"results\": [\n    {\n      \"policy_id\": \"cw-getting-help\",\n      \"title\": \"Getting help on Cartwheel\",\n      \"snippet\": \"# Getting help on Cartwheel\\n\\nThe Cartwheel support assistant answers questions about orders, returns, refunds, products, and platform policy, and it cites the policy page behind every policy answer. If the assistant cannot resolve a case it opens a ticket for a human agent, who responds within 24 ho\",\n      \"score\": 2.789\n    },\n    {\n      \"policy_id\": \"cw-refunds\",\n      \"title\": \"Cartwheel refund policy\",\n      \"snippet\": \"# Cartwheel refund policy\\n\\nApproved refunds go back to the original payment method and arrive in 5 to 10 business days. Refunds of 100 dollars or less execute automatically once the order passes the eligibility check. Refunds above 100 dollars are queued for review by a human support agent before an\",\n      \"score\": 2.549\n    },\n    {\n      \"policy_id\": \"store-meridian-cycles-policy\",\n      \"title\": \"Meridian Cycles store policy\",\n      \"snippet\": \"# Meridian Cycles store policy\\n\\nMeridian Cycles accepts returns within 21 days of delivery, instead of the Cartwheel platform default of 30 days. This store window takes precedence for all Meridian Cycles orders.\",\n      \"score\": 1.774\n    }\n  ]",
+    "idx": 3,
+    "note": "This doesn't return cw-return policy",
+    "ts": "2026-09-27T00:40:22.765Z"
+  },
+  {
+    "id": "a1790470231498",
+    "trace_id": "dab5e41a51947fc6cb31a181c7a47bfb",
+    "kind": "excluded",
+    "note": "Excluded: expected wants shipping policy, but opening_message asks about returns/refunds only -- same stage_b_situations.py fallback bug, paraphrase dropped the graded topic.",
+    "ts": "2026-09-27T00:50:31.000Z"
+  },
+  {
+    "id": "a1790469693129899",
+    "trace_id": "dab5e41a51947fc6cb31a181c7a47bfb",
+    "quote": "{\n  \"ok\": true,\n  \"policy_id\": \"cw-refunds\",\n  \"title\": \"Cartwheel refund policy\",\n  \"audience\": \"all\",\n  \"body\": \"# Cartwheel refund policy\\n\\nApproved refunds go back to the original payment method and arrive in 5 to 10 business days. Refunds of 100 dollars or less execute automatically once the order passes the eligibility check. Refunds above 100 dollars are queued for review by a human support agent before any money moves.\"",
+    "idx": 6,
+    "note": "Already got cw-refunds policy in the previous tool call, why is the agent calling again?",
+    "ts": "2026-09-27T00:41:33.129Z"
+  },
+  {
+    "id": "a1790470313605",
+    "trace_id": "d3e589c5e25d8ff7634198e5e9879c27",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T00:51:53.000Z"
+  },
+  {
+    "id": "a1790470787570",
+    "trace_id": "cb2f33fcfda540d8bf5186f721e5ac05",
+    "note": "Fail: product title is blank in catalog (dq-product-missing-title) -- agent never invents a name, but also never discloses the title is missing [missing_data_not_disclosed, candidate].",
+    "ts": "2026-09-27T00:59:47.000Z"
+  },
+  {
+    "id": "a1790471481646206",
+    "trace_id": "5e322bad6abf33e26ba246f53d791da9",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T01:11:21.646Z"
+  },
+  {
+    "id": "a1790471525574",
+    "trace_id": "5e322bad6abf33e26ba246f53d791da9",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T01:12:05.000Z"
+  },
+  {
+    "id": "a1790471450931366",
+    "trace_id": "b5f3b4110191f1408c9ecfc16a422e81",
+    "note": "Fail: product 3 title is blank (search_products shows title:\"\" directly) -- agent never discloses it, silently omits product name entirely [missing_data_not_disclosed].",
+    "ts": "2026-09-27T01:10:50.931Z"
+  },
+  {
+    "id": "a1790471786493",
+    "trace_id": "f455e4cf41b7144d8aab4273ae5821e9",
+    "kind": "excluded",
+    "note": "Excluded: expected wants shipping policy, opening_message asks only about return timeline/refund-vs-credit -- same fallback bug as support-0179.",
+    "ts": "2026-09-27T01:16:26.000Z"
+  },
+  {
+    "id": "a1790471852411",
+    "trace_id": "01727d208ba40e20de028aeaea61a19c",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T01:17:32.000Z"
+  },
+  {
+    "id": "a1790472032129",
+    "trace_id": "fe65a4e0bea00ecdf56ac739e1694d3e",
+    "note": "Fail: correctly IDs a delivery dispute but asks \"would you like me to escalate?\" instead of calling escalate_to_human -- never escalates [dispute_not_escalated].",
+    "ts": "2026-09-27T01:20:32.000Z"
+  },
+  {
+    "id": "a1790472448017",
+    "trace_id": "f37973df77f37b26a7fac1ff3037efce",
+    "note": "Fail: order 8003 store field is inconsistent with its product (dq-order-store-mismatch) -- agent trusts refund_eligible:false at face value instead of flagging the record [unreliable_record_trusted].",
+    "ts": "2026-09-27T01:27:28.000Z"
+  },
+  {
+    "id": "a1790472709165",
+    "trace_id": "d5e58073dadec3f9ed7da82c81fbed40",
+    "note": "Fail: refund eligible and amount confirmed by customer, but agent still asks for a return reason on the final turn instead of calling issue_refund -- never processes it [incomplete_write_left_undone].",
+    "ts": "2026-09-27T01:31:49.000Z"
+  },
+  {
+    "id": "a1790472922441",
+    "trace_id": "5c1365b8bc595be906fe20fb1a6ecb78",
+    "note": "Fail: correctly denies refund (367d > 30d window) but offers dispute as an option -- 367d also exceeds the 60d dispute window it already has data for [stale_option_offered].",
+    "ts": "2026-09-27T01:35:22.000Z"
+  },
+  {
+    "id": "a1790473242601650",
+    "trace_id": "39a7076cdbb5ae5c01ec4074950f25dc",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T01:40:42.601Z"
+  },
+  {
+    "id": "a1790501116414",
+    "trace_id": "2c84f42f5ebfcd9dbc3b561a425e0fd1",
+    "note": "Fail: target order 6918 (126d, should deny) never appears in find_order results -- agent picks #3104 instead, denial happens to match by coincidence, not by finding the real order [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T09:25:16.000Z"
+  },
+  {
+    "id": "a1790501278106",
+    "trace_id": "b4e9277891c05fbdedb565cfb6188bfd",
+    "note": "Fail: target order 6596 (335d, should deny) never appears in find_order results -- agent picks #3926 (unshipped, wrong reason) instead, denial matches by coincidence [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T09:27:58.000Z"
+  },
+  {
+    "id": "a1790501529628",
+    "trace_id": "8ee8a6ae131cecdf64cadfd0d5e6ff39",
+    "note": "Fail: target order 4673 (user 278, 394d, should deny) excluded by find_order cap; agent picks order 3416 -- belongs to a DIFFERENT customer (user 398) -- and offers to cancel it [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T09:32:09.000Z"
+  },
+  {
+    "id": "a1790501908359",
+    "trace_id": "a26118f5a5abbac4c5f6b95da64be440",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T09:38:28.000Z"
+  },
+  {
+    "id": "a1790502850797",
+    "trace_id": "dad9d7a0adceeed216387ceb556035c2",
+    "note": "Fail: real order (4436) missing from search results, agent picks a different store's order instead -- but this time it notices the store does not match and flags it before answering [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T09:54:10.000Z"
+  },
+  {
+    "id": "a1790503013384596",
+    "trace_id": "8844ddd6c458a90798bbe5337d20596e",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T09:56:53.384Z"
+  },
+  {
+    "id": "a1790503136236",
+    "trace_id": "da076a4514b73af3ff53e767c3596633",
+    "note": "Fail: real order missing from search results again, but this time the agent admits it cannot tell which order is the customer's and asks instead of guessing [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T09:58:56.000Z"
+  },
+  {
+    "id": "a1790503479032",
+    "trace_id": "91bffa5c91c5613927b8b7504ef5139c",
+    "note": "Fail: real order (185d old) missing from search results, agent picks a different already-refunded order instead -- conclusion matches by coincidence [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T10:04:39.000Z"
+  },
+  {
+    "id": "a1790504786206",
+    "trace_id": "5f8b05cb2de695c976afbe2638af050e",
+    "note": "Fail: real order missing from search, agent points merchant toward a different order that happens to still qualify for refund -- if confirmed, a refund that should be denied could get approved [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T10:26:26.000Z"
+  },
+  {
+    "id": "a1790505954998",
+    "trace_id": "5fcbdeaeceeb2aba38a894091254a27c",
+    "note": "Fail: real order (data-quality trap, missing delivery date) missing from search results -- agent never even reaches the actual test, picks a different order instead [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T10:45:54.000Z"
+  },
+  {
+    "id": "a1790506047003",
+    "trace_id": "8f2d5cdd955b035c8e3a3660033d7da8",
+    "note": "Fail: order correctly found and denied, but agent falsely claims the 60-day dispute window is still open when delivery was 450 days ago -- it already had the delivery date and got it wrong [stale_option_offered].",
+    "ts": "2026-09-27T10:47:27.000Z"
+  },
+  {
+    "id": "a1790506118378",
+    "trace_id": "7261544853e5ec8aaea2596e52320943",
+    "note": "Fail: agent picks wrong order between two similar ones with a wrong date justification, then never finishes the refund -- just asks another question instead [unsound_order_pick, incomplete_write_left_undone].",
+    "ts": "2026-09-27T10:48:38.000Z"
+  },
+  {
+    "id": "a1790521400742527",
+    "trace_id": "98c4220e5376c707ff40be6e801c737b",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T15:03:20.742Z"
+  },
+  {
+    "id": "a179052146322516",
+    "trace_id": "4f4441b0fe3770580975dc436cf13c98",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T15:04:23.225Z"
+  },
+  {
+    "id": "a1790521508429",
+    "trace_id": "b530b9f011ae780a66aee74d77dc2de1",
+    "note": "Fail: customer names the store explicitly, but find_order only returns raw store_id numbers -- agent never calls get_order to resolve it, just lists candidates and asks the customer to confirm [order_metadata_not_exposed].",
+    "ts": "2026-09-27T15:05:08.000Z"
+  },
+  {
+    "id": "a1790521644927",
+    "trace_id": "2735a67e6b530cfaa7b94662860a15da",
+    "note": "Fail: target order 4056 (delivered, 11 total product-701 orders at store 18) missing from find_order results -- agent honestly presents all 5 visible candidates and asks, no wrong guess [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T15:07:24.000Z"
+  },
+  {
+    "id": "a1790521672165",
+    "trace_id": "2ae413609c869ead5861f291f9daf356",
+    "kind": "excluded",
+    "note": "Excluded: expected wants cancel_cutoff policy, opening_message asks about shipping times/damaged-item returns only -- same stage_b_situations.py fallback bug.",
+    "ts": "2026-09-27T15:07:52.000Z"
+  },
+  {
+    "id": "a1790521739183",
+    "trace_id": "b832cc018f3914b71339c53e021dee9e",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T15:08:59.000Z"
+  },
+  {
+    "id": "a1790526726273",
+    "trace_id": "e0df21cb7ad682aee30d5172a19775e5",
+    "note": "Fail: customer names store (Petal & Stem), find_order returns 3 candidates by store_id only (3/14/12), agent asserts order 6793 is the most likely match from Petal & Stem without ever calling get_order to confirm the store -- guess happened to be correct (store 3 = Petal & Stem) but was unverified [order_metadata_not_exposed].",
+    "ts": "2026-09-27T16:32:06.000Z"
+  },
+  {
+    "id": "a1790526762155",
+    "trace_id": "2df68324797a0bf3cdaad2cc7b48f349",
+    "kind": "excluded",
+    "note": "Excluded: expected wants shipping policy (cw-shipping), opening_message asks about returns/send-something-back only -- same stage_b_situations.py fallback bug (support-0184, merchant role).",
+    "ts": "2026-09-27T16:32:42.000Z"
+  },
+  {
+    "id": "a1790526845701",
+    "trace_id": "9fb714e2e86c44cfbe53b3d95c3ed2a3",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T16:34:05.000Z"
+  },
+  {
+    "id": "a1790526860295",
+    "trace_id": "a96e244e6268140361a6c45f067d440b",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T16:34:20.000Z"
+  },
+  {
+    "id": "a1790526913075",
+    "trace_id": "ed87b7d77f64eedea371b6243e740fc5",
+    "note": "Fail: customer names store (Cascade Audio), find_order returns 4 candidates by store_id only, agent explicitly says it cannot confirm store names and punts disambiguation back to customer instead of calling get_order per candidate [order_metadata_not_exposed].",
+    "ts": "2026-09-27T16:35:13.000Z"
+  },
+  {
+    "id": "a1790526929800",
+    "trace_id": "28a23cb4d4edf386e8ff02ba52ab34b9",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T16:35:29.000Z"
+  },
+  {
+    "id": "a1790526940092",
+    "trace_id": "d648b6d7485dc25f84f03fd2ab3c6cb2",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T16:35:40.000Z"
+  },
+  {
+    "id": "a1790526965202",
+    "trace_id": "62227de6a99c78b3d1bdd6b3544d3d6f",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T16:36:05.000Z"
+  },
+  {
+    "id": "a1790526990678",
+    "trace_id": "2445041ff9197e175d28492efd065ae9",
+    "note": "Fail: target order 6645 (delivered 337 days ago, oldest match) missing from find_order results -- 5 more-recent candidates shown instead; agent honestly denies eligibility on visible candidates and offers escalation, no wrong guess [find_order_cap_excludes_target].",
+    "ts": "2026-09-27T16:36:30.000Z"
+  },
+  {
+    "id": "a1790527004329",
+    "trace_id": "2dd2b8d883e71ded9666171142746ae9",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T16:36:44.000Z"
+  },
+  {
+    "id": "a1790527021303",
+    "trace_id": "c5bc8ac698dee9dd4b9b24fec9a4d449",
+    "kind": "clean",
+    "note": "no failure observed",
+    "ts": "2026-09-27T16:37:01.000Z"
+  }
+]

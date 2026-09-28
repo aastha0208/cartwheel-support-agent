@@ -771,6 +771,64 @@ def test_m2_module1_export_is_normalized_for_review(analysis_state, tmp_path) ->
     assert roles == ["user", "tool_call", "tool_result", "assistant"]
 
 
+def test_m2_multi_turn_traces_merge_by_session_with_turn_boundaries() -> None:
+    """Traces sharing a session_id merge into one conversation with turn markers.
+
+    Cartwheel creates one Langfuse trace per user turn (homework/module-2/hw4.md,
+    "How the three tools fit together"), linked by ``cartwheel.session_id``. The
+    HW4 review interface depends on this merge to show one continuous
+    conversation instead of isolated turns.
+    """
+    from analysis.helpers.normalization import normalize_traces
+
+    raw = [
+        {
+            "id": "trace-a",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "input": "hi, question one",
+            "output": "answer one",
+            "metadata": {
+                "cartwheel.session_id": "sess-1",
+                "cartwheel.scenario_id": "support-9999",
+                "cartwheel.user_role": "shopper",
+            },
+            "observations": [],
+        },
+        {
+            "id": "trace-b",
+            "timestamp": "2026-01-01T00:05:00Z",
+            "input": "follow-up question two",
+            "output": "answer two",
+            "metadata": {
+                "cartwheel.session_id": "sess-1",
+                "cartwheel.scenario_id": "support-9999",
+                "cartwheel.user_role": "shopper",
+            },
+            "observations": [],
+        },
+    ]
+
+    merged = normalize_traces(raw)
+
+    assert len(merged) == 1
+    record = merged[0]
+    assert record["trace_id"] == "trace-a"  # earliest turn represents the conversation
+    assert record["meta"]["session_id"] == "sess-1"
+
+    roles = [message["role"] for message in record["trace"]]
+    assert roles == [
+        "turn_boundary", "user", "assistant",
+        "turn_boundary", "user", "assistant",
+    ]
+    boundaries = [m for m in record["trace"] if m["role"] == "turn_boundary"]
+    assert [b["trace_id"] for b in boundaries] == ["trace-a", "trace-b"]
+
+    # turn_boundary markers carry no text/content, so they must not be counted
+    # as turns or leak into the flattened text used for clustering.
+    assert record["features"]["turn_count"] == 4
+    assert "turn_boundary" not in record["text"]
+
+
 def test_m2_langfuse_identifier_is_preserved_for_score_writes() -> None:
     """A live Langfuse id must not be hashed into a different trace id."""
     from analysis.helpers.langfuse_io import logical_to_langfuse_id

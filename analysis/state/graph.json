@@ -1,0 +1,834 @@
+{
+  "nodes": [
+    {
+      "trace_id": "62c973650e1230553d5ae25b74da5d32",
+      "x": 2.0954268258928224,
+      "y": -1.0770955286421133,
+      "cluster": 4,
+      "scenario_id": "support-0124"
+    },
+    {
+      "trace_id": "2b8e1594915ab47c40d71bf52881f7ea",
+      "x": -1.6435421817424425,
+      "y": -0.06412500691706978,
+      "cluster": 2,
+      "scenario_id": "support-0121"
+    },
+    {
+      "trace_id": "7d91b1a1a90b557a4554fd30c6841f47",
+      "x": -0.9661841029638689,
+      "y": -0.16090814179759383,
+      "cluster": 2,
+      "scenario_id": "support-0059"
+    },
+    {
+      "trace_id": "d4a183f5189924ee6d6f87ab9d3480fe",
+      "x": -1.0912704342812551,
+      "y": -0.1703732978989748,
+      "cluster": 2,
+      "scenario_id": "support-0217"
+    },
+    {
+      "trace_id": "1d98d8059bdf035bbff7821d7dae9bed",
+      "x": -2.9364294762723393,
+      "y": -0.5700597955520728,
+      "cluster": 2,
+      "scenario_id": "support-0030"
+    },
+    {
+      "trace_id": "0baaa7cf7bb9d3aac6dacf01a96593c9",
+      "x": -1.854625365840532,
+      "y": -0.08009745783815016,
+      "cluster": 2,
+      "scenario_id": "support-0162"
+    },
+    {
+      "trace_id": "1ae7ad1e3ca332afd0720b814a79d68c",
+      "x": 1.0866033355002032,
+      "y": 2.070951873753243,
+      "cluster": 5,
+      "scenario_id": "support-0007"
+    },
+    {
+      "trace_id": "07c04331fb3877c490cd6f73d0f5d479",
+      "x": 0.19184449061447092,
+      "y": 0.3348220254156077,
+      "cluster": 1,
+      "scenario_id": "support-0218"
+    },
+    {
+      "trace_id": "013e2378e7a31d66e487db1cf7454d9c",
+      "x": -1.1121780512276873,
+      "y": 0.5089414454096242,
+      "cluster": 2,
+      "scenario_id": "support-0082"
+    },
+    {
+      "trace_id": "012cd6b1a7eb64d05bb1aff82b2784b4",
+      "x": 4.427841471914356,
+      "y": 0.04035790898144349,
+      "cluster": 0,
+      "scenario_id": "support-0019"
+    },
+    {
+      "trace_id": "055f7cc1d0ec5c7d15b1f50218d5c833",
+      "x": 1.9482000711523513,
+      "y": -0.2825838758144981,
+      "cluster": 3,
+      "scenario_id": "support-0180"
+    },
+    {
+      "trace_id": "010cb6308a3efaaccc80ec8fb5b4f5c4",
+      "x": -1.9445311664749036,
+      "y": -0.08690053878601774,
+      "cluster": 2,
+      "scenario_id": "support-0216"
+    },
+    {
+      "trace_id": "0ca3ca16cd9f5ea7f5ad16c43010b650",
+      "x": -0.2823710061560488,
+      "y": 0.42369396952765814,
+      "cluster": 1,
+      "scenario_id": "support-0052"
+    },
+    {
+      "trace_id": "059cb6485250785b429748a2d0740fbb",
+      "x": -0.6062368113992546,
+      "y": 2.238932643427746,
+      "cluster": 5,
+      "scenario_id": "support-0028"
+    },
+    {
+      "trace_id": "135f980834033479b62927b73db47461",
+      "x": 2.6041816431184484,
+      "y": -0.3577017649667294,
+      "cluster": 4,
+      "scenario_id": "support-0065"
+    },
+    {
+      "trace_id": "015b1499ea25142eea9f7da0f2b8c29e",
+      "x": -1.9523490621822404,
+      "y": -0.08749211104235405,
+      "cluster": 2,
+      "scenario_id": "support-0237"
+    },
+    {
+      "trace_id": "0b2f4c6a10e0c524c7a08aa5a481e00c",
+      "x": 1.7711307349394656,
+      "y": 3.3597876215252365,
+      "cluster": 5,
+      "scenario_id": "support-0092"
+    },
+    {
+      "trace_id": "1508c068714a04e7121f7ff740c23a8d",
+      "x": 0.4159530523350127,
+      "y": 2.3162807159437184,
+      "cluster": 5,
+      "scenario_id": "support-0093"
+    },
+    {
+      "trace_id": "8bd97c6d6d93574ba10b80bbe91edbe7",
+      "x": -3.1436037125167604,
+      "y": -0.5857364603449849,
+      "cluster": 2,
+      "scenario_id": "support-0244"
+    },
+    {
+      "trace_id": "47e31c0a7e77ac583fa315964e16f788",
+      "x": -2.007074332133597,
+      "y": -0.09163311683670822,
+      "cluster": 2,
+      "scenario_id": "support-0210"
+    },
+    {
+      "trace_id": "0d759a5e4d9f82d621e3b3e083ef200c",
+      "x": 1.4610671735046001,
+      "y": -0.9770587463517396,
+      "cluster": 3,
+      "scenario_id": "support-0139"
+    },
+    {
+      "trace_id": "04e0a6e759d81e4a63a516ee1e9be154",
+      "x": -1.9288953750602305,
+      "y": -0.08571739427334511,
+      "cluster": 2,
+      "scenario_id": "support-0100"
+    },
+    {
+      "trace_id": "67a5c615b365104176ee483b77eedf2d",
+      "x": 2.1579699915515156,
+      "y": -1.072362950591423,
+      "cluster": 4,
+      "scenario_id": "support-0125"
+    },
+    {
+      "trace_id": "302a2ca584e060ee3cb51c8706d85fed",
+      "x": 1.0869935491045177,
+      "y": 0.40255704876611526,
+      "cluster": 1,
+      "scenario_id": "support-0090"
+    },
+    {
+      "trace_id": "806de685e1cac28c6f02022946fbea38",
+      "x": -0.07898301138259686,
+      "y": 0.46236691762561993,
+      "cluster": 1,
+      "scenario_id": "support-0069"
+    },
+    {
+      "trace_id": "cd65968a68b707c6832469d31e6e994e",
+      "x": -0.5844774558012024,
+      "y": 1.1282962504745855,
+      "cluster": 5,
+      "scenario_id": "support-0015"
+    },
+    {
+      "trace_id": "1ea0dcd4a66e321d5925c72f3304ddce",
+      "x": -1.6709048167181209,
+      "y": -0.06619550981424686,
+      "cluster": 2,
+      "scenario_id": "support-0117"
+    },
+    {
+      "trace_id": "244b5d28a9babd0df8dbb22ff21596d9",
+      "x": 5.018561487684319,
+      "y": 0.7426711119151412,
+      "cluster": 0,
+      "scenario_id": "support-0123"
+    },
+    {
+      "trace_id": "04e33986e55cd0d69fd31d1a59954a1c",
+      "x": -1.9210774793528937,
+      "y": -0.0851258220170088,
+      "cluster": 2,
+      "scenario_id": "support-0061"
+    },
+    {
+      "trace_id": "0fe53731687d0e3b55662583a0bcb2e8",
+      "x": -2.4656614023081826,
+      "y": 0.5778456495502751,
+      "cluster": 2,
+      "scenario_id": "support-0085"
+    },
+    {
+      "trace_id": "1072dc7d908d48b052310e787f74cd2c",
+      "x": 0.3810874657981887,
+      "y": -0.9107415826725357,
+      "cluster": 3,
+      "scenario_id": "support-0062"
+    },
+    {
+      "trace_id": "2f49d006ebd79634075620f0502527d8",
+      "x": 2.971031145114527,
+      "y": -1.0108394359324466,
+      "cluster": 4,
+      "scenario_id": "support-0073"
+    },
+    {
+      "trace_id": "f2f01224f4534881e68b12ca91a24e80",
+      "x": 0.21797431911349693,
+      "y": 0.461554593933182,
+      "cluster": 1,
+      "scenario_id": "support-0074"
+    },
+    {
+      "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+      "x": 2.475988884713895,
+      "y": 2.1295197034505864,
+      "cluster": 0,
+      "scenario_id": "support-0075"
+    },
+    {
+      "trace_id": "b6af3fd154492c4223fe41686d198e56",
+      "x": -0.9134133069393465,
+      "y": -0.1569150290673237,
+      "cluster": 2,
+      "scenario_id": "support-0076"
+    },
+    {
+      "trace_id": "d4786980450df6328f693d660ccaaf97",
+      "x": 2.8654895530654825,
+      "y": -1.018825661392987,
+      "cluster": 4,
+      "scenario_id": "support-0077"
+    },
+    {
+      "trace_id": "7d285533e5802a008a93f3137ff3226a",
+      "x": -0.968138576890703,
+      "y": -0.1610560348616779,
+      "cluster": 2,
+      "scenario_id": "support-0220"
+    },
+    {
+      "trace_id": "48eb49723b493c91cc4bcbe3b7687e7e",
+      "x": -2.0383459149629437,
+      "y": -0.09399940586205346,
+      "cluster": 2,
+      "scenario_id": "support-0201"
+    },
+    {
+      "trace_id": "9779181a94c000f1177ed889eb2f9984",
+      "x": 4.226869476115045,
+      "y": 1.2389060292901324,
+      "cluster": 0,
+      "scenario_id": "support-0072"
+    },
+    {
+      "trace_id": "de07dfb65eab5a1d229ce5781cf05f30",
+      "x": -1.003319107573718,
+      "y": -0.1637181100151913,
+      "cluster": 2,
+      "scenario_id": "support-0221"
+    },
+    {
+      "trace_id": "18ab56b0579df6dc2e671c3d6c9d297a",
+      "x": -1.9679848535969136,
+      "y": -0.08867525555502667,
+      "cluster": 2,
+      "scenario_id": "support-0202"
+    },
+    {
+      "trace_id": "8b7cc4d00ac2e118f0c1fe0af76da3e7",
+      "x": -1.7158577170353067,
+      "y": -0.06959705028818065,
+      "cluster": 2,
+      "scenario_id": "support-0225"
+    },
+    {
+      "trace_id": "3a70d592db7c5588c2ba541639cc56e2",
+      "x": -1.864397735474703,
+      "y": -0.08083692315857055,
+      "cluster": 2,
+      "scenario_id": "support-0224"
+    },
+    {
+      "trace_id": "18172866f0cb13f11614ae9debffe789",
+      "x": -1.9464856404017379,
+      "y": -0.08704843185010182,
+      "cluster": 2,
+      "scenario_id": "support-0238"
+    },
+    {
+      "trace_id": "1e9ff37f4e714847942c3bde07b9aebf",
+      "x": -1.8819880008162104,
+      "y": -0.08216796073532726,
+      "cluster": 2,
+      "scenario_id": "support-0056"
+    },
+    {
+      "trace_id": "806391fc3b3cc77a8ef2ff84c8205f01",
+      "x": -2.063754076011788,
+      "y": -0.09592201569514647,
+      "cluster": 2,
+      "scenario_id": "support-0209"
+    },
+    {
+      "trace_id": "7f018507f5f469bdf43689bc1f9d4793",
+      "x": -1.7002219256206332,
+      "y": -0.06841390577550803,
+      "cluster": 2,
+      "scenario_id": "support-0112"
+    },
+    {
+      "trace_id": "1b9617a3eafa089e0a43a43d97941067",
+      "x": -1.6103161249862619,
+      "y": -0.06161082482764046,
+      "cluster": 2,
+      "scenario_id": "support-0039"
+    },
+    {
+      "trace_id": "4be3771bf913221d9634c74aeb72a593",
+      "x": -0.5752893175970363,
+      "y": -0.1313295289807783,
+      "cluster": 1,
+      "scenario_id": "support-0057"
+    },
+    {
+      "trace_id": "f08728980e49e2c776db01a10e8630a8",
+      "x": -1.854625365840532,
+      "y": -0.08009745783815016,
+      "cluster": 2,
+      "scenario_id": "support-0226"
+    },
+    {
+      "trace_id": "cbdc1b53d8e87394b147e74e18b5af10",
+      "x": -1.7412658780841508,
+      "y": -0.07151966012127366,
+      "cluster": 2,
+      "scenario_id": "support-0049"
+    },
+    {
+      "trace_id": "b43706a3e2d8ca34a4f57d9eab8ff760",
+      "x": 1.655159053328665,
+      "y": -0.8608994437561525,
+      "cluster": 3,
+      "scenario_id": "support-0191"
+    },
+    {
+      "trace_id": "29afd16b7ccdd4bc2a53f8eebd1646c4",
+      "x": -0.23461189326040888,
+      "y": -0.004078246578885257,
+      "cluster": 1,
+      "scenario_id": "support-0190"
+    },
+    {
+      "trace_id": "cde4daf06712ded2f8ac5b9774ac4ded",
+      "x": -1.973848275377416,
+      "y": -0.0891189347472789,
+      "cluster": 2,
+      "scenario_id": "support-0213"
+    },
+    {
+      "trace_id": "2ed56ad10ff2b54412c8765a0b88fa7b",
+      "x": 0.49674242320060036,
+      "y": 0.3578933434127238,
+      "cluster": 1,
+      "scenario_id": "support-0148"
+    },
+    {
+      "trace_id": "6f1e7a050e53ece94cd405adf6af40a5",
+      "x": -1.924986427206562,
+      "y": -0.08542160814517696,
+      "cluster": 2,
+      "scenario_id": "support-0025"
+    },
+    {
+      "trace_id": "d941b2ccda38d2a447224a9c4f17ce5a",
+      "x": 2.5593022312988434,
+      "y": 2.590492824283981,
+      "cluster": 0,
+      "scenario_id": "support-0009"
+    },
+    {
+      "trace_id": "ec1db3bdc0745e9c2d62d0e1628840a2",
+      "x": -1.8194448351575172,
+      "y": -0.07743538268463676,
+      "cluster": 2,
+      "scenario_id": "support-0166"
+    },
+    {
+      "trace_id": "d2fe1e34cd5a5630b77503e55f8c54d2",
+      "x": -1.8331261526453564,
+      "y": -0.0784706341332253,
+      "cluster": 2,
+      "scenario_id": "support-0168"
+    },
+    {
+      "trace_id": "f4aabc56fefb33d0e5a5e69010ac7a44",
+      "x": -2.0422548628166117,
+      "y": -0.09429519199022161,
+      "cluster": 2,
+      "scenario_id": "support-0215"
+    },
+    {
+      "trace_id": "3a664a4f124c1ec52dc8d50876d10341",
+      "x": 0.03874694927475854,
+      "y": 1.708313676813231,
+      "cluster": 5,
+      "scenario_id": "support-0087"
+    },
+    {
+      "trace_id": "dab5e41a51947fc6cb31a181c7a47bfb",
+      "x": 1.9012926969083315,
+      "y": -0.28613330935251596,
+      "cluster": 3,
+      "scenario_id": "support-0179"
+    },
+    {
+      "trace_id": "cb2f33fcfda540d8bf5186f721e5ac05",
+      "x": -0.17084328594380252,
+      "y": 0.4554159436136683,
+      "cluster": 1,
+      "scenario_id": "support-0046"
+    },
+    {
+      "trace_id": "5e322bad6abf33e26ba246f53d791da9",
+      "x": 0.2844264326258585,
+      "y": 0.46658295811204065,
+      "cluster": 1,
+      "scenario_id": "support-0070"
+    },
+    {
+      "trace_id": "b5f3b4110191f1408c9ecfc16a422e81",
+      "x": 2.5320770323433424,
+      "y": 1.452867035295501,
+      "cluster": 0,
+      "scenario_id": "support-0048"
+    },
+    {
+      "trace_id": "f455e4cf41b7144d8aab4273ae5821e9",
+      "x": 1.0142143117097586,
+      "y": -0.8861162993425122,
+      "cluster": 3,
+      "scenario_id": "support-0189"
+    },
+    {
+      "trace_id": "fe65a4e0bea00ecdf56ac739e1694d3e",
+      "x": 1.1045838144460252,
+      "y": 0.40388808634287193,
+      "cluster": 1,
+      "scenario_id": "support-0084"
+    },
+    {
+      "trace_id": "b5acee4541315709b0ce8d3fc7a8e6a8",
+      "x": 1.7235656407678608,
+      "y": -0.8557231865132098,
+      "cluster": 3,
+      "scenario_id": "support-0177"
+    },
+    {
+      "trace_id": "4c40d879ff1286449b12a8c7fefd87d0",
+      "x": 1.6336598401334894,
+      "y": -0.8625262674610773,
+      "cluster": 3,
+      "scenario_id": "support-0183"
+    },
+    {
+      "trace_id": "f37973df77f37b26a7fac1ff3037efce",
+      "x": 1.4825663866997758,
+      "y": -0.9754319226468148,
+      "cluster": 3,
+      "scenario_id": "support-0037"
+    },
+    {
+      "trace_id": "2c84f42f5ebfcd9dbc3b561a425e0fd1",
+      "x": 1.5490185002121375,
+      "y": -0.9704035584679561,
+      "cluster": 3,
+      "scenario_id": "support-0145"
+    },
+    {
+      "trace_id": "b4e9277891c05fbdedb565cfb6188bfd",
+      "x": 1.5099290216754542,
+      "y": -0.9733614197496377,
+      "cluster": 3,
+      "scenario_id": "support-0135"
+    },
+    {
+      "trace_id": "d5e58073dadec3f9ed7da82c81fbed40",
+      "x": 0.9127852272134008,
+      "y": 1.5016577827207176,
+      "cluster": 5,
+      "scenario_id": "support-0011"
+    },
+    {
+      "trace_id": "5c1365b8bc595be906fe20fb1a6ecb78",
+      "x": 2.863282301554511,
+      "y": -0.48613401556124614,
+      "cluster": 4,
+      "scenario_id": "support-0122"
+    },
+    {
+      "trace_id": "8ee8a6ae131cecdf64cadfd0d5e6ff39",
+      "x": 2.33387264496659,
+      "y": -1.059052574823856,
+      "cluster": 4,
+      "scenario_id": "support-0150"
+    },
+    {
+      "trace_id": "a26118f5a5abbac4c5f6b95da64be440",
+      "x": 1.6780137793831922,
+      "y": -0.9606426162384071,
+      "cluster": 3,
+      "scenario_id": "support-0141"
+    },
+    {
+      "trace_id": "dad9d7a0adceeed216387ceb556035c2",
+      "x": 2.726591833058819,
+      "y": -0.47319446061391385,
+      "cluster": 4,
+      "scenario_id": "support-0151"
+    },
+    {
+      "trace_id": "8844ddd6c458a90798bbe5337d20596e",
+      "x": 2.9749400929681955,
+      "y": -1.0105436498042784,
+      "cluster": 4,
+      "scenario_id": "support-0081"
+    },
+    {
+      "trace_id": "da076a4514b73af3ff53e767c3596633",
+      "x": 1.6565145661880165,
+      "y": -0.9622694399433319,
+      "cluster": 3,
+      "scenario_id": "support-0137"
+    },
+    {
+      "trace_id": "91bffa5c91c5613927b8b7504ef5139c",
+      "x": 0.5260595321031127,
+      "y": 0.36011173937398494,
+      "cluster": 1,
+      "scenario_id": "support-0149"
+    },
+    {
+      "trace_id": "7261544853e5ec8aaea2596e52320943",
+      "x": 2.378825545283776,
+      "y": -1.0556510343499221,
+      "cluster": 4,
+      "scenario_id": "support-0068"
+    },
+    {
+      "trace_id": "5f8b05cb2de695c976afbe2638af050e",
+      "x": -0.45802088198698643,
+      "y": -0.12245594513573362,
+      "cluster": 1,
+      "scenario_id": "support-0142"
+    },
+    {
+      "trace_id": "5fcbdeaeceeb2aba38a894091254a27c",
+      "x": 2.369053175649605,
+      "y": -1.0563904996703426,
+      "cluster": 4,
+      "scenario_id": "support-0040"
+    },
+    {
+      "trace_id": "39a7076cdbb5ae5c01ec4074950f25dc",
+      "x": 4.01616914080253,
+      "y": 0.13396243114418435,
+      "cluster": 0,
+      "scenario_id": "support-0128"
+    },
+    {
+      "trace_id": "8f2d5cdd955b035c8e3a3660033d7da8",
+      "x": 1.41415979926058,
+      "y": -0.9806081798897576,
+      "cluster": 3,
+      "scenario_id": "support-0130"
+    },
+    {
+      "trace_id": "2d4e32266211fdb927d350811b8a8ea5",
+      "x": -1.6552690253034477,
+      "y": -0.06501236530157424,
+      "cluster": 2,
+      "scenario_id": "support-0177r"
+    },
+    {
+      "trace_id": "567ae2e5ca15d7c614b6e3900e5c4080",
+      "x": -1.6533145513766134,
+      "y": -0.06486447223749016,
+      "cluster": 2,
+      "scenario_id": "support-0183r"
+    },
+    {
+      "trace_id": "68dc0f8dc95c0b8aff9e7f38c39db9b4",
+      "x": 1.4597042958265094,
+      "y": -0.29626507240229977,
+      "cluster": 3,
+      "scenario_id": "support-0191r"
+    },
+    {
+      "trace_id": "e502506cdee9a591be3f0bcf79aadfe7",
+      "x": 0.09738116707978342,
+      "y": 1.7127504687357533,
+      "cluster": 5,
+      "scenario_id": "support-0087r"
+    },
+    {
+      "trace_id": "d3e589c5e25d8ff7634198e5e9879c27",
+      "x": -1.6943585038401308,
+      "y": -0.0679702265832558,
+      "cluster": 2,
+      "scenario_id": "support-0179r"
+    },
+    {
+      "trace_id": "01727d208ba40e20de028aeaea61a19c",
+      "x": -1.7295390345231458,
+      "y": -0.0706323017367692,
+      "cluster": 2,
+      "scenario_id": "support-0189r"
+    },
+    {
+      "trace_id": "98c4220e5376c707ff40be6e801c737b",
+      "x": 0.4537439968102488,
+      "y": 0.3546396960028741,
+      "cluster": 1,
+      "scenario_id": "support-0012"
+    },
+    {
+      "trace_id": "4f4441b0fe3770580975dc436cf13c98",
+      "x": -1.3173978135452744,
+      "y": 0.49341267368079605,
+      "cluster": 2,
+      "scenario_id": "support-0199"
+    },
+    {
+      "trace_id": "b530b9f011ae780a66aee74d77dc2de1",
+      "x": -1.745174825937819,
+      "y": -0.0718154462494418,
+      "cluster": 2,
+      "scenario_id": "support-0098"
+    },
+    {
+      "trace_id": "2735a67e6b530cfaa7b94662860a15da",
+      "x": -1.6454966556692767,
+      "y": -0.06427289998115385,
+      "cluster": 2,
+      "scenario_id": "support-0107"
+    },
+    {
+      "trace_id": "2ae413609c869ead5861f291f9daf356",
+      "x": 1.1314827473198084,
+      "y": -0.8772427154974676,
+      "cluster": 3,
+      "scenario_id": "support-0178"
+    },
+    {
+      "trace_id": "e0df21cb7ad682aee30d5172a19775e5",
+      "x": -1.8253082569380197,
+      "y": -0.07787906187688899,
+      "cluster": 2,
+      "scenario_id": "support-0103"
+    },
+    {
+      "trace_id": "2df68324797a0bf3cdaad2cc7b48f349",
+      "x": 0.45926642287155517,
+      "y": -0.9048258601091725,
+      "cluster": 3,
+      "scenario_id": "support-0184"
+    },
+    {
+      "trace_id": "a96e244e6268140361a6c45f067d440b",
+      "x": 1.467522191533846,
+      "y": -0.2956735001459635,
+      "cluster": 3,
+      "scenario_id": "support-0078"
+    },
+    {
+      "trace_id": "ed87b7d77f64eedea371b6243e740fc5",
+      "x": -1.7764464087671656,
+      "y": -0.07418173527478705,
+      "cluster": 2,
+      "scenario_id": "support-0099"
+    },
+    {
+      "trace_id": "28a23cb4d4edf386e8ff02ba52ab34b9",
+      "x": -3.1279679211020874,
+      "y": -0.5845533158323124,
+      "cluster": 2,
+      "scenario_id": "support-0246"
+    },
+    {
+      "trace_id": "d648b6d7485dc25f84f03fd2ab3c6cb2",
+      "x": -0.9791437530015261,
+      "y": -0.03713343456170111,
+      "cluster": 2,
+      "scenario_id": "support-0018"
+    },
+    {
+      "trace_id": "62227de6a99c78b3d1bdd6b3544d3d6f",
+      "x": -1.6826316602791258,
+      "y": -0.06708286819875132,
+      "cluster": 2,
+      "scenario_id": "support-0136"
+    },
+    {
+      "trace_id": "2445041ff9197e175d28492efd065ae9",
+      "x": -0.07311958960209436,
+      "y": 0.4628105968178722,
+      "cluster": 1,
+      "scenario_id": "support-0138"
+    },
+    {
+      "trace_id": "2dd2b8d883e71ded9666171142746ae9",
+      "x": -3.077151599004399,
+      "y": -0.5807080961661264,
+      "cluster": 2,
+      "scenario_id": "support-0250"
+    },
+    {
+      "trace_id": "c5bc8ac698dee9dd4b9b24fec9a4d449",
+      "x": 2.014060588415969,
+      "y": -0.9584970786491634,
+      "cluster": 4,
+      "scenario_id": "support-0126"
+    },
+    {
+      "trace_id": "b832cc018f3914b71339c53e021dee9e",
+      "x": -1.6298608642546035,
+      "y": -0.06308975546848124,
+      "cluster": 2,
+      "scenario_id": "support-0178r"
+    },
+    {
+      "trace_id": "9fb714e2e86c44cfbe53b3d95c3ed2a3",
+      "x": -1.7178121909621407,
+      "y": -0.06974494335226472,
+      "cluster": 2,
+      "scenario_id": "support-0184r"
+    }
+  ],
+  "clusters": [
+    {
+      "id": 0,
+      "n": 7,
+      "avg_features": {
+        "turn_count": 6.86,
+        "tool_call_count": 5.71,
+        "distinct_tools": 4.0,
+        "has_retrieval": 0.57,
+        "tokens": 779.57
+      },
+      "description": "Long conversations, tool-heavy, policy/retrieval lookups"
+    },
+    {
+      "id": 1,
+      "n": 15,
+      "avg_features": {
+        "turn_count": 3.8,
+        "tool_call_count": 2.67,
+        "distinct_tools": 2.33,
+        "has_retrieval": 0.0,
+        "tokens": 564.33
+      },
+      "description": "Short conversations, moderate tool use, no policy lookups"
+    },
+    {
+      "id": 2,
+      "n": 48,
+      "avg_features": {
+        "turn_count": 2.98,
+        "tool_call_count": 1.06,
+        "distinct_tools": 1.0,
+        "has_retrieval": 0.0,
+        "tokens": 218.44
+      },
+      "description": "Short conversations, minimal tool use, no policy lookups"
+    },
+    {
+      "id": 3,
+      "n": 18,
+      "avg_features": {
+        "turn_count": 4.22,
+        "tool_call_count": 3.17,
+        "distinct_tools": 2.39,
+        "has_retrieval": 1.0,
+        "tokens": 606.67
+      },
+      "description": "Moderate-length conversations, moderate tool use, policy/retrieval lookups"
+    },
+    {
+      "id": 4,
+      "n": 12,
+      "avg_features": {
+        "turn_count": 4.25,
+        "tool_call_count": 4.08,
+        "distinct_tools": 3.83,
+        "has_retrieval": 1.0,
+        "tokens": 717.17
+      },
+      "description": "Moderate-length conversations, tool-heavy, policy/retrieval lookups"
+    },
+    {
+      "id": 5,
+      "n": 8,
+      "avg_features": {
+        "turn_count": 6.62,
+        "tool_call_count": 2.0,
+        "distinct_tools": 1.62,
+        "has_retrieval": 0.0,
+        "tokens": 541.25
+      },
+      "description": "Long conversations, moderate tool use, no policy lookups"
+    }
+  ]
+}

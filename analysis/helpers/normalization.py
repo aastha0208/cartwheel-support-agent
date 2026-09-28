@@ -171,7 +171,16 @@ def _messages(record: dict[str, Any]) -> list[dict[str, Any]]:
                     if not isinstance(item, dict):
                         continue
                     for part in item.get("parts") or []:
-                        if isinstance(part, dict) and part.get("type") == "text" and part.get("content", "").strip():
+                        if not isinstance(part, dict):
+                            continue
+                        # A model's chain-of-thought before it decides to reply
+                        # or call a tool. Kept as its own role (not merged into
+                        # the following assistant text) so a review interface
+                        # can render it collapsed by default, per the model's
+                        # own step order.
+                        if part.get("type") == "thinking" and part.get("thinking", "").strip():
+                            messages.append({"role": "thinking", "text": part["thinking"]})
+                        elif part.get("type") == "text" and part.get("content", "").strip():
                             messages.append({"role": "assistant", "text": part["content"]})
             continue
         messages.extend(_observation_message(observation))
@@ -252,6 +261,8 @@ def normalize_trace(value: Any) -> dict[str, Any]:
         "scenario_id": raw.get("cartwheel_scenario_id")
         or metadata.get("cartwheel.scenario_id")
         or metadata.get("scenario_id"),
+        "session_id": metadata.get("cartwheel.session_id")
+        or metadata.get("session_id"),
     }
     supplied_segments = raw.get("segments")
     segments = dict(supplied_segments) if isinstance(supplied_segments, dict) else {}
@@ -287,26 +298,56 @@ def normalize_trace(value: Any) -> dict[str, Any]:
 
 
 def _merge_multi_turn(traces: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Merge traces that share a scenario_id into one conversation."""
+    """Merge traces that share a conversation into one record.
+
+    Cartwheel creates one trace per user turn, so a multi-turn conversation is
+    split across several trace records, linked by ``cartwheel.session_id``
+    (see homework/module-2/hw4.md, "How the three tools fit together").
+    ``session_id`` is the preferred grouping key; ``scenario_id`` is a
+    fallback for records that never carried session metadata (e.g. the
+    committed demonstration seed). In the Module 1 export the two happen to
+    be equivalent, one scenario per session, so either key merges the same
+    groups today.
+    """
     from collections import defaultdict
 
-    by_scenario: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    no_scenario: list[dict[str, Any]] = []
+    by_group: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    ungrouped: list[dict[str, Any]] = []
     for trace in traces:
-        sid = trace["meta"].get("scenario_id")
-        if sid:
-            by_scenario[sid].append(trace)
+        key = trace["meta"].get("session_id") or trace["meta"].get("scenario_id")
+        if key:
+            by_group[key].append(trace)
         else:
-            no_scenario.append(trace)
+            ungrouped.append(trace)
 
-    merged: list[dict[str, Any]] = list(no_scenario)
-    for sid, group in by_scenario.items():
+    merged: list[dict[str, Any]] = list(ungrouped)
+    for key, group in by_group.items():
         if len(group) == 1:
             merged.append(group[0])
             continue
         group.sort(key=lambda t: t.get("timestamp") or "")
         first = dict(group[0])
+        # Mark where each original turn's messages begin, so a review
+        # interface can show which raw trace a message came from (the
+        # merge below otherwise loses that provenance). A new list, not a
+        # mutation of group[0]["trace"], so the un-merged record (still
+        # held by the by_group lookup) is left untouched.
+        first["trace"] = [
+            {
+                "role": "turn_boundary",
+                "trace_id": first["trace_id"],
+                "timestamp": first.get("timestamp"),
+            },
+            *first["trace"],
+        ]
         for later in group[1:]:
+            first["trace"].append(
+                {
+                    "role": "turn_boundary",
+                    "trace_id": later["trace_id"],
+                    "timestamp": later.get("timestamp"),
+                }
+            )
             first["trace"].extend(later["trace"])
             first["observations"].extend(later["observations"])
             first["models"] = list(
@@ -323,11 +364,21 @@ def _merge_multi_turn(traces: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return merged
 
 
-def normalize_traces(values: list[Any]) -> list[dict[str, Any]]:
-    """Normalize, merge multi-turn conversations, reject duplicate ids."""
-    normalized = [normalize_trace(value) for value in values]
+def merge_traces(normalized: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge already-normalized traces sharing a conversation; reject duplicate ids.
+
+    Split out from :func:`normalize_traces` so a caller that normalizes
+    records one at a time (e.g. fetching them individually from an API) can
+    still get the multi-turn merge without re-normalizing.
+    """
     merged = _merge_multi_turn(normalized)
     ids = [record["id"] for record in merged]
     if len(ids) != len(set(ids)):
         raise ValueError("the trace source contains duplicate identifiers")
     return merged
+
+
+def normalize_traces(values: list[Any]) -> list[dict[str, Any]]:
+    """Normalize, merge multi-turn conversations, reject duplicate ids."""
+    normalized = [normalize_trace(value) for value in values]
+    return merge_traces(normalized)

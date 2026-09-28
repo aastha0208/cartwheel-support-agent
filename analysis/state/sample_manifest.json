@@ -1,0 +1,437 @@
+{
+  "source": "langfuse",
+  "batches": [
+    {
+      "batch": 1,
+      "batch_description": "15 uniform + 15 cluster representatives (hw4.md Part B, batch 1) | corrected: removed 6 pilot-scenario traces that leaked in from fetch_traces()'s unfiltered population, replaced with support-* picks | corrected: removed 8 orphaned/duplicate traces (failed-then-retried HW3 runs with no assistant reply) found via fetch_traces()'s unfiltered pull, replaced with picks from the traces/support_traces.json whitelist",
+      "k": 30,
+      "strategy": "random (uniform half) + diversity (cluster-representative half)",
+      "picks": [
+        {
+          "trace_id": "62c973650e1230553d5ae25b74da5d32",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "2b8e1594915ab47c40d71bf52881f7ea",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "7d91b1a1a90b557a4554fd30c6841f47",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "d4a183f5189924ee6d6f87ab9d3480fe",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "1d98d8059bdf035bbff7821d7dae9bed",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "0baaa7cf7bb9d3aac6dacf01a96593c9",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "1ae7ad1e3ca332afd0720b814a79d68c",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "07c04331fb3877c490cd6f73d0f5d479",
+          "reason": "cluster 0 representative"
+        },
+        {
+          "trace_id": "013e2378e7a31d66e487db1cf7454d9c",
+          "reason": "cluster 2 representative"
+        },
+        {
+          "trace_id": "012cd6b1a7eb64d05bb1aff82b2784b4",
+          "reason": "cluster 3 representative"
+        },
+        {
+          "trace_id": "055f7cc1d0ec5c7d15b1f50218d5c833",
+          "reason": "cluster 4 representative"
+        },
+        {
+          "trace_id": "010cb6308a3efaaccc80ec8fb5b4f5c4",
+          "reason": "cluster 5 representative"
+        },
+        {
+          "trace_id": "0ca3ca16cd9f5ea7f5ad16c43010b650",
+          "reason": "cluster 0 representative"
+        },
+        {
+          "trace_id": "059cb6485250785b429748a2d0740fbb",
+          "reason": "cluster 2 representative"
+        },
+        {
+          "trace_id": "135f980834033479b62927b73db47461",
+          "reason": "cluster 3 representative"
+        },
+        {
+          "trace_id": "015b1499ea25142eea9f7da0f2b8c29e",
+          "reason": "cluster 5 representative"
+        },
+        {
+          "trace_id": "0b2f4c6a10e0c524c7a08aa5a481e00c",
+          "reason": "cluster 6 representative"
+        },
+        {
+          "trace_id": "1508c068714a04e7121f7ff740c23a8d",
+          "reason": "cluster 0 representative"
+        },
+        {
+          "trace_id": "8bd97c6d6d93574ba10b80bbe91edbe7",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "47e31c0a7e77ac583fa315964e16f788",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "0d759a5e4d9f82d621e3b3e083ef200c",
+          "reason": "cluster 0 representative"
+        },
+        {
+          "trace_id": "04e0a6e759d81e4a63a516ee1e9be154",
+          "reason": "cluster 2 representative"
+        },
+        {
+          "trace_id": "67a5c615b365104176ee483b77eedf2d",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "302a2ca584e060ee3cb51c8706d85fed",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "806de685e1cac28c6f02022946fbea38",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "cd65968a68b707c6832469d31e6e994e",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "1ea0dcd4a66e321d5925c72f3304ddce",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "244b5d28a9babd0df8dbb22ff21596d9",
+          "reason": "random pick"
+        },
+        {
+          "trace_id": "04e33986e55cd0d69fd31d1a59954a1c",
+          "reason": "cluster 0 representative"
+        },
+        {
+          "trace_id": "0fe53731687d0e3b55662583a0bcb2e8",
+          "reason": "cluster 1 representative"
+        }
+      ]
+    },
+    {
+      "batch": 2,
+      "batch_description": "Dimension-stratified (hw4.md Part B, batch 2): user role, 10 shopper + 10 merchant + 10 support, chosen to correct batch 1's shopper-heavy skew back toward the true scenario population proportions (51%/27%/22%). The 6 shopper slots include the boundary-day refund/return-window scenarios found during the support-0123 investigation (support-0062/0073/0074/0075/0076/0077), folded in here rather than kept as a separate batch since all 6 are shopper-role.",
+      "k": 30,
+      "strategy": "stratified random by role (10 per value, seed=7), with 6 of the 10 shopper slots filled by earlier targeted boundary-case picks",
+      "picks": [
+        {
+          "trace_id": "1072dc7d908d48b052310e787f74cd2c",
+          "reason": "batch 2: role-stratified (shopper) -- carried over from the earlier boundary-day depth-search probe (refund/return window edge cases, all shopper-role)"
+        },
+        {
+          "trace_id": "2f49d006ebd79634075620f0502527d8",
+          "reason": "batch 2: role-stratified (shopper) -- carried over from the earlier boundary-day depth-search probe (refund/return window edge cases, all shopper-role)"
+        },
+        {
+          "trace_id": "f2f01224f4534881e68b12ca91a24e80",
+          "reason": "batch 2: role-stratified (shopper) -- carried over from the earlier boundary-day depth-search probe (refund/return window edge cases, all shopper-role)"
+        },
+        {
+          "trace_id": "7987dca1130313cc8a1e42bd28ff9481",
+          "reason": "batch 2: role-stratified (shopper) -- carried over from the earlier boundary-day depth-search probe (refund/return window edge cases, all shopper-role)"
+        },
+        {
+          "trace_id": "b6af3fd154492c4223fe41686d198e56",
+          "reason": "batch 2: role-stratified (shopper) -- carried over from the earlier boundary-day depth-search probe (refund/return window edge cases, all shopper-role)"
+        },
+        {
+          "trace_id": "d4786980450df6328f693d660ccaaf97",
+          "reason": "batch 2: role-stratified (shopper) -- carried over from the earlier boundary-day depth-search probe (refund/return window edge cases, all shopper-role)"
+        },
+        {
+          "trace_id": "7d285533e5802a008a93f3137ff3226a",
+          "reason": "batch 2: role-stratified (shopper)"
+        },
+        {
+          "trace_id": "48eb49723b493c91cc4bcbe3b7687e7e",
+          "reason": "batch 2: role-stratified (shopper)"
+        },
+        {
+          "trace_id": "9779181a94c000f1177ed889eb2f9984",
+          "reason": "batch 2: role-stratified (shopper)"
+        },
+        {
+          "trace_id": "de07dfb65eab5a1d229ce5781cf05f30",
+          "reason": "batch 2: role-stratified (shopper)"
+        },
+        {
+          "trace_id": "18ab56b0579df6dc2e671c3d6c9d297a",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "8b7cc4d00ac2e118f0c1fe0af76da3e7",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "3a70d592db7c5588c2ba541639cc56e2",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "18172866f0cb13f11614ae9debffe789",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "1e9ff37f4e714847942c3bde07b9aebf",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "806391fc3b3cc77a8ef2ff84c8205f01",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "7f018507f5f469bdf43689bc1f9d4793",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "1b9617a3eafa089e0a43a43d97941067",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "4be3771bf913221d9634c74aeb72a593",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "f08728980e49e2c776db01a10e8630a8",
+          "reason": "batch 2: role-stratified (merchant)"
+        },
+        {
+          "trace_id": "cbdc1b53d8e87394b147e74e18b5af10",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "b43706a3e2d8ca34a4f57d9eab8ff760",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "29afd16b7ccdd4bc2a53f8eebd1646c4",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "cde4daf06712ded2f8ac5b9774ac4ded",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "2ed56ad10ff2b54412c8765a0b88fa7b",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "6f1e7a050e53ece94cd405adf6af40a5",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "d941b2ccda38d2a447224a9c4f17ce5a",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "ec1db3bdc0745e9c2d62d0e1628840a2",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "d2fe1e34cd5a5630b77503e55f8c54d2",
+          "reason": "batch 2: role-stratified (support)"
+        },
+        {
+          "trace_id": "f4aabc56fefb33d0e5a5e69010ac7a44",
+          "reason": "batch 2: role-stratified (support)"
+        }
+      ]
+    },
+    {
+      "batch": 3,
+      "batch_description": "Depth search (hw4.md Part B, batch 3): semantic-neighbor candidates for the three watch-list modes stuck at 2 confirmed instances (store_identity_not_resolved, policy_citation_missing, order_disambiguation_unsound). Retrieval only -- every trace is unjudged until reviewed; a candidate that turns out not to fit becomes a recorded rejected suggestion, not a silent drop.",
+      "k": 25,
+      "strategy": "semantic neighbor (bag-of-words cosine vs. each mode's 2 known positives)",
+      "picks": [
+        {
+          "trace_id": "3a664a4f124c1ec52dc8d50876d10341",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "dab5e41a51947fc6cb31a181c7a47bfb",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "cb2f33fcfda540d8bf5186f721e5ac05",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "5e322bad6abf33e26ba246f53d791da9",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "b5f3b4110191f1408c9ecfc16a422e81",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "f455e4cf41b7144d8aab4273ae5821e9",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "fe65a4e0bea00ecdf56ac739e1694d3e",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "b5acee4541315709b0ce8d3fc7a8e6a8",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "4c40d879ff1286449b12a8c7fefd87d0",
+          "reason": "batch 3 depth search: candidate for store_identity_not_resolved (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "f37973df77f37b26a7fac1ff3037efce",
+          "reason": "batch 3 depth search: candidate for policy_citation_missing (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "2c84f42f5ebfcd9dbc3b561a425e0fd1",
+          "reason": "batch 3 depth search: candidate for policy_citation_missing (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "b4e9277891c05fbdedb565cfb6188bfd",
+          "reason": "batch 3 depth search: candidate for policy_citation_missing (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "d5e58073dadec3f9ed7da82c81fbed40",
+          "reason": "batch 3 depth search: candidate for policy_citation_missing (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "5c1365b8bc595be906fe20fb1a6ecb78",
+          "reason": "batch 3 depth search: candidate for policy_citation_missing (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "8ee8a6ae131cecdf64cadfd0d5e6ff39",
+          "reason": "batch 3 depth search: candidate for policy_citation_missing (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "a26118f5a5abbac4c5f6b95da64be440",
+          "reason": "batch 3 depth search: candidate for policy_citation_missing (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "dad9d7a0adceeed216387ceb556035c2",
+          "reason": "batch 3 depth search: candidate for policy_citation_missing (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "8844ddd6c458a90798bbe5337d20596e",
+          "reason": "batch 3 depth search: candidate for order_disambiguation_unsound (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "da076a4514b73af3ff53e767c3596633",
+          "reason": "batch 3 depth search: candidate for order_disambiguation_unsound (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "91bffa5c91c5613927b8b7504ef5139c",
+          "reason": "batch 3 depth search: candidate for order_disambiguation_unsound (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "7261544853e5ec8aaea2596e52320943",
+          "reason": "batch 3 depth search: candidate for order_disambiguation_unsound (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "5f8b05cb2de695c976afbe2638af050e",
+          "reason": "batch 3 depth search: candidate for order_disambiguation_unsound (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "5fcbdeaeceeb2aba38a894091254a27c",
+          "reason": "batch 3 depth search: candidate for order_disambiguation_unsound (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "39a7076cdbb5ae5c01ec4074950f25dc",
+          "reason": "batch 3 depth search: candidate for order_disambiguation_unsound (semantic neighbor of a confirmed failure)"
+        },
+        {
+          "trace_id": "8f2d5cdd955b035c8e3a3660033d7da8",
+          "reason": "batch 3 depth search: candidate for order_disambiguation_unsound (semantic neighbor of a confirmed failure)"
+        }
+      ]
+    },
+    {
+      "batch": 4,
+      "batch_description": "Final uniform check (hw4.md Part B, batch 4): 15 traces drawn by true uniform random sample from every scenario not yet reviewed in batches 1-3, to test whether the drafted taxonomy is stable -- deliberately not steered toward known coverage gaps, so the 'new modes found' count stays a fair signal.",
+      "k": 15,
+      "strategy": "uniform random, seed=7",
+      "picks": [
+        {
+          "trace_id": "98c4220e5376c707ff40be6e801c737b",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "4f4441b0fe3770580975dc436cf13c98",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "b530b9f011ae780a66aee74d77dc2de1",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "2735a67e6b530cfaa7b94662860a15da",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "2ae413609c869ead5861f291f9daf356",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "e0df21cb7ad682aee30d5172a19775e5",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "2df68324797a0bf3cdaad2cc7b48f349",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "a96e244e6268140361a6c45f067d440b",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "ed87b7d77f64eedea371b6243e740fc5",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "28a23cb4d4edf386e8ff02ba52ab34b9",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "d648b6d7485dc25f84f03fd2ab3c6cb2",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "62227de6a99c78b3d1bdd6b3544d3d6f",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "2445041ff9197e175d28492efd065ae9",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "2dd2b8d883e71ded9666171142746ae9",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        },
+        {
+          "trace_id": "c5bc8ac698dee9dd4b9b24fec9a4d449",
+          "reason": "batch 4: uniform random (taxonomy stability check)"
+        }
+      ]
+    }
+  ]
+}
