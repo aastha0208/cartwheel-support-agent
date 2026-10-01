@@ -1,4 +1,4 @@
-# Cartwheel Support Agent — Evaluating an AI Agent Before Customers Trust It
+# Cartwheel Support Agent — Evaluating and Improving an AI Agent Before Customers Trust It
 
 > **Product case study.** Built during *AI Evals for Engineers & PMs* (Hamel Husain & Shreya Shankar, Sept–Oct 2026). The course provides the Cartwheel platform and the starter agent; the analysis, decisions and tooling described below are mine. The course's own setup guide is in [COURSE_README.md](COURSE_README.md).
 
