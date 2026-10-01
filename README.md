@@ -43,11 +43,18 @@ Counts are from a deliberately stratified sample, so they show what exists, not 
 - **Check the raw evidence, not the summary.** I nearly downgraded one mode based on how a note was worded. Re-reading the actual conversation and its ground truth reversed that decision.
 - **Know what your search tools can't see.** Similarity search found 1 useful example out of 25. Failures defined by something *missing*, like a tool call that never happened, leave no words to match on, so they have to be found by review rather than search.
 
-## What's next
+## Status and roadmap
 
-- Fix the order-search cap and expose missing order details first, since together they account for the largest share of failures.
-- Build automated judges for the confirmed modes, and check each judge against human labels before trusting it (the course's next modules).
-- Re-run the scenario set after each fix to confirm improvements without new regressions, the same release-gate idea as my [Prompt Eval Gate](https://github.com/aastha0208/prompt-eval-gate).
+This is a working project; the evaluation system is being built in stages.
+
+- [x] **Error analysis:** failure modes identified, confirmed and tied to the fix each needs
+- [x] **First fixes:** dispute and account-change escalation corrected and verified
+- [ ] **Automated evaluators:** code-based checks for failure modes that can be detected deterministically, such as a missing escalation or a missing tool call
+- [ ] **LLM-as-judge:** model-based graders for the judgement-heavy modes, each validated against my human labels before it's trusted
+- [ ] **CI/CD quality gate:** run the evaluators on every change to the agent and block changes that bring back known failures, the same release-gate idea as my [Prompt Eval Gate](https://github.com/aastha0208/prompt-eval-gate)
+- [ ] **Production monitoring:** sample live conversations, score them automatically, and watch failure rates over time to catch drift
+
+The fix priority stays with the evidence: correct the order-search cap and expose the missing order details first, since together they account for the largest share of failures in the sample.
 
 ## Running it
 
