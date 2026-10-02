@@ -116,4 +116,6 @@ Split (seed 7): train 26 (20 Pass, 6 Fail), dev 51 (39 Pass, 12 Fail), test 52 (
 
 ## Pending
 - Student: the video.
-- Commit (Part E), when the student asks.
+
+## Committed
+- 2026-10-02: Part E files committed (`972cdf8`).
