@@ -96,8 +96,8 @@
     "trace_id": "2b8e1594915ab47c40d71bf52881f7ea",
     "quote": "{\n  \"ok\": true,\n  \"orders\": [\n    {\n      \"order_id\": 3178,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 1,\n      \"total_usd\": 28,\n      \"status\": \"refunded\",\n      \"ordered_at\": \"2026-06-15\",\n      \"shipped_at\": \"2026-06-18\",\n      \"delivered_at\": \"2026-06-23\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 7687,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 1,\n      \"total_usd\": 28,\n      \"status\": \"refunded\",\n      \"ordered_at\": \"2026-05-29\",\n      \"shipped_at\": \"2026-06-01\",\n      \"delivered_at\": \"2026-06-07\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 803,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 1,\n      \"total_usd\": 28,\n      \"status\": \"refunded\",\n      \"ordered_at\": \"2025-11-06\",\n      \"shipped_at\": \"2025-11-09\",\n      \"delivered_at\": \"2025-11-11\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 6804,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 2,\n      \"total_usd\": 56,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-10-22\",\n      \"shipped_at\": \"2025-10-24\",\n      \"delivered_at\": \"2025-10-28\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 5559,\n      \"store_id\": 13,\n      \"product_id\": 489,\n      \"quantity\": 1,\n      \"total_usd\": 28,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2025-09-23\",\n      \"shipped_at\": \"2025-09-25\",\n      \"delivered_at\": \"2025-09-29\",\n      \"refund_eligible\": false\n    }\n  ]\n}",
     "idx": 3,
-    "note": "find_order's 5-match cap (SPEC.md:88) is scoped the same for shopper and support callers, so a platform-wide support search on a common product can silently exclude the correct order: here, order #7101 never appeared, and the agent had to ask the shopper to clarify instead of reporting its status.",
-    "ts": "2026-09-24T14:18:31.321Z"
+    "note": "Target order #7101 never appeared, and the agent had to ask the shopper to clarify instead of reporting its status.",
+    "ts": "2026-09-29T17:10:39.352Z"
   },
   {
     "id": "a1790260303739831",
@@ -126,16 +126,16 @@
     "trace_id": "0d759a5e4d9f82d621e3b3e083ef200c",
     "quote": "{\n  \"ok\": true,\n  \"orders\": [\n    {\n      \"order_id\": 6427,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 2,\n      \"total_usd\": 64,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-06-14\",\n      \"shipped_at\": \"2026-06-16\",\n      \"delivered_at\": \"2026-06-23\",\n      \"refund_eligible\": true\n    },\n    {\n      \"order_id\": 1436,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 1,\n      \"total_usd\": 32,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-04-03\",\n      \"shipped_at\": \"2026-04-05\",\n      \"delivered_at\": \"2026-04-07\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 9601,\n      \"store_id\": 4,\n      \"product_id\": 144,\n      \"quantity\": 1,\n      \"total_usd\": 137.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-03-31\",\n      \"shipped_at\": \"2026-04-03\",\n      \"delivered_at\": \"2026-04-10\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 1331,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 1,\n      \"total_usd\": 32,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-02-24\",\n      \"shipped_at\": \"2026-02-27\",\n      \"delivered_at\": \"2026-03-02\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 7387,\n      \"store_id\": 4,\n      \"product_id\": 140,\n      \"quantity\": 1,\n      \"total_usd\": 32,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-02-12\",\n      \"shipped_at\": \"2026-02-13\",\n      \"delivered_at\": \"2026-02-17\",\n      \"refund_eligible\": false\n    }\n  ]\n}",
     "idx": 3,
-    "note": "find_order's 5-match cap excludes the actual target order (#1703):\nsame tool gap as support-0121, now also seen at a single busy merchant store, not just platform-wide support searches.",
-    "ts": "2026-09-24T15:03:05.298Z"
+    "note": "find_order's 5-match cap excludes the actual target order (#1703) now also seen at a single busy merchant store, not just platform-wide support searches.",
+    "ts": "2026-09-29T17:11:18.755Z"
   },
   {
     "id": "a179026222956896",
     "trace_id": "0d759a5e4d9f82d621e3b3e083ef200c",
     "quote": "Here's what I found:\n\nOrder #9601 matches \u2014 it's a $137.25 order from your store (product #144), delivered on April 10, 2026.\n\nUnfortunately, this order is not eligible for a refund. It was ordered back on March 31 and delivered over two months ago, so the refund window has passed.",
     "idx": 9,
-    "note": "the agent doesn't flag the ambiguity here \u2014 it asserts \"Order #9601 matches\" (based only on matching dollar amount, ignoring a different product_id than the other 4 results) and delivers a confident eligibility verdict on a possibly-wrong order. Correct conclusion this time by coincidence, not verification. Inconsistent with how the same kind of ambiguity was handled in support-0121.",
-    "ts": "2026-09-24T15:03:49.568Z"
+    "note": "the agent doesn't flag the ambiguity here: it asserts \"Order #9601 matches\" (based only on matching dollar amount, ignoring a different product_id than the other 4 results) and delivers a confident eligibility verdict on a possibly-wrong order. Correct conclusion this time by coincidence, not verification. Inconsistent with how the same kind of ambiguity was handled in support-0121.",
+    "ts": "2026-09-29T15:29:53.367Z"
   },
   {
     "id": "a179026324385510",
@@ -1094,5 +1094,13 @@
     "kind": "clean",
     "note": "no failure observed",
     "ts": "2026-09-27T16:37:01.000Z"
+  },
+  {
+    "id": "a1790699165705638",
+    "trace_id": "2445041ff9197e175d28492efd065ae9",
+    "quote": "{\n  \"ok\": true,\n  \"orders\": [\n    {\n      \"order_id\": 4365,\n      \"store_id\": 18,\n      \"product_id\": 698,\n      \"quantity\": 2,\n      \"total_usd\": 56.5,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-06-19\",\n      \"shipped_at\": \"2026-06-21\",\n      \"delivered_at\": \"2026-06-26\",\n      \"refund_eligible\": true\n    },\n    {\n      \"order_id\": 7578,\n      \"store_id\": 18,\n      \"product_id\": 698,\n      \"quantity\": 1,\n      \"total_usd\": 28.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-05-21\",\n      \"shipped_at\": \"2026-05-23\",\n      \"delivered_at\": \"2026-05-26\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 7419,\n      \"store_id\": 18,\n      \"product_id\": 698,\n      \"quantity\": 1,\n      \"total_usd\": 28.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-03-11\",\n      \"shipped_at\": \"2026-03-14\",\n      \"delivered_at\": \"2026-03-18\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 3836,\n      \"store_id\": 18,\n      \"product_id\": 698,\n      \"quantity\": 1,\n      \"total_usd\": 28.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-02-06\",\n      \"shipped_at\": \"2026-02-09\",\n      \"delivered_at\": \"2026-02-13\",\n      \"refund_eligible\": false\n    },\n    {\n      \"order_id\": 9728,\n      \"store_id\": 18,\n      \"product_id\": 698,\n      \"quantity\": 1,\n      \"total_usd\": 28.25,\n      \"status\": \"delivered\",\n      \"ordered_at\": \"2026-01-09\",\n      \"shipped_at\": \"2026-01-12\",\n      \"delivered_at\": \"2026-01-18\",\n      \"refund_eligible\": false\n    }\n  ]",
+    "idx": 3,
+    "note": "the actual order 6645 doesn't surface here",
+    "ts": "2026-09-29T16:26:05.705Z"
   }
 ]

@@ -41,6 +41,16 @@ unchanged):
     GET  /api/scenarios       read-only {id, intent, role} for every HW3 scenario,
                                for the Batch Ledger's coverage view
     POST /api/suggestions     push suggestions
+    GET  /api/hw5_samples     HW5 labeling sample set (separate from samples.json)
+    POST /api/hw5_samples     push the HW5 labeling sample set
+    GET  /api/hw5_annotations notes written in the HW5 set (hw5_annotations.json)
+    POST /api/hw5_annotations save them (the HW4 annotations.json is untouched)
+    GET  /api/hw5_labels?mode=<mode>   every HW5 label record for a mode (history)
+    POST /api/hw5_labels      append one label {mode, trace_id, label, evidence}
+    GET  /api/hw5_judge?mode=<mode>[&judge=<id>]   judge verdicts + critiques
+                              (test split hidden until the judge is frozen)
+    GET  /api/hw5_judge_runs?mode=<mode>   every version plus saved reruns,
+                              same test-split rule
 
 Run it:
 
@@ -53,12 +63,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import threading
 import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 HERE = Path(__file__).resolve().parent
 STATE_DIR = HERE.parent / "state"
@@ -66,6 +78,8 @@ UI_DIR = HERE / "ui"
 # The full HW3 scenario set, for the Batch Ledger's coverage view -- read-only
 # reference data (not writable via this API), so it stays outside API_FILES.
 SCENARIOS_PATH = HERE.parent.parent / "scenarios" / "support_scenarios.jsonl"
+# HW5 targeted scenarios, added to the coverage view only for the HW5 set.
+HW5_SCENARIOS_PATHS = [HERE.parent.parent / "scenarios" / f for f in ("hw5_targeted_scenarios.jsonl", "hw5_targeted_scenarios_round2.jsonl")]
 # Every version of annotations.json ever overwritten gets copied here first,
 # so an accidental delete-click or bad edit is always one file away from
 # recovery, not gone the moment the next save fires.
@@ -81,7 +95,19 @@ API_FILES: dict[str, Path] = {
     "/api/graph": STATE_DIR / "graph.json",
     "/api/patterns": STATE_DIR / "patterns.json",
     "/api/suggestions": STATE_DIR / "suggestions.json",
+    # HW5: a separate sample set for per-mode Pass/Fail labeling, so the HW4
+    # review set in samples.json stays as it was.
+    "/api/hw5_samples": STATE_DIR / "hw5_samples.json",
+    # Notes written while viewing the HW5 set, kept out of the HW4 file.
+    "/api/hw5_annotations": STATE_DIR / "hw5_annotations.json",
 }
+
+# HW5 labels live in state/hw5_labels/<mode>.jsonl (1 = Pass, 0 = Fail). They
+# are append-only: a correction adds a line, and the helpers use the last
+# record written for each trace. Not in API_FILES because POST appends one
+# record instead of overwriting the file.
+HW5_LABEL_DIR = STATE_DIR / "hw5_labels"
+_MODE_RE = re.compile(r"[a-z0-9_]+")
 
 # Default empty document per endpoint, so a fresh checkout serves valid JSON
 # before the agent has written anything. samples/annotations/suggestions are
@@ -92,6 +118,8 @@ API_DEFAULTS: dict[str, Any] = {
     "/api/graph": {"nodes": [], "clusters": []},
     "/api/patterns": {},
     "/api/suggestions": [],
+    "/api/hw5_samples": [],
+    "/api/hw5_annotations": [],
 }
 
 
@@ -127,6 +155,127 @@ def _write_json(path: Path, data: Any) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
     tmp.replace(path)
+
+
+def _hw5_label_path(mode: str) -> Path | None:
+    """The mode's HW5 label file, or None for a name that isn't a plain id."""
+    if not _MODE_RE.fullmatch(mode or ""):
+        return None
+    return HW5_LABEL_DIR / f"{mode}.jsonl"
+
+
+def _read_hw5_labels(path: Path) -> list[dict[str, Any]]:
+    """Every record in the label file, oldest first (the full history)."""
+    if not path.exists():
+        return []
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            rows.append(json.loads(line))
+    return rows
+
+
+def _append_hw5_label(mode: str, body: dict[str, Any]) -> dict[str, Any]:
+    """Validate one human label from the UI and append it to the mode's file."""
+    path = _hw5_label_path(mode)
+    if path is None:
+        raise ValueError("mode must be a lowercase id like dispute_not_escalated")
+    trace_id = body.get("trace_id")
+    label = body.get("label")
+    evidence = (body.get("evidence") or "").strip()
+    if not trace_id or label not in (0, 1):
+        raise ValueError("need trace_id and label 1 (Pass) or 0 (Fail)")
+    if not evidence:
+        raise ValueError("add the evidence behind the label")
+    prior = [r for r in _read_hw5_labels(path) if r.get("trace_id") == trace_id]
+    record = {
+        "trace_id": trace_id,
+        "scenario_id": body.get("scenario_id") or (prior[-1].get("scenario_id") if prior else None),
+        "label": label,
+        "source": "human:hw5",
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "label_id": f"{trace_id}#{len(prior)}",
+        "evidence": [{"note": evidence}],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
+JUDGE_DIR = STATE_DIR / "judges"
+REPORT_DIR = HERE.parent / "report"
+
+
+def _judge_view(mode: str, judge_id: str | None = None) -> dict[str, Any]:
+    """Judge verdicts and critiques per trace, for display beside the labels.
+
+    Uses ``judge_id`` or the mode's latest registered version. Test-split
+    predictions are left out until that version is frozen, so the review
+    interface never shows test results early.
+    """
+    history = _read_json(JUDGE_DIR / f"_history_{mode}.json", {"versions": []})
+    ids = [v["judge_id"] for v in history.get("versions", [])]
+    if judge_id is None:
+        judge_id = ids[-1] if ids else None
+    if judge_id not in ids:
+        return {"judge_id": None, "versions": ids, "rows": {}}
+    judge = _read_json(JUDGE_DIR / f"{judge_id}.json", {})
+    frozen = judge.get("status") == "frozen"
+    phash = judge.get("prompt_hash")
+    preds = judge.get("predictions", {}).get(phash, {})
+    crits = judge.get("critiques", {}).get(phash, {})
+    split_of = {
+        tid: name
+        for name, tids in _read_json(STATE_DIR / "splits.json", {}).get(mode, {}).items()
+        if isinstance(tids, list)
+        for tid in tids
+    }
+    rows = {}
+    for tid, pred in preds.items():
+        split = split_of.get(tid)
+        if split == "test" and not frozen:
+            continue
+        # Predictions use 1 = Pass, 0 = Fail (pass_positive), like HW5 labels.
+        rows[tid] = {"split": split, "verdict": "Pass" if pred == 1 else "Fail",
+                     "critique": crits.get(tid, "")}
+    return {"judge_id": judge_id, "versions": ids, "model": judge.get("model"),
+            "status": judge.get("status"), "rows": rows}
+
+
+def _judge_runs(mode: str) -> dict[str, Any]:
+    """Every judge run for a mode, oldest first, for the side-by-side views.
+
+    One entry per registered version (via ``_judge_view``, so test rows stay
+    hidden until that version is frozen), plus any saved rerun of a version
+    in ``analysis/report/dev-<judge_id>-stability.json``. Reruns are marked
+    ``official: False``; they never change a version's own record.
+    """
+    history = _read_json(JUDGE_DIR / f"_history_{mode}.json", {"versions": []})
+    split_of = {
+        tid: name
+        for name, tids in _read_json(STATE_DIR / "splits.json", {}).get(mode, {}).items()
+        if isinstance(tids, list)
+        for tid in tids
+    }
+    runs = []
+    for version in history.get("versions", []):
+        jid = version["judge_id"]
+        view = _judge_view(mode, jid)
+        runs.append({"run_id": jid, "judge_id": jid, "official": True,
+                     "status": view.get("status"), "model": view.get("model"),
+                     "rows": view["rows"]})
+        rerun = _read_json(REPORT_DIR / f"dev-{jid}-stability.json", {})
+        if rerun.get("runs"):
+            rows = {tid: {"split": split_of.get(tid),
+                          "verdict": "Pass" if r.get("pred") == 1 else "Fail",
+                          "critique": r.get("critique", "")}
+                    for tid, r in rerun["runs"].items()
+                    if split_of.get(tid) != "test"}
+            runs.append({"run_id": f"{jid}-rerun", "judge_id": jid, "official": False,
+                         "status": "rerun", "model": rerun.get("model"),
+                         "note": rerun.get("note", ""), "rows": rows})
+    return {"runs": runs}
 
 
 def _backup_annotations() -> None:
@@ -217,13 +366,52 @@ class ReviewHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/scenarios":
-            self._send_json(_read_scenarios_lite())
+            want = parse_qs(urlsplit(self.path).query).get("set", [""])[0]
+            self._send_json(_read_scenarios_lite(include_hw5=want == "hw5"))
+            return
+
+        if path == "/api/hw5_labels":
+            mode = parse_qs(urlsplit(self.path).query).get("mode", [""])[0]
+            label_path = _hw5_label_path(mode)
+            if label_path is None:
+                self._send_json({"error": "unknown mode"}, status=400)
+                return
+            self._send_json(_read_hw5_labels(label_path))
+            return
+
+        if path == "/api/hw5_judge":
+            query = parse_qs(urlsplit(self.path).query)
+            mode = query.get("mode", [""])[0]
+            if _hw5_label_path(mode) is None:
+                self._send_json({"error": "unknown mode"}, status=400)
+                return
+            self._send_json(_judge_view(mode, query.get("judge", [None])[0]))
+            return
+
+        if path == "/api/hw5_judge_runs":
+            mode = parse_qs(urlsplit(self.path).query).get("mode", [""])[0]
+            if _hw5_label_path(mode) is None:
+                self._send_json({"error": "unknown mode"}, status=400)
+                return
+            self._send_json(_judge_runs(mode))
             return
 
         self._send_json({"error": f"unknown path: {path}"}, status=404)
 
     def do_POST(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0]
+        if path == "/api/hw5_labels":
+            body = self._read_body()
+            if not isinstance(body, dict):
+                self._send_json({"error": "expected a JSON object"}, status=400)
+                return
+            try:
+                record = _append_hw5_label(body.get("mode", ""), body)
+            except ValueError as exc:
+                self._send_json({"error": str(exc)}, status=400)
+                return
+            self._send_json({"ok": True, "record": record})
+            return
         if path not in API_FILES:
             self._send_json({"error": f"cannot POST to {path}"}, status=404)
             return
@@ -310,16 +498,25 @@ def _sync_annotation_scores(data: Any) -> int:
     return written
 
 
-def _read_scenarios_lite() -> list[dict[str, Any]]:
+def _read_scenarios_lite(include_hw5: bool = False) -> list[dict[str, Any]]:
     """Read the coverage-relevant fields per scenario from the full HW3 dataset.
 
     Lightweight on purpose: the Batch Ledger only needs these fields to show
     coverage by category, not the full opening_message/expected payload.
+    With ``include_hw5``, the HW5 targeted scenarios are appended so the HW5
+    set's coverage can place their traces.
     """
-    if not SCENARIOS_PATH.exists():
-        return []
+    paths = [SCENARIOS_PATH] + (HW5_SCENARIOS_PATHS if include_hw5 else [])
     out: list[dict[str, Any]] = []
-    for line in SCENARIOS_PATH.read_text(encoding="utf-8").splitlines():
+    for path in paths:
+        if path.exists():
+            out.extend(_scenario_rows(path))
+    return out
+
+
+def _scenario_rows(path: Path) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue

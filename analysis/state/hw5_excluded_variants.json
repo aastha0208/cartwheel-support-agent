@@ -1,0 +1,111 @@
+{
+ "rule": "Handout: one evaluation record per conversation; keep one record from each group of duplicate runs or close scenario variants. Groups found by same scenario, same order, or masked opening-message similarity >= 0.85 (plus support-0225 at 0.80-0.84 with the same template). Kept record per group: lowest scenario id (fixed rule, not chosen by content). Group 4 (order #8003: support-0035 Fail dispute, support-0037 Pass refund) keeps both: different requests and labels. Excluded traces keep their labels in hw5_labels; they are only left out of hw5_trace_inputs.json.",
+ "decided_by": "student, 2026-09-30",
+ "excluded": [
+  {
+   "scenario_id": "support-0217",
+   "trace_id": "d4a183f5189924ee6d6f87ab9d3480fe",
+   "label": 0,
+   "group": "1: charge-dispute template (plus borderline 0225)",
+   "kept_instead": "support-0059"
+  },
+  {
+   "scenario_id": "support-0218",
+   "trace_id": "07c04331fb3877c490cd6f73d0f5d479",
+   "label": 0,
+   "group": "1: charge-dispute template (plus borderline 0225)",
+   "kept_instead": "support-0059"
+  },
+  {
+   "scenario_id": "support-0221",
+   "trace_id": "de07dfb65eab5a1d229ce5781cf05f30",
+   "label": 0,
+   "group": "1: charge-dispute template (plus borderline 0225)",
+   "kept_instead": "support-0059"
+  },
+  {
+   "scenario_id": "support-0222",
+   "trace_id": "4cdd22166959974e464a6f4937dc3e89",
+   "label": 0,
+   "group": "1: charge-dispute template (plus borderline 0225)",
+   "kept_instead": "support-0059"
+  },
+  {
+   "scenario_id": "support-0223",
+   "trace_id": "d40453893d2ca3b0175ce99f0cb37357",
+   "label": 0,
+   "group": "1: charge-dispute template (plus borderline 0225)",
+   "kept_instead": "support-0059"
+  },
+  {
+   "scenario_id": "support-0225",
+   "trace_id": "8b7cc4d00ac2e118f0c1fe0af76da3e7",
+   "label": 0,
+   "group": "1: charge-dispute template (plus borderline 0225)",
+   "kept_instead": "support-0059"
+  },
+  {
+   "scenario_id": "support-0227",
+   "trace_id": "4396324a8b0683aa160fe85d43d94d58",
+   "label": 0,
+   "group": "1: charge-dispute template (plus borderline 0225)",
+   "kept_instead": "support-0059"
+  },
+  {
+   "scenario_id": "support-0123",
+   "trace_id": "244b5d28a9babd0df8dbb22ff21596d9",
+   "label": 1,
+   "group": "2: refund template",
+   "kept_instead": "support-0122"
+  },
+  {
+   "scenario_id": "support-0126",
+   "trace_id": "c5bc8ac698dee9dd4b9b24fec9a4d449",
+   "label": 1,
+   "group": "2: refund template",
+   "kept_instead": "support-0122"
+  },
+  {
+   "scenario_id": "support-0128",
+   "trace_id": "39a7076cdbb5ae5c01ec4074950f25dc",
+   "label": 1,
+   "group": "2: refund template",
+   "kept_instead": "support-0122"
+  },
+  {
+   "scenario_id": "support-0040",
+   "trace_id": "5fcbdeaeceeb2aba38a894091254a27c",
+   "label": 1,
+   "group": "3: same order #8002 (0019 is a different request and is kept too)",
+   "kept_instead": "support-0039"
+  },
+  {
+   "scenario_id": "support-0121",
+   "trace_id": "2b8e1594915ab47c40d71bf52881f7ea",
+   "label": 1,
+   "group": "5: order-status template",
+   "kept_instead": "support-0117"
+  },
+  {
+   "scenario_id": "support-0130",
+   "trace_id": "8f2d5cdd955b035c8e3a3660033d7da8",
+   "label": 1,
+   "group": "6: refund template",
+   "kept_instead": "support-0125"
+  },
+  {
+   "scenario_id": "support-0141",
+   "trace_id": "a26118f5a5abbac4c5f6b95da64be440",
+   "label": 1,
+   "group": "7: merchant refund template",
+   "kept_instead": "support-0136"
+  },
+  {
+   "scenario_id": "support-0150",
+   "trace_id": "8ee8a6ae131cecdf64cadfd0d5e6ff39",
+   "label": 1,
+   "group": "8: support refund template",
+   "kept_instead": "support-0145"
+  }
+ ]
+}

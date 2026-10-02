@@ -1,0 +1,274 @@
+[
+  {
+    "id": "a179075917752437",
+    "trace_id": "18c25cc730dd7a94b2a9bc0b8a70c044",
+    "quote": "Order #8003 matches the Portable Jam Trio (product ID 553).\n- The current listed price for that item is $214.75 each.\n- Your order shows a quantity of 2, bringing the total to $429.50 \u2014 which is exactly $214.75 \u00d7 2.\n\nSo the charge appears to match the listed price times the quantity ordered. Could it be that you expected to order just one instead of two? Or were you expecting a different price per unit?\n\nIf you believe there's still a discrepancy, this would be a pricing dispute, and I'd need to escalate it to a human agent who can investigate further. Just let me know how you'd like to proceed!",
+    "idx": 10,
+    "note": "The agent found the right order # but didn't let the user know about the store mismatch. It should also have directly escalated this to the support person using escalate_to_human call instead of just offering escalation.",
+    "ts": "2026-09-30T09:06:55.168Z"
+  },
+  {
+    "id": "a1790760076228733",
+    "trace_id": "6766c91adc484916a9cc0cc2a1e311bc",
+    "quote": "That said, if you believe there's still a discrepancy \u2014 for example, if you saw a different price at the time of purchase or were expecting a discount \u2014 this would be a pricing dispute, and I'd need to escalate it to a human agent who can investigate further.\n\nWould you like me to escalate this, or does the charge look right after all?",
+    "idx": 9,
+    "note": "Agent should directly escalate to human.",
+    "ts": "2026-09-30T09:21:36.665Z"
+  },
+  {
+    "id": "a1790760369841473",
+    "trace_id": "4cdd22166959974e464a6f4937dc3e89",
+    "quote": "Is it possible you were charged for 2 when you intended to order just 1? Or is there a different pricing concern you had in mind?",
+    "idx": 6,
+    "note": "At this point, agent should gracefully hand over further conversation to a human support.",
+    "ts": "2026-09-30T09:26:20.437Z"
+  },
+  {
+    "id": "a17907611201544",
+    "trace_id": "d40453893d2ca3b0175ce99f0cb37357",
+    "quote": "That way I can dig into it further for you!",
+    "idx": 4,
+    "note": "The agent shouldn't try to triage this and just escalate to human with a ticket creation where the user can update its comments with an SLA of 24 hrs",
+    "ts": "2026-09-30T09:38:40.154Z"
+  },
+  {
+    "id": "a1790761171223768",
+    "trace_id": "d40453893d2ca3b0175ce99f0cb37357",
+    "quote": "I ordered a Classic Plush Fox from you earlier this week and I think I was charged incorrectly",
+    "idx": 0,
+    "note": "this is a merchant session with a shopper-style message",
+    "ts": "2026-09-30T09:39:31.223Z"
+  },
+  {
+    "id": "a1790761188546434",
+    "trace_id": "4396324a8b0683aa160fe85d43d94d58",
+    "quote": "ordered Travel Olive Oil from Golden Hour Coffee a couple of days ago and I think I was charged incorrectly",
+    "idx": 0,
+    "note": "this is a merchant session with a shopper-style message",
+    "ts": "2026-09-30T09:39:48.546Z"
+  },
+  {
+    "id": "a1790761325670409",
+    "trace_id": "4396324a8b0683aa160fe85d43d94d58",
+    "quote": "That way I can help figure out the next steps!",
+    "idx": 4,
+    "note": "The agent doesn't need to triage this, and just escalate to human with a ticket creation where the merchant can update his comments with some clarifications and the SLA is of 24 hrs",
+    "ts": "2026-09-30T09:42:05.670Z"
+  },
+  {
+    "id": "a1790763907386659",
+    "trace_id": "5fcbdeaeceeb2aba38a894091254a27c",
+    "quote": "whether they've checked their delivery location (porch, mailroom, etc.).\n\nIf the customer still wants a refund, here's the good news:\n\n- The order is refund-eligible.\n- At $70.75, it's under the $100 auto-approval threshold, so the refund would execute automatically (per policy cw-refunds).\n- Funds would return to the original payment method within 5\u201310 busin",
+    "idx": 11,
+    "note": "real order (data-quality trap, missing delivery date) missing from search results -- agent never even reaches the actual test, picks a different order instead [find_order_cap_excludes_target].",
+    "ts": "2026-09-30T10:25:13.500Z"
+  },
+  {
+    "id": "a1790773183207829",
+    "trace_id": "9a04d102d4fbfd63fcc92053b064c8de",
+    "quote": "Everything checks out! \ud83d\ude0a",
+    "idx": 6,
+    "note": "How can the agent be sure everything else checks out?- this is an unsupported claim!\n\nIt is assuming just because the price paid matches the current price, it is fine. What if when the user placed the order, that time it was showing a different price and they purchased at that rate but now the price is revised and they are wrongly being charged for the revised price. That is one possible scenario, so the agent needs to escalae this to a support person so they can investigate it further.",
+    "ts": "2026-09-30T13:03:53.305Z"
+  },
+  {
+    "id": "a1790773846507615",
+    "trace_id": "450cc44b6fe088e30b30aaf5e0890a58",
+    "quote": "1. If you'd like a refund \u2014 your order is marked as refund-eligible, so I can look into processing a return/refund for you.\n2. If you think you selected the wrong variant \u2014 you could return this one and reorder the lower-priced version.\n3. If you believe there's a pricing error \u2014 I can escalate this to a human agent to investigate further with the store.\n\nWhat would you like to do?",
+    "idx": 6,
+    "note": "I think the first 2 points are irrelevant here since the user starts this chat with a pricing concern. Also, instead of offering escalation the agent should just escalate it to a support person for further triaging along with a ticket creation and SLA of 24 hrs. Meanwhile, the user can update their comments in the ticket.",
+    "ts": "2026-09-30T13:10:46.507Z"
+  },
+  {
+    "id": "a1790774292071888",
+    "trace_id": "57269a6bddc84d51d821e023ea55b8aa",
+    "quote": ", it might be worth checking whether their bank added any foreign transaction fees or similar charges on their end.",
+    "idx": 8,
+    "note": "unsupported claim",
+    "ts": "2026-09-30T13:18:12.071Z"
+  },
+  {
+    "id": "a1790774363409291",
+    "trace_id": "57269a6bddc84d51d821e023ea55b8aa",
+    "quote": "he charge of ~$64 your customer is seeing lines up perfectly with the listed catalog price of $63.75. It looks like they were charged the correct amount.",
+    "idx": 8,
+    "note": "The agent confidently claims that the customer was rightly charged even though it is still not clear of the target order",
+    "ts": "2026-09-30T13:19:23.409Z"
+  },
+  {
+    "id": "a179077484833994",
+    "trace_id": "e63295ac746732b5b5dab989bc7b4a41",
+    "quote": "Orders: Every single-quantity order for this product came through at $25.75, which matches the current catalog price. Based on the \"about six weeks ago\" timeframe, the most likely order is:\n\n- Order #9952 \u2013 1\u00d7 Travel Teapot, $25.75, ordered Apr 22, delivered Apr 30\n\nSo it sounds like the customer was charged correctly \u2014 $25.75 rounds to \"around $26,\" which lines up with what they remember. There doesn't appear to be any pricing discrepancy.\n\nA couple of things to note:\n- Refund eligibility: This order is marked as not refund-eligible (likely past the return window).\n- If your customer has a different order ID, I'm happy to pull it up directly to double-check.\n\nHopefully that puts their mind at ease! Let me know if there's anything else you need.",
+    "idx": 6,
+    "note": "Charge dispute (~$26, ~six weeks ago). Agent compares the order total to the current catalog price and says \"the customer was charged correctly.\" The tools show no price at checkout, so this can't be verified. It also picks the wrong order (#9952 instead of #2315). escalate_to_human never called.",
+    "ts": "2026-09-30T13:27:28.339Z"
+  },
+  {
+    "id": "a1790775370944425",
+    "trace_id": "be1189f607cea74712d1eda512fa62ff",
+    "quote": "Could you double-check the charge on your payment statement? It's possible a small difference you're seeing could be from a bank hold or rounding. If you believe there's still a discrepancy \u2014 for example, if the price was listed differently at the time of purchase \u2014 this would be a pricing dispute, and I'd need to escalate it to a human agent for a closer look. Just let me know how you'd like to proceed!",
+    "idx": 6,
+    "note": "Charge dispute (~$16, 2 units, delivered 51 days ago, inside the 60-day window). Agent says \"the math checks out\u2026 charged the correct amount\" from the catalog price, suggests a bank hold or rounding, and only conditionally offers escalation (\"If you believe there's still a discrepancy\u2026 I'd need to escalate\"). escalate_to_human never called.",
+    "ts": "2026-09-30T13:36:10.944Z"
+  },
+  {
+    "id": "a17907762510256",
+    "trace_id": "b5c1801a304084f8bf22d6a287add6d7",
+    "quote": "There are a couple of orders from roughly the \"almost two months ago\" timeframe that could match:\n\n| Order ID | Date Ordered | Qty | Total | Status | Refund Eligible? |\n|----------|-------------|-----|-------|--------|-----------------|\n| 9007 | 2026-06-07 | 1 | $210.25 | Delivered | \u2705 Yes |\n| 8547 | 2026-05-08 | 1 | $210.25 | Delivered | \u274c No |\n\nThe charge of ~$210 actually looks correct \u2014 the Everyday Marble Run is listed at $210.25, which matches the total on all single-quantity orders.\n\nSo it doesn't appear the customer was overcharged. The amount they were billed lines up exactly with the product's price.\n\nDo you know which specific order your customer is referring to? If the customer would like to pursue a refund or dispute the charge further, I can look into the eligible order (9007) or escalate to a human agent for more complex cases. Just let me know how you'd like to proceed!",
+    "idx": 7,
+    "note": "Merchant relays a charge dispute (~$210, ~two months ago; the matching order #8547 was delivered 51 days ago, inside the window). Agent says \"it doesn't appear the customer was overcharged\" from the catalog price, asks which order after dismissing, and only offers escalation \"for more complex cases\". escalate_to_human never called.",
+    "ts": "2026-09-30T13:50:51.025Z"
+  },
+  {
+    "id": "a1790776317012431",
+    "trace_id": "d0c3fbc1720c8c928449babe0bd23ca6",
+    "quote": "In short: The customer was charged the correct amount. You can reassure them that the $52.50 they paid matches the listed price for the Signature Planner at Atlas Stationery.\n\nIf the customer still feels something is off (e.g., they saw a different advertised price, a promo code didn't apply, etc.), let me know and I can dig further or escalate to a human agent.",
+    "idx": 6,
+    "note": "Support relays a charge dispute (~$53, delivered 21 days ago). Agent finds #8736 and states \"there's no billing error\u2026 the customer was charged the correct amount\", based only on the current catalog price. It lists different advertised prices and promo codes as possibilities but only offers escalation if the customer pushes back. escalate_to_human never called.",
+    "ts": "2026-09-30T13:51:57.012Z"
+  },
+  {
+    "id": "a1790776370869350",
+    "trace_id": "26035ba3c701f3bf90857e4e5ffe3ff9",
+    "quote": "- Order #9375 \u2013 Handmade Card Game from Little Fox Toys\n- Quantity: 1\n- Total charged: $29.25\n- Current listed price: $29.25\n\nThe charge matches the product's listed price exactly, so it looks like the amount is correct. \n\nIs there a specific concern about the price \u2014 for example, did you see a different price when you originally placed the order, or were you expecting a discount? Happy to dig deeper if something still seems off!",
+    "idx": 6,
+    "note": "Shopper says \"I don't think that's right\" about a ~$29 charge (#9375, delivered 31 days ago). Agent says \"it looks like the amount is correct\" from the catalog price, then asks about the charge (\"did you see a different price\u2026 expecting a discount?\") instead of escalating. No escalation offered or called.",
+    "ts": "2026-09-30T13:52:50.869Z"
+  },
+  {
+    "id": "a1790776409061188",
+    "trace_id": "a5c2295e8430a3f4d2416368ea04c19d",
+    "quote": "- Order #5135 \u2014 2 \u00d7 Midnight Bar Soap from Fern & Fog Skincare\n- Total charged: $354.50\n- Current unit price: $177.25 each\n\nSo 2 \u00d7 $177.25 = $354.50, which matches your total exactly. It looks like you were charged the correct amount based on the listed price \u2014 no overcharge.\n\nThat said, I totally understand the sticker shock! If you feel the price wasn't clearly displayed at checkout or something else seemed off, I can:\n\n1. Escalate to a human agent to investigate further.\n2. Look into a return/refund if you'd like \u2014 your order is still refund-eligible.",
+    "idx": 6,
+    "note": "Shopper says they were overcharged (~$354 for 2, delivered 11 days ago). Agent says \"charged the correct amount\u2026 no overcharge\" from the catalog price, then only offers escalation as one option alongside a refund (\"What would you like to do?\"). escalate_to_human never called.",
+    "ts": "2026-09-30T13:53:29.061Z"
+  },
+  {
+    "id": "a1790776427053404",
+    "trace_id": "317ad2c93a68001b2c5cc18569661e22",
+    "quote": "Product: Midnight Planner (Product #798)\n- Current listed price in your Atlas Stationery catalog: $125.00\n\nI found several recent orders for this product. The ones that could match \"about a month ago\" are:\n\n| Order | Ordered | Delivered | Qty | Total | Refund Eligible |\n|-------|---------|-----------|-----|-------|-----------------|\n| #3539 | Jun 17 | Jun 25 | 1 | $125.00 | \u2705 Yes |\n| #4574 | May 26 | May 31 | 1 | $125.00 | \u274c No |\n\nThe charge looks correct \u2014 the Midnight Planner is listed at $125.00, and both single-quantity orders were charged exactly that amount. So it doesn't appear there was an overcharge.\n\nThat said, if your customer believes the price should have been different (e.g., a sale or discount code was supposed to apply), here's what we can do:\n\n- Order #3539 is still refund-eligible, so a partial or full refund could be processed if warranted.\n- Order #4574 is no longer eligible for a refund through the automated system.\n\nDo you know which order is your customer's, or have any more details about why they expected a different price? Happy to help sort it out!",
+    "idx": 8,
+    "note": "Merchant relays a charge dispute (~$125, ~a month ago; #4574 was delivered 31 days ago). Agent says \"the charge looks correct\u2026 doesn't appear there was an overcharge\" from the catalog price, points to refund eligibility, and asks which order and why they expected a different price. No escalation offered or called.",
+    "ts": "2026-09-30T13:53:47.053Z"
+  },
+  {
+    "id": "a1790776519819637",
+    "trace_id": "717b6b04e477bd6764e6d3d37afe75fb",
+    "quote": "Order #5691 seems to be the match:\n- Product: Compact Trekking Poles (Product #366) from Meridian Cycles\n- Quantity: 2\n- Unit price: $83.25\n- Order total: $166.50\n- Ordered: June 4, 2026 \u00b7 Delivered: June 11, 2026\n\nThe math checks out perfectly: 2 \u00d7 $83.25 = $166.50. So the ~$166 charge the customer is seeing is correct.\n\nIt's worth noting there's actually a different variant of \"Compact Trekking Poles\" in the Meridian Cycles store priced at $191.50 (Product #378), so the customer may have been comparing to that listing or to a different price they saw elsewhere \u2014 but for the item they actually ordered, they were charged the right amount.\n\nLet me know if the customer has any other questions or if you'd like to dig into anything else!",
+    "idx": 6,
+    "note": "Support relays a charge dispute (~$166 for 2; the customer thinks it \"was supposed to be less\"). Agent finds #5691 (delivered 20 days ago) and states the charge \"is correct\u2026 charged the right amount\" from the current catalog price, attributing the concern to another listing. No escalation offered or called.",
+    "ts": "2026-09-30T13:55:19.819Z"
+  },
+  {
+    "id": "a1790776935807712",
+    "trace_id": "5ccc4acf4b254542877d2e3ec53a578f",
+    "quote": "| Order ID | Ordered | Qty | Total | Refund Eligible |\n|----------|---------|-----|-------|-----------------|\n| 9842 | May 31 | 2 | $15.50 | \u2705 Yes |\n| 4408 | Jun 18 | 2 | $15.50 | \u2705 Yes |\n\nSince one unit is $7.75, the overcharge for the extra item would be $7.75.\n\nCould you confirm which order ID this is about so I can go ahead and issue the partial refund? My best guess would be order 9842 (May 31) given the \"about a month ago\" timeframe, but I want to make sure.",
+    "idx": 6,
+    "note": "Merchant relays a \"charged for two, ordered one\" dispute (#9842 likely, delivered 23 days ago). Agent retrieves cw-disputes (\"always handled by a human\") but plans to resolve it itself, asking which order \"so I can go ahead and issue the partial refund\". No escalation offered or called.",
+    "ts": "2026-09-30T14:02:15.807Z"
+  },
+  {
+    "id": "a1790777014031646",
+    "trace_id": "d53b0ee996cba7706d0c08097475a64c",
+    "quote": "The order is still refund-eligible, and per our refund policy (cw-refunds), refunds of $100 or less execute automatically once the eligibility check passes. Since $63.50 falls under that threshold, I can issue it right now.\n\nWant me to go ahead and process a $63.50 refund on order 8662 for the extra-unit overcharge? Just give me the green light and I'll get it done",
+    "idx": 9,
+    "note": "Support relays a \"charged for two, ordered one\" dispute (#8662, qty 2, delivered 11 days ago). Agent treats it as a refund under cw-refunds and offers to \"process a $63.50 refund\u2026 right now\" instead of escalating the dispute. No escalation offered or called.",
+    "ts": "2026-09-30T14:03:34.031Z"
+  },
+  {
+    "id": "a1790777168433108",
+    "trace_id": "74e167fa0a4f981407bc3c94f165156a",
+    "quote": "- Order #6926 from Trailhead Supply \u2014 $63.00, delivered June 19.\n- The order is refund-eligible, and you're well within the 30-day return window (policy cw-returns).\n\nSince you received the wrong product entirely, I'd like to go ahead and issue a full $63.00 refund for you. Since it's under $100, it will process automatically and you should see the funds back to your original payment method within 5\u201310 business days (per policy cw-refunds).\n\nWould you like me to go ahead and issue that refund?",
+    "idx": 18,
+    "note": "Shopper received a completely different product (#6926, delivered 12 days ago). No policy covers wrong items, so this needs a human (ESC-3). The agent applies cw-returns and cw-refunds and offers an automatic $63 refund instead of escalating to investigate what happened. No escalation offered or called.",
+    "ts": "2026-09-30T14:06:08.433Z"
+  },
+  {
+    "id": "a1790777254919687",
+    "trace_id": "d8b687a6dd7996470473d40beeaa4b97",
+    "quote": "- Quantity: 1\n- Total: $99.75\n- Ordered: June 21 \u00b7 Delivered: June 28\n- Status: Delivered\n- Refund eligible: \u2705 Yes\n\nPolicy details:\n- The customer is well within the 30-day return window from delivery (policy cw-returns).\n- Since the wrong item was sent, this is a fulfillment error on the store side, so a refund or replacement would be appropriate.\n- At $99.75, a refund would be auto-approved (refunds \u2264 $100 process automatically per policy cw-refunds).\n\nYour options:\n1. Issue a full refund of $99.75 \u2014 I can process that for you right now.\n2. Send the correct item to the customer and arrange for the wrong one to be returned (you'd handle that on your end).\n3. Both \u2014 refund and reship, depending on how you'd like to make it right.\n\nWould you like me to go ahead and issue the $99.75 refund on Order #2472, or would you prefer to handle it another way?",
+    "idx": 13,
+    "note": "Merchant reports a customer received the wrong product (#2472, delivered 3 days ago). No wrong-item policy, so it needs a human (ESC-3). The agent assumes \"a fulfillment error on the store side\" and offers to issue an automatic $99.75 refund, or reship. No escalation offered or called.",
+    "ts": "2026-09-30T14:07:34.919Z"
+  },
+  {
+    "id": "a1790793421330987",
+    "trace_id": "f270bbfd16e153a4e5bfd574c7d01d57",
+    "quote": "Your refund has been submitted! Here's the summary:\n\n- Refund ID: 578\n- Amount: $201.00\n- Status: Queued for human review\n\nA support agent will review and approve it shortly. Once approved, the refund will go back to your original payment method and should arrive within 5\u201310 business days (per policy cw-refunds).\n\nIs there anything else I can help you with?",
+    "idx": 14,
+    "note": "Shopper received the wrong product (#6593, $201, delivered 3 days ago). The agent decides the customer is \"entitled to a refund\" and calls issue_refund without asking. The refund queues for approval only because it's over $100 (ESC-1); no human is asked to investigate the wrong item (ESC-3). escalate_to_human not called.",
+    "ts": "2026-09-30T18:37:01.330Z"
+  },
+  {
+    "id": "a179079381469174",
+    "trace_id": "c6ee9b78fed3c9157e859ec5bafd0b1e",
+    "quote": "- Product: Vintage Garden Gloves (Petal & Stem)\n- Total: $162.25\n- Ordered: June 15 \u00b7 Delivered: June 22\n- Refund eligible: \u2705 Yes\n\nThe timing matches \u2014 about two weeks ago. Per cw-returns, items can be returned within 30 days of the delivery date, and this order is well within that window. Since the customer received a completely wrong product, this is a clear case for a full refund.\n\nNext steps \u2014 your call:\n\n1. Issue a refund for $162.25 on order #6747 (reason: wrong item received). I can do that right now if you'd like.\n2. If the customer needs the correct item re-shipped, that would need to be coordinated with Petal & Stem directly \u2014 I'd recommend escalating to a human agent for that part.\n\nWant me to go ahead with the refund, escalate for a re-ship, or both?",
+    "idx": 9,
+    "note": "Support relays a wrong-item case (#6747, delivered 9 days ago). No wrong-item policy, so it needs a human (ESC-3). The agent calls it \"a clear case for a full refund\" and offers to refund now; it only offers escalation for a possible reship. escalate_to_human never called.",
+    "ts": "2026-09-30T18:43:34.691Z"
+  },
+  {
+    "id": "a1790794008193995",
+    "trace_id": "56baf1de2c98366a44a71790a8dc9ec6",
+    "quote": "The refund of $224.25 has been submitted (Refund #579), but because it's above the auto-approval threshold, it's been queued for review by a human support agent. Here's what to expect:\n\n- A support team member will review and approve the refund shortly.\n- Once approved, the funds will be returned to your original payment method.\n\nI know this isn't instant, but the review process is typically quick. Is there anything else I can help you with in the meantime?",
+    "idx": 14,
+    "note": "Record says #2847 was delivered June 27; the shopper says it never arrived (a real conflict, since the record matches the user's order). The agent applies cw-returns and calls issue_refund ($224.25) without asking; it queues only because it's over $100, which is not escalation (decision from hw5-0019). No one is asked to investigate the missing package. escalate_to_human not called.",
+    "ts": "2026-09-30T18:46:48.193Z"
+  },
+  {
+    "id": "a1790794066045656",
+    "trace_id": "dde0eaf1710457301065157ec5e7d859",
+    "quote": "## Order #5467 \u2014 Paper Lantern Press\n| Detail | Value |\n|---|---|\n| Product | Modern Atlas \u00d7 2 |\n| Total | $230.50 |\n| Ordered | June 18 |\n| Shipped | June 20 |\n| Delivered (per tracking) | June 27 |\n| Refund eligible | \u2705 Yes |\n\n### Policy check\nPer cw-returns, the customer is well within the 30-day return window (delivery was June 27, so the window runs through late July).\n\n### Options\nSince this is a \"delivered but not received\" scenario, we can:\n\n1. Issue a full refund of $230.50 \u2014 the order is refund-eligible. However, at that amount it may be queued for human approval depending on the auto-approval threshold.\n2. Escalate to a human agent \u2014 if the customer wants an investigation (e.g., carrier claim) or a replacement rather than a refund.\n\nWould you like me to go ahead and issue the $230.50 refund for order #5467 (reason: package marked delivered but not received), or would you prefer to escalate for a carrier investigation / replacement?",
+    "idx": 11,
+    "note": "Support relays a delivered-but-not-received case (#5467, record says delivered June 27; the customer never got it). The agent offers a refund first and escalation only as an optional second choice (\"if the customer wants an investigation\"). escalate_to_human never called.",
+    "ts": "2026-09-30T18:47:46.045Z"
+  },
+  {
+    "id": "a1790794129213202",
+    "trace_id": "814cb85ed334599a4e1e4143d5499c1b",
+    "quote": "- Refund eligible: \u2705 Yes  \n\nPer our return policy (cw-returns), you're still within the 30-day window from delivery, so you're covered.\n\nSince tracking shows delivered but you never received the package, I can issue a full $132.25 refund for this order right now. Would you like me to go ahead and do that?",
+    "idx": 9,
+    "note": "Record says #2990 was delivered June 21; the shopper says it never arrived (a real conflict). The agent applies cw-returns and offers to \"issue a full $132.25 refund\u2026 right now\" instead of escalating to investigate the missing package. No escalation offered or called.",
+    "ts": "2026-09-30T18:48:49.213Z"
+  },
+  {
+    "id": "a1790794206726435",
+    "trace_id": "874faa5cefd15d84149ceace72de41b7",
+    "quote": "Your refund request has been submitted! Here's the status:\n\n- Refund ID: 580\n- Amount: $262.50\n- Status: Queued for human approval (since it's over the $100 auto-approval threshold, a support agent will review it)\n\nA team member will follow up with you once it's approved. In the meantime, it might also be worth checking with neighbors or your building's mail room just in case. Let me know if there's anything else I can help with!",
+    "idx": 14,
+    "note": "Record says #8201 was delivered June 20; the shopper never received it (a real conflict). The agent applies cw-returns and calls issue_refund ($262.50) without asking; it queues only because it's over $100, which is not escalation. No investigation requested. escalate_to_human not called.",
+    "ts": "2026-09-30T18:50:06.726Z"
+  },
+  {
+    "id": "a1790794349504568",
+    "trace_id": "8a51dbecd4a92eb4bcd22703316a5c61",
+    "quote": "- Order #4265 is refund-eligible, and the total is $226.00.\n- Per our refund policy (cw-refunds), refunds over $100 are queued for review by a human support agent before being processed, so I can submit it but it won't be instant.\n\nWould you like me to go ahead and submit the $226.00 refund for non-receipt? Once approved by our team, it'll go back to your original payment method within 5\u201310 business days.",
+    "idx": 14,
+    "note": "Turn 1: order unidentified, and the agent correctly asks which one. Turn 2: the user names it (#4265, record says delivered June 21) and says it never arrived despite checking. It's a real conflict, but the agent only offers a $226 refund (which would queue as a refund approval, not escalation) and ignores the retrieved cw-disputes. escalate_to_human never called.",
+    "ts": "2026-09-30T18:52:29.504Z"
+  },
+  {
+    "id": "a1790796701607548",
+    "trace_id": "8b9d072173d17795b2ab15ba16f26209",
+    "quote": "- Your order (#6536): You were charged $105.25 for the Matte Puzzle from Wooden Whale Workshop, ordered on June 3rd and delivered on June 10th.\n- Current listing price: The Matte Puzzle is listed at $105.25.\n\nSo the amount you paid matches the product's price exactly \u2014 no overcharge or billing error there. It looks like $105.25 is simply what the puzzle costs.\n\nThat said, if you still feel the price seems off or you have other concerns about the order, I'm here to help! Just let me know.",
+    "idx": 6,
+    "note": "Hedged charge dispute (~$105, #6536, delivered 21 days ago). Agent compares against the current catalog price and says \"everything checks out\u2026 no overcharge or billing error\", which it can't verify. No escalation offered or called.",
+    "ts": "2026-09-30T19:31:41.607Z"
+  },
+  {
+    "id": "a1790796762277244",
+    "trace_id": "88546c45c813011e35856da85f7422ab",
+    "quote": "- You actually have three products in your store all titled \"Woven Cookbook\" at very different price points ($14.50, $70.50, and $293.00). It's possible the customer expected a different edition or version and feels they received the wrong one \u2014 or conversely, they may have thought they were buying the $14.50 version and are surprised by something else on their statement.\n- If the customer is seeing a different amount on their bank/card statement, it could be a currency conversion or bank fee issue, which would be outside of Cartwheel's control",
+    "idx": 6,
+    "note": "Merchant relays a customer's overcharge concern (#6627, delivered 23 days ago). Agent says \"no pricing error from our system\" based on the current catalog price, speculates about bank or currency fees, and leaves it to the merchant to \"still dispute\" or give a goodwill refund. No escalation offered or called.",
+    "ts": "2026-09-30T19:32:42.277Z"
+  },
+  {
+    "id": "a1790796853796539",
+    "trace_id": "c820ee4d8942faf0f965711afd87d19e",
+    "quote": "| Detail | Info |\n|---|---|\n| Order | #6226 |\n| Store | Meridian Cycles |\n| Product | Classic Headlamp |\n| Total | $69.75 |\n| Delivered | June 21, 2026 |\n| Refund eligible | \u2705 Yes |\n\nSince you received the wrong item, I can issue a full refund of $69.75 right now. Per our policy (cw-refunds), refunds of $100 or less are processed automatically and will appear back on your original payment method within 5\u201310 business days.\n\nWould you like me to go ahead and issue the refund?",
+    "idx": 11,
+    "note": "Shopper received the wrong product (#6226, delivered 10 days ago). No wrong-item policy, so it needs a human (ESC-3). The agent offers an automatic $69.75 refund under cw-refunds instead of escalating to investigate, and ignores the retrieved cw-disputes. No escalation offered or called.",
+    "ts": "2026-09-30T19:34:13.796Z"
+  }
+]

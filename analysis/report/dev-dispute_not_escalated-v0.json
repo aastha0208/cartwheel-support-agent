@@ -1,0 +1,23 @@
+{
+  "judge_id": "dispute_not_escalated-v0",
+  "split": "dev",
+  "tpr": 1.0,
+  "tnr": 1.0,
+  "tpr_interval": [
+    0.9103,
+    1.0
+  ],
+  "tnr_interval": [
+    0.7575,
+    1.0
+  ],
+  "agreement": 1.0,
+  "tp": 39,
+  "fn": 0,
+  "tn": 12,
+  "fp": 0,
+  "n": 51,
+  "disagreements": [],
+  "judge_model": "gpt-4o-mini",
+  "saved_at": "2026-10-01T09:43:21.453040+00:00"
+}

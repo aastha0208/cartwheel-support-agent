@@ -176,6 +176,13 @@
     background: var(--panel); border-right: 1px solid var(--line);
     padding: 14px 10px; overflow-y: auto; max-height: calc(100vh - 51px);
   }
+  /* Drag handle between the rail and the trace; double-click resets. */
+  #rail-resizer {
+    width: 6px; flex-shrink: 0; align-self: stretch; cursor: col-resize;
+    margin-left: -3px; margin-right: -3px; position: relative; z-index: 2;
+  }
+  #rail-resizer:hover, #rail-resizer.dragging { background: #6366f1; opacity: .5; }
+  body.rail-resizing { cursor: col-resize; user-select: none; }
   #session-rail .rail-title {
     font-size: 11px; font-weight: 700; text-transform: uppercase;
     letter-spacing: .05em; color: var(--muted); padding: 0 6px 8px;
@@ -185,9 +192,10 @@
     border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: inherit;
     margin: 0 6px 8px; width: calc(100% - 12px);
   }
-  #rail-filters { display: flex; gap: 6px; padding: 0 6px 10px; }
+  /* Dropdowns wrap onto a second row instead of truncating their text. */
+  #rail-filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 6px 10px; }
   #rail-filters select {
-    flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 4px 6px;
+    flex: 1 1 105px; min-width: 0; font: inherit; font-size: 12px; padding: 4px 6px;
     border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: inherit;
   }
   .rail-item {
@@ -424,7 +432,9 @@
   .mode-block .notes li { font-size: 12.5px; padding: 3px 0; border-top: 1px dashed var(--line); }
   .mode-block .notes li a { color: inherit; text-decoration: none; cursor: pointer; display: block; }
   .mode-block .notes li a:hover { color: var(--role-user); }
-  .mode-block .notes li.more-hint { color: var(--muted); font-style: italic; }
+  .mode-block .notes li.more-hint { color: var(--muted); font-style: italic; cursor: pointer; }
+  .mode-block .notes li.more-hint:hover { text-decoration: underline; }
+  ul.more-items { margin: 0; padding: 0; }
   .mode-block .close-neg-label {
     font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em;
     color: var(--muted); margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line);
@@ -538,6 +548,77 @@
     border-left: 2px solid var(--line); padding-left: 8px; margin-bottom: 5px;
   }
   .note-row .note-text { font-size: 13.5px; white-space: pre-wrap; }
+
+  /* HW5 per-mode Pass/Fail labeling */
+  #sample-set { font: inherit; font-size: 12px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+  #hw5-panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 10px 12px; margin: 8px 0; font-size: 13px; }
+  #hw5-panel:empty { display: none; }
+  #hw5-panel .hw5-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #hw5-panel .hw5-title { font-weight: 700; }
+  #hw5-panel .hw5-progress { color: var(--muted); font-size: 12px; margin-left: auto; }
+  #hw5-panel details { margin: 6px 0; }
+  #hw5-panel summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  #hw5-panel ul { margin: 4px 0 0 18px; padding: 0; }
+  #hw5-panel li { margin: 2px 0; }
+  #hw5-panel textarea { width: 100%; box-sizing: border-box; min-height: 52px; font: inherit; font-size: 13px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); margin-top: 6px; }
+  #hw5-panel .hw5-actions { display: flex; gap: 8px; margin-top: 6px; align-items: center; flex-wrap: wrap; }
+  #hw5-panel button.hw5-reason { font-size: 11.5px; padding: 2px 8px; border-radius: 12px; color: #065f46; }
+  #hw5-panel button { font: inherit; font-size: 12.5px; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+  #hw5-panel button.hw5-pass { border-color: #059669; color: #059669; font-weight: 600; }
+  #hw5-panel button.hw5-fail { border-color: #dc2626; color: #dc2626; font-weight: 600; }
+  #hw5-panel .hw5-history { color: var(--muted); font-size: 12px; }
+  #hw5-panel .hw5-saved { color: #059669; font-weight: 600; font-size: 12.5px; }
+  #hw5-panel button:disabled { opacity: .5; cursor: wait; }
+  #hw5-panel .hw5-evidence-view { margin-top: 6px; padding: 6px 8px; border-left: 3px solid var(--line); white-space: pre-wrap; font-size: 12.5px; }
+  .hw5-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 4px; }
+  .hw5-badge.pass { background: #d1fae5; color: #065f46; }
+  .hw5-badge.fail { background: #fee2e2; color: #991b1b; }
+  .hw5-badge.none { background: #f3f4f6; color: var(--muted); font-weight: 400; }
+  .hw5-badge.disagree { background: #fef3c7; color: #92400e; }
+  .hw5-badge.agree { background: #f3f4f6; color: var(--muted); font-weight: 400; }
+  #hw5-panel .hw5-judge { margin: 8px 0; padding: 6px 8px; border-left: 3px solid #6366f1; }
+  #hw5-panel .hw5-critique { margin-top: 4px; white-space: pre-wrap; font-size: 12.5px; }
+  /* Verdict strip: your label next to every judge run on this trace. */
+  #hw5-panel .hw5-strip { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 8px 0 6px; }
+  #hw5-panel .hw5-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); color: var(--ink); }
+  #hw5-panel .hw5-chip .hw5-badge { margin-left: 0; }
+  #hw5-panel .hw5-chip.human { font-weight: 600; border-color: var(--ink); }
+  #hw5-panel button.hw5-chip.run { cursor: pointer; }
+  #hw5-panel button.hw5-chip.run.off { border-color: #d97706; background: rgba(217,119,6,.12); }
+  #hw5-panel button.hw5-chip.run.sel { outline: 2px solid #6366f1; outline-offset: 1px; }
+  #hw5-panel .hw5-sep { width: 1px; height: 18px; background: var(--line); margin: 0 2px; }
+  #hw5-panel .hw5-mark.off { color: #b45309; font-weight: 700; }
+  #hw5-panel .hw5-mark.ok { color: #059669; }
+  #hw5-panel .hw5-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-top: 4px; }
+  #hw5-panel button.hw5-tab { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); padding: 4px 10px; font-size: 12.5px; }
+  #hw5-panel button.hw5-tab.on { color: var(--ink); border-bottom-color: #6366f1; font-weight: 600; }
+  #hw5-panel .hw5-body { padding-top: 6px; }
+  #hw5-panel .hw5-sub { font-weight: 600; font-size: 12.5px; margin-top: 4px; }
+  /* Judge results view */
+  #judges-view { padding: 18px; max-width: 1080px; margin: 0 auto; font-size: 13px; }
+  .jr-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .jr-card { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 10px 12px; }
+  .jr-card.frozen { border-color: #6366f1; box-shadow: 0 0 0 1px #6366f1; }
+  .jr-card h3 { margin: 0 0 2px; font-size: 14px; }
+  .jr-card .jr-tag { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+  .jr-rate { display: flex; justify-content: space-between; gap: 6px; margin: 3px 0; }
+  .jr-rate b { font-variant-numeric: tabular-nums; }
+  .jr-rate .jr-ci { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .jr-cm { border-collapse: collapse; margin-top: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .jr-cm td, .jr-cm th { border: 1px solid var(--line); padding: 2px 8px; text-align: center; }
+  .jr-cm th { font-weight: 600; color: var(--muted); }
+  .jr-cm td.err { background: #fef3c7; color: #92400e; font-weight: 700; }
+  .jr-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .jr-controls select { font: inherit; font-size: 12.5px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: inherit; }
+  .jr-table-wrap { overflow-x: auto; }
+  .jr-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  .jr-table th { text-align: left; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); padding: 5px 8px; white-space: nowrap; }
+  .jr-table td { border-bottom: 1px solid var(--line); padding: 4px 8px; white-space: nowrap; }
+  .jr-table tbody tr { cursor: pointer; }
+  .jr-table tbody tr:hover { background: var(--panel); }
+  .jr-table td.off { background: rgba(217,119,6,.15); }
+  .jr-table td .hw5-badge { margin-left: 0; }
+  .jr-note { color: var(--muted); font-size: 12px; margin: 4px 0 12px; }
 </style>
 </head>
 <body>
@@ -549,8 +630,13 @@
     <button data-view="notes">Notes</button>
     <button data-view="ledger">Coverage</button>
     <button data-view="map">Map</button>
+    <button data-view="judges">Judge results</button>
   </div>
   <div class="spacer"></div>
+  <select id="sample-set" title="Which sample set to show">
+    <option value="hw4">HW4 review set</option>
+    <option value="hw5">HW5 labeling set</option>
+  </select>
   <div class="nav" id="trace-nav">
     <button id="prev">&larr;</button>
     <span class="pos" id="pos">0 / 0</span>
@@ -567,8 +653,10 @@
       <select id="rail-scenario-jump"><option value="">Jump to scenario&hellip;</option></select>
       <div id="rail-list"></div>
     </div>
+    <div id="rail-resizer" title="Drag to resize · double-click to reset"></div>
     <div class="trace-main">
       <div id="status-strip"></div>
+      <div id="hw5-panel"></div>
       <div class="trace-header" id="trace-header"></div>
       <div class="trace-body-wrap">
         <div class="trace-body" id="trace-body"></div>
@@ -580,7 +668,7 @@
 
 <div id="progress-view" class="view">
   <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
-    <div class="section-title" style="margin:0;">Review status</div>
+    <div class="section-title" style="margin:0;" id="progress-title">Review status</div>
     <select id="progress-batch-select" style="font:inherit; font-size:12px; padding:3px 6px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:inherit;"></select>
   </div>
   <div id="status-summary"></div>
@@ -623,6 +711,13 @@
   <div id="map-legend" style="margin-top:12px;"></div>
 </div>
 
+<div id="judges-view" class="view">
+  <div class="section-title" style="margin-top:0;">Judge runs <span style="text-transform:none; font-weight:400;">(Pass is the positive class: TPR on your Pass labels, TNR on your Fail labels; Wilson 95% intervals; computed from your current labels and the saved predictions, no model calls)</span></div>
+  <div id="judges-cards"></div>
+  <div class="section-title">Every judged trace <span style="text-transform:none; font-weight:400;">(click a row to open the conversation)</span></div>
+  <div id="judges-table"></div>
+</div>
+
 <div id="popover"><input id="note-input" placeholder="what went wrong? (Enter to save)" /><div class="hint">first failure only, in your own words</div></div>
 <div id="toast"></div>
 
@@ -652,6 +747,452 @@ const api = {
   },
 };
 
+/* ------------------------------------------------------------------ *
+ * HW5: per-mode Pass/Fail labels (1 = Pass, 0 = Fail)                *
+ * ------------------------------------------------------------------ */
+const HW5 = {
+  mode: 'dispute_not_escalated',
+  // Short reminder of analysis/report/hw5_failure_definition.md (the full
+  // definition lives there).
+  rules: {
+    fail: [
+      'User disputes a charge ("dispute", "don\'t recognize", "charged twice/wrong", "overcharged"), reports a wrong item, a delivered-but-not-received order, or a delay past the cw-shipping promise (3 days to ship, 7 days in transit) shown in the trace',
+      '...and escalate_to_human is never called',
+      'Only offering to escalate ("Would you like me to escalate?") is still Fail',
+      'Asking about the charge ("why do you think it\'s wrong?") when the order and in-window date are known is Fail',
+      'Declining as "too late" without the delivery date from the record is Fail',
+      'Open-ended or repeated questioning instead of escalating (support-0093) is Fail',
+    ],
+    pass: [
+      'No dispute or contested order raised',
+      'escalate_to_human called (looking up the order first is fine)',
+      'Dispute more than 60 days after the recorded delivery, declined per cw-disputes',
+      'Order can\'t be identified and the agent asks one specific identifying question',
+      'Non-delivery the record agrees with (shipped, not delivered) and nothing shows it is overdue',
+      'Agent asks for the date instead of looking it up, but then escalates',
+    ],
+  },
+  labels: [],   // every record in hw5_labels/<mode>.jsonl, oldest first
+  // One-click Pass reasons (from the definition's Pass rows); editable after.
+  passReasons: [
+    'No dispute or contested order raised',
+    'escalate_to_human called',
+    'Dispute past the 60-day window, declined per cw-disputes',
+    "Order can't be identified; one specific identifying question",
+    "Non-delivery the record agrees with; nothing shows it's overdue",
+  ],
+  hw4Notes: [],   // HW4 annotations, read-only context in the HW5 set
+  editing: null,  // trace_id whose saved label is being changed
+  saving: false,  // blocks a second click while a save is in flight
+  lastSaved: null,  // {trace_id, label, ts} for the inline confirmation
+  // The primary judge (the frozen version, else the newest): drives the rail
+  // badge and the rail's judge filter.
+  judge: {judge_id: null, versions: [], rows: {}},
+  // Every run from /api/hw5_judge_runs: each version plus saved reruns
+  // (test rows only for a frozen version).
+  runs: [],
+  section: {tid: null, name: null},  // open panel section, per trace
+  runSel: {tid: null, id: null},     // run whose critique is shown, per trace
+  draft: {tid: null, text: null},    // unsaved evidence, kept across redraws
+};
+async function loadHW5Judge() {
+  try {
+    const r = await api.get(`/api/hw5_judge_runs?mode=${encodeURIComponent(HW5.mode)}`);
+    if (r && Array.isArray(r.runs)) {
+      // Run order: the versions as registered, then the reruns (each rerun
+      // was made after the version history, e.g. v0 -> v1 -> v0 rerun).
+      HW5.runs = [...r.runs.filter(x => x.official), ...r.runs.filter(x => !x.official)];
+      const official = r.runs.filter(x => x.official);
+      const primary = official.find(x => x.status === 'frozen') || official[official.length - 1];
+      if (primary) HW5.judge = {judge_id: primary.judge_id, model: primary.model,
+                                status: primary.status, rows: primary.rows,
+                                versions: official.map(x => x.judge_id)};
+      return;
+    }
+  } catch (e) { /* older server: fall back to the single-version endpoint */ }
+  try {
+    const j = await api.get(`/api/hw5_judge?mode=${encodeURIComponent(HW5.mode)}`);
+    if (j && j.rows) {
+      HW5.judge = j;
+      if (j.judge_id) HW5.runs = [{run_id: j.judge_id, judge_id: j.judge_id, official: true,
+                                   status: j.status, model: j.model, rows: j.rows}];
+    }
+  } catch (e) { /* keep last */ }
+}
+/* Short name for a run: "v0 frozen", "v1", "v0 rerun". */
+function hw5RunName(run) {
+  const v = run.judge_id.slice(run.judge_id.lastIndexOf('-') + 1);
+  return v + (!run.official ? ' rerun' : run.status === 'frozen' ? ' frozen' : '');
+}
+/* 'agree' | 'disagree' | null (not judged, or no human label). */
+function hw5RunMatch(run, tid) {
+  const j = run && run.rows[tid], cur = hw5Current(tid);
+  if (!j || !cur) return null;
+  return (j.verdict === 'Pass') === (cur.label === 1) ? 'agree' : 'disagree';
+}
+function hw5JudgeMatch(tid) { return hw5RunMatch(HW5.judge, tid); }
+function hw5RunsOn(tid) { return HW5.runs.filter(r => r.rows[tid]); }
+/* The run shown under "Judge reasoning": your pick on this trace, else the
+   primary judge, unless only another run disagrees with you. */
+function hw5SelectedRun(tid) {
+  const on = hw5RunsOn(tid);
+  if (HW5.runSel.tid === tid) { const r = on.find(x => x.run_id === HW5.runSel.id); if (r) return r; }
+  const primary = on.find(x => x.official && x.judge_id === HW5.judge.judge_id);
+  if (primary && hw5RunMatch(primary, tid) === 'disagree') return primary;
+  return on.find(x => hw5RunMatch(x, tid) === 'disagree') || primary || on[0] || null;
+}
+function hw5StripHtml(s, cur) {
+  const tid = s.trace_id, on = hw5RunsOn(tid), sel = hw5SelectedRun(tid);
+  const human = cur
+    ? `<span class="hw5-chip human">Your label <span class="hw5-badge ${cur.label === 1 ? 'pass' : 'fail'}">${cur.label === 1 ? 'Pass' : 'Fail'}</span></span>`
+    : '<span class="hw5-chip human">Your label <span class="hw5-badge none">unlabeled</span></span>';
+  const chips = on.map(run => {
+    const v = run.rows[tid].verdict, m = hw5RunMatch(run, tid);
+    return `<button class="hw5-chip run${run === sel ? ' sel' : ''}${m === 'disagree' ? ' off' : ''}" data-run="${escape(run.run_id)}"` +
+      ` title="Show this run's reasoning">${escape(hw5RunName(run))} <span class="hw5-badge ${v === 'Pass' ? 'pass' : 'fail'}">${v}</span>` +
+      (m === 'disagree' ? ' <span class="hw5-mark off">&#10007;</span>' : m === 'agree' ? ' <span class="hw5-mark ok">&#10003;</span>' : '') + `</button>`;
+  }).join('');
+  const split = on.length ? on[0].rows[tid].split : null;
+  const tail = on.length ? `<span class="hw5-history">${escape(split || '?')} split</span>`
+    : HW5.runs.length ? '<span class="hw5-history">not judged (train examples are not judged)</span>' : '';
+  return `<div class="hw5-strip">${human}${on.length ? '<span class="hw5-sep"></span>' : ''}${chips}${tail}</div>`;
+}
+function hw5JudgeHtml(s) {
+  const run = hw5SelectedRun(s.trace_id);
+  if (!run) return `<div class="hw5-history">No judge run covers this trace.</div>`;
+  const j = run.rows[s.trace_id], match = hw5RunMatch(run, s.trace_id);
+  const tag = match === 'disagree' ? '<span class="hw5-badge disagree">disagrees with your label</span>'
+    : match === 'agree' ? '<span class="hw5-badge agree">agrees with your label</span>' : '';
+  return `<div class="hw5-judge"><div><b>${escape(hw5RunName(run))}</b>` +
+    ` <span class="hw5-history">${escape(run.judge_id)} · ${escape(run.model || '')} · ${escape(j.split || '?')} split` +
+    `${run.official ? '' : ' · rerun, not an official version'}</span> ` +
+    `<span class="hw5-badge ${j.verdict === 'Pass' ? 'pass' : 'fail'}">${j.verdict}</span>${tag}</div>` +
+    `<div class="hw5-critique">${escape(j.critique) || '<i>no critique saved</i>'}</div>` +
+    (hw5RunsOn(s.trace_id).length > 1 ? '<div class="hw5-history" style="margin-top:4px">Click another run above to compare its reasoning.</div>' : '') +
+    `</div>`;
+}
+/* ---- Judge results view: one card per run and split, one table row per
+   judged trace. Read-only; computed from saved predictions. ---- */
+function wilson(k, n, z = 1.96) {
+  if (!n) return [NaN, NaN];
+  const p = k / n, d = 1 + z * z / n;
+  const c = (p + z * z / (2 * n)) / d;
+  const h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
+  return [Math.max(0, c - h), Math.min(1, c + h)];
+}
+function hw5RunMetrics(run, split) {
+  const m = {tp: 0, fn: 0, tn: 0, fp: 0, unlabeled: 0};
+  for (const [tid, j] of Object.entries(run.rows)) {
+    if (j.split !== split) continue;
+    const cur = hw5Current(tid);
+    if (!cur) { m.unlabeled++; continue; }
+    const jp = j.verdict === 'Pass';
+    if (cur.label === 1) jp ? m.tp++ : m.fn++; else jp ? m.fp++ : m.tn++;
+  }
+  return m;
+}
+function hw5RateHtml(name, k, n) {
+  const f = x => isNaN(x) ? '–' : x.toFixed(2), [lo, hi] = wilson(k, n);
+  return `<div class="jr-rate"><span>${name} <b>${k}/${n} = ${n ? f(k / n) : '–'}</b></span><span class="jr-ci">[${f(lo)}, ${f(hi)}]</span></div>`;
+}
+function hw5ScenarioOf(tid) {
+  const s = state.samples.find(x => x.trace_id === tid);
+  const cur = hw5Current(tid);
+  return (s && (s.meta || {}).scenario_id) || (cur && cur.scenario_id) || tid.slice(0, 8);
+}
+function renderJudges() {
+  const cardsEl = document.getElementById('judges-cards');
+  const tableEl = document.getElementById('judges-table');
+  if (!HW5.runs.length) {
+    cardsEl.innerHTML = '<div class="empty">No judge runs saved yet.</div>'; tableEl.innerHTML = ''; return;
+  }
+  const cards = [];
+  for (const split of ['dev', 'test']) {
+    for (const run of HW5.runs) {
+      if (!Object.values(run.rows).some(j => j.split === split)) continue;
+      const m = hw5RunMetrics(run, split);
+      const tag = !run.official ? 'Rerun of the same prompt (not an official version)'
+        : run.status === 'frozen' ? (split === 'test' ? 'Frozen judge · final result (test run once)' : 'Frozen judge')
+        : 'Development version';
+      cards.push(`<div class="jr-card${run.status === 'frozen' && split === 'test' ? ' frozen' : ''}">` +
+        `<h3>${escape(hw5RunName(run))} · ${split}</h3><div class="jr-tag">${escape(tag)} · ${escape(run.model || '')}</div>` +
+        hw5RateHtml('TPR', m.tp, m.tp + m.fn) + hw5RateHtml('TNR', m.tn, m.tn + m.fp) +
+        `<table class="jr-cm"><tr><th></th><th>judge Pass</th><th>judge Fail</th></tr>` +
+        `<tr><th>you Pass</th><td>${m.tp}</td><td class="${m.fn ? 'err' : ''}">${m.fn}</td></tr>` +
+        `<tr><th>you Fail</th><td class="${m.fp ? 'err' : ''}">${m.fp}</td><td>${m.tn}</td></tr></table>` +
+        `<div class="jr-tag" style="margin:6px 0 0">${m.fn + m.fp} disagreement${m.fn + m.fp === 1 ? '' : 's'}` +
+        (m.unlabeled ? ` · ${m.unlabeled} without your label` : '') + `</div></div>`);
+    }
+  }
+  cardsEl.innerHTML = `<div class="jr-cards">${cards.join('')}</div>`;
+
+  // Table: one row per judged trace, one column per run.
+  const split_of = {};
+  for (const run of HW5.runs) for (const [tid, j] of Object.entries(run.rows)) split_of[tid] = j.split;
+  const f = HW5.jr || (HW5.jr = {split: '', show: 'disagree'});
+  let tids = Object.keys(split_of).filter(t => !f.split || split_of[t] === f.split);
+  const offOn = t => HW5.runs.some(r => hw5RunMatch(r, t) === 'disagree');
+  const runsDiffer = t => new Set(HW5.runs.filter(r => r.rows[t]).map(r => r.rows[t].verdict)).size > 1;
+  if (f.show === 'disagree') tids = tids.filter(offOn);
+  if (f.show === 'differ') tids = tids.filter(runsDiffer);
+  const order = {dev: 0, test: 1};
+  tids.sort((a, b) => (order[split_of[a]] ?? 2) - (order[split_of[b]] ?? 2) ||
+    hw5ScenarioOf(a).localeCompare(hw5ScenarioOf(b)));
+  const badge = v => `<span class="hw5-badge ${v === 'Pass' ? 'pass' : 'fail'}">${v}</span>`;
+  const rows = tids.map(t => {
+    const cur = hw5Current(t);
+    return `<tr data-tid="${t}"><td>${escape(hw5ScenarioOf(t))}</td><td>${escape(split_of[t] || '')}</td>` +
+      `<td>${cur ? badge(cur.label === 1 ? 'Pass' : 'Fail') : '<span class="hw5-badge none">unlabeled</span>'}</td>` +
+      HW5.runs.map(r => {
+        const j = r.rows[t];
+        if (!j) return '<td></td>';
+        const m = hw5RunMatch(r, t);
+        return `<td class="${m === 'disagree' ? 'off' : ''}">${badge(j.verdict)}${m === 'disagree' ? ' &#10007;' : ''}</td>`;
+      }).join('') + `</tr>`;
+  }).join('');
+  tableEl.innerHTML =
+    `<div class="jr-controls">` +
+    `<select id="jr-split"><option value="">All splits</option><option value="dev"${f.split === 'dev' ? ' selected' : ''}>dev</option>` +
+    `<option value="test"${f.split === 'test' ? ' selected' : ''}>test</option></select>` +
+    `<select id="jr-show"><option value="disagree"${f.show === 'disagree' ? ' selected' : ''}>Any run disagrees with you</option>` +
+    `<option value="differ"${f.show === 'differ' ? ' selected' : ''}>Runs disagree with each other</option>` +
+    `<option value="all"${f.show === 'all' ? ' selected' : ''}>All judged traces</option></select>` +
+    `<span class="hw5-history">${tids.length} trace${tids.length === 1 ? '' : 's'}</span></div>` +
+    `<div class="jr-note">Train traces are the judge's examples and are not judged. Test results appear only for the frozen version. ✗ marks a verdict that differs from your label.</div>` +
+    `<div class="jr-table-wrap"><table class="jr-table"><thead><tr><th>Scenario</th><th>Split</th><th>Your label</th>` +
+    HW5.runs.map(r => `<th>${escape(hw5RunName(r))}</th>`).join('') + `</tr></thead><tbody>` +
+    (rows || `<tr><td colspan="${3 + HW5.runs.length}" class="hw5-history">No traces match.</td></tr>`) +
+    `</tbody></table></div>`;
+  document.getElementById('jr-split').onchange = e => { f.split = e.target.value; renderJudges(); };
+  document.getElementById('jr-show').onchange = e => { f.show = e.target.value; renderJudges(); };
+  tableEl.querySelectorAll('tbody tr[data-tid]').forEach(tr => tr.onclick = () => {
+    if (sampleSet() !== 'hw5') { toast('Switch to the HW5 labeling set to open this trace'); return; }
+    gotoTrace(tr.dataset.tid);
+  });
+}
+/* Your annotation notes on this trace, as a starting point for the
+   evidence. Skips the bare "no failure observed" marker. */
+function hw5NotesOn(list, tid) {
+  return list.filter(a => a.trace_id === tid && a.note && a.note !== 'no failure observed');
+}
+function hw5NoteLine(a) { return (a.quote ? `"${clip(a.quote, 160)}" -> ` : '') + a.note; }
+function hw5EvidenceFromAnnotations(tid) {
+  const own = hw5NotesOn(state.annotations, tid);
+  const hw4 = sampleSet() === 'hw5' ? hw5NotesOn(HW5.hw4Notes, tid) : [];
+  // Your comments only; the highlighted trace text stays in the margin.
+  return [...own, ...hw4].map(a => a.note.trim()).join('\n');
+}
+function hw5EvidenceText(rec) {
+  return (rec.evidence || []).map(e => (e.quote ? `"${clip(e.quote, 160)}" -> ` : '') + (e.note || '')).join('\n');
+}
+/* Records seeded from HW4 carry every HW4 note on the trace, which may be
+   about other modes, so they are shown as notes rather than evidence. */
+function hw5EvidenceTitle(rec) {
+  return rec.source === 'human:hw4' ? 'HW4 annotation notes (may concern other modes)' : 'Evidence';
+}
+function sampleSet() {
+  try { return localStorage.getItem('cartwheel.sampleSet') === 'hw5' ? 'hw5' : 'hw4'; }
+  catch (e) { return 'hw4'; }
+}
+function samplesPath() { return sampleSet() === 'hw5' ? '/api/hw5_samples' : '/api/samples'; }
+/* Notes written in the HW5 set go to hw5_annotations.json, so the HW4
+   annotations.json only ever holds HW4 review notes. */
+function annotationsPath() { return sampleSet() === 'hw5' ? '/api/hw5_annotations' : '/api/annotations'; }
+/* In the HW5 set, HW4 notes on reused traces are shown read-only in the
+   panel (never saved back from here). */
+async function loadHW4NotesReadOnly() {
+  if (sampleSet() !== 'hw5') return;
+  try { HW5.hw4Notes = asAnnotationList(await api.get('/api/annotations')); } catch (e) { /* keep last */ }
+}
+async function loadHW5Labels() {
+  try {
+    const rows = await api.get(`/api/hw5_labels?mode=${encodeURIComponent(HW5.mode)}`);
+    const changed = JSON.stringify(rows) !== JSON.stringify(HW5.labels);
+    if (Array.isArray(rows)) HW5.labels = rows;
+    return changed;
+  } catch (e) { return false; }
+}
+function hw5History(tid) { return HW5.labels.filter(r => r.trace_id === tid); }
+function hw5Current(tid) { const h = hw5History(tid); return h.length ? h[h.length - 1] : null; }
+function hw5Badge(s) {
+  const cur = hw5Current(s.trace_id);
+  if (!cur) return sampleSet() === 'hw5' ? '<span class="hw5-badge none">unlabeled</span>' : '';
+  return cur.label === 1 ? '<span class="hw5-badge pass">Pass</span>' : '<span class="hw5-badge fail">Fail</span>';
+}
+function renderHW5Panel() {
+  const el = document.getElementById('hw5-panel');
+  const s = curTrace();
+  if (!s) { el.innerHTML = ''; return; }
+  const cur = hw5Current(s.trace_id);
+  const hist = hw5History(s.trace_id);
+  const hw4n = sampleSet() === 'hw5' ? hw5NotesOn(HW5.hw4Notes, s.trace_id).length : 0;
+  const inSet = state.samples.map(x => hw5Current(x.trace_id));
+  const nPass = inSet.filter(r => r && r.label === 1).length;
+  const nFail = inSet.filter(r => r && r.label === 0).length;
+  const nNone = inSet.filter(r => !r).length;
+  // One section open at a time. Unlabeled or changing: your evidence. A judge
+  // disagreeing with your label: its reasoning. Otherwise your evidence.
+  const labeling = !cur || HW5.editing === s.trace_id;
+  const anyOff = hw5RunsOn(s.trace_id).some(r => hw5RunMatch(r, s.trace_id) === 'disagree');
+  const section = labeling ? 'evidence'
+    : HW5.section.tid === s.trace_id ? HW5.section.name
+    : anyOff ? 'judge' : 'evidence';
+  const tabs = [
+    ['judge', 'Judge reasoning', HW5.runs.length > 0],
+    ['evidence', labeling ? 'Label this trace' : 'Your evidence', true],
+    ['history', `History & HW4 notes (${hist.length + hw4n})`, hist.length + hw4n > 0],
+    ['rules', 'Rules', true],
+  ].filter(t => t[2]);
+  const histHtml = hist.length
+    ? `<div class="hw5-sub">Label history</div><ul>` +
+      hist.map(r => `<li><b>${r.label === 1 ? 'Pass' : 'Fail'}</b> · ${escape(r.source || '')} · ${escape((r.ts || '').slice(0, 16).replace('T', ' '))}` +
+        (r.source === 'human:hw4' && (r.evidence || []).length ? `<div class="hw5-history"><i>${escape(hw5EvidenceTitle(r))}:</i></div>` : '') +
+        (r.evidence || []).map(e => `<div class="hw5-history">${e.quote ? '“' + escape(clip(e.quote, 120)) + '” — ' : ''}${escape(e.note || '')}</div>`).join('') +
+        `</li>`).join('') + '</ul>'
+    : '';
+  const body = {
+    judge: () => hw5JudgeHtml(s),
+    evidence: () => hw5EditorHtml(s, cur),
+    history: () => histHtml + hw4NotesHtml(s),
+    rules: () => `<b>Fail</b><ul>${HW5.rules.fail.map(r => `<li>${escape(r)}</li>`).join('')}</ul>` +
+      `<b>Pass</b><ul>${HW5.rules.pass.map(r => `<li>${escape(r)}</li>`).join('')}</ul>`,
+  }[section] || (() => '');
+  el.innerHTML =
+    `<div class="hw5-top"><span class="hw5-title">HW5 · ${escape(HW5.mode)}</span>` +
+    `<span class="hw5-progress">this set: ${nPass} Pass · ${nFail} Fail · ${nNone} unlabeled</span>` +
+    (nNone ? `<button id="hw5-next">Next unlabeled &rarr;</button>` : '') + `</div>` +
+    hw5StripHtml(s, cur) +
+    `<div class="hw5-tabs">${tabs.map(([k, name]) =>
+      `<button class="hw5-tab${k === section ? ' on' : ''}" data-section="${k}">${escape(name)}</button>`).join('')}</div>` +
+    `<div class="hw5-body">${body()}</div>`;
+  document.querySelectorAll('#hw5-panel .hw5-tab').forEach(b => b.onclick = () => {
+    HW5.section = {tid: s.trace_id, name: b.dataset.section};
+    renderHW5Panel();
+  });
+  document.querySelectorAll('#hw5-panel .hw5-chip.run').forEach(b => b.onclick = () => {
+    HW5.runSel = {tid: s.trace_id, id: b.dataset.run};
+    HW5.section = {tid: s.trace_id, name: 'judge'};
+    renderHW5Panel();
+  });
+  // Keep evidence you typed across redraws and section switches.
+  const box = document.getElementById('hw5-evidence');
+  if (box) {
+    if (HW5.draft.tid === s.trace_id && HW5.draft.text !== null) box.value = HW5.draft.text;
+    box.oninput = () => { HW5.draft = {tid: s.trace_id, text: box.value}; };
+  }
+  wireHW5Editor(s, cur);
+  const next = document.getElementById('hw5-next');
+  if (next) next.onclick = () => {
+    const n = state.samples.length;
+    for (let k = 1; k <= n; k++) {
+      const cand = state.samples[(state.cur + k) % n];
+      if (!hw5Current(cand.trace_id)) { gotoTrace(cand.trace_id); return; }
+    }
+  };
+}
+function hw4NotesHtml(s) {
+  if (sampleSet() !== 'hw5') return '';
+  const notes = hw5NotesOn(HW5.hw4Notes, s.trace_id);
+  if (!notes.length) return '';
+  return `<div class="hw5-sub">HW4 review notes (${notes.length}, read-only; edit them in the HW4 review set)</div><ul>` +
+    notes.map(a => `<li class="hw5-history">${escape(hw5NoteLine(a))}</li>`).join('') + '</ul>';
+}
+
+/* Saved state: the label's evidence read-only plus "Change label".
+   Unlabeled (or changing): an evidence box prefilled from your annotations
+   (or the saved evidence) and the Pass/Fail buttons. */
+function hw5EditorHtml(s, cur) {
+  const justSaved = HW5.lastSaved && HW5.lastSaved.trace_id === s.trace_id;
+  const savedMsg = justSaved
+    ? `<span class="hw5-saved">&#10003; Saved ${HW5.lastSaved.label === 1 ? 'Pass' : 'Fail'} at ${escape(HW5.lastSaved.ts.slice(11, 16))} UTC</span>`
+    : '';
+  if (cur && HW5.editing !== s.trace_id) {
+    return `<div class="hw5-evidence-view"><b>${escape(hw5EvidenceTitle(cur))}</b><div>${escape(hw5EvidenceText(cur)) || '<i>none recorded</i>'}</div></div>` +
+      `<div class="hw5-actions"><button id="hw5-change">Change label</button>${savedMsg}</div>`;
+  }
+  const hasNotes = !!hw5EvidenceFromAnnotations(s.trace_id);
+  // Changing a label you saved in HW5 starts from that evidence; HW4-seeded
+  // notes and unlabeled traces start empty.
+  const prefill = cur && cur.source !== 'human:hw4' ? hw5EvidenceText(cur) : '';
+  const hint = cur
+    ? 'Changing the label adds a new record; the earlier one stays in the history.'
+    : '';
+  return `<div class="hw5-actions"><span class="hw5-history">Pass reason:</span>` +
+    HW5.passReasons.map((r, i) => `<button class="hw5-reason" data-reason="${i}">${escape(r)}</button>`).join('') +
+    (hasNotes ? `<button id="hw5-insert-notes">Insert my annotation notes</button>` : '') + `</div>` +
+    `<textarea id="hw5-evidence" placeholder="Evidence: the user turn, tool call/result, or reply text that decides the label">${escape(prefill)}</textarea>` +
+    `<div class="hw5-actions"><button class="hw5-pass" id="hw5-pass">Pass</button>` +
+    `<button class="hw5-fail" id="hw5-fail">Fail</button>` +
+    (cur ? `<button id="hw5-cancel">Cancel</button>` : '') +
+    `<span class="hw5-history">${escape(hint)}</span></div>`;
+}
+function wireHW5Editor(s, cur) {
+  const change = document.getElementById('hw5-change');
+  if (change) change.onclick = () => { HW5.editing = s.trace_id; HW5.lastSaved = null; renderHW5Panel(); };
+  const cancel = document.getElementById('hw5-cancel');
+  if (cancel) cancel.onclick = () => { HW5.editing = null; HW5.draft = {tid: null, text: null}; renderHW5Panel(); };
+  const box = document.getElementById('hw5-evidence');
+  const put = (text) => {
+    if (!box) return;
+    box.value = box.value.trim() ? box.value.trimEnd() + '\n' + text : text;
+    HW5.draft = {tid: s.trace_id, text: box.value};
+    box.focus();
+  };
+  document.querySelectorAll('#hw5-panel .hw5-reason').forEach(b => {
+    b.onclick = () => put(HW5.passReasons[parseInt(b.dataset.reason, 10)]);
+  });
+  const notes = document.getElementById('hw5-insert-notes');
+  if (notes) notes.onclick = () => put(hw5EvidenceFromAnnotations(s.trace_id));
+  const pass = document.getElementById('hw5-pass');
+  if (pass) pass.onclick = () => saveHW5Label(s, 1);
+  const fail = document.getElementById('hw5-fail');
+  if (fail) fail.onclick = () => saveHW5Label(s, 0);
+}
+async function saveHW5Label(s, label) {
+  if (HW5.saving) return;
+  const evidence = document.getElementById('hw5-evidence').value.trim();
+  if (!evidence) { toast('Add the evidence behind the label first'); return; }
+  const cur = hw5Current(s.trace_id);
+  if (cur && cur.label === label && hw5EvidenceText(cur).trim() === evidence) {
+    HW5.editing = null; renderHW5Panel();
+    toast('No change: same label and evidence as the saved record');
+    return;
+  }
+  HW5.saving = true;
+  document.querySelectorAll('#hw5-panel .hw5-actions button').forEach(b => { b.disabled = true; });
+  try {
+    const r = await fetch('/api/hw5_labels', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({mode: HW5.mode, trace_id: s.trace_id,
+                            scenario_id: (s.meta || {}).scenario_id, label, evidence}),
+    });
+    const res = await r.json();
+    if (!r.ok) { toast(res.error || 'save failed'); return; }
+    await loadHW5Labels();
+    HW5.editing = null;
+    HW5.draft = {tid: null, text: null};
+    HW5.lastSaved = {trace_id: s.trace_id, label, ts: res.record.ts};
+    // First label in the HW5 set: move on to the next unlabeled trace.
+    // A changed label stays put so you can see the result.
+    if (!cur && sampleSet() === 'hw5') {
+      const name = (s.meta || {}).scenario_id || s.trace_id.slice(0, 8);
+      const n = state.samples.length;
+      for (let k = 1; k < n; k++) {
+        const nxt = state.samples[(state.cur + k) % n];
+        if (!hw5Current(nxt.trace_id)) {
+          toast(`Saved ${label === 1 ? 'Pass' : 'Fail'} for ${name} — next: ${(nxt.meta || {}).scenario_id || nxt.trace_id.slice(0, 8)}`);
+          gotoTrace(nxt.trace_id);
+          return;
+        }
+      }
+      toast(`Saved ${label === 1 ? 'Pass' : 'Fail'} for ${name} — no unlabeled traces left in this set`);
+    }
+  } finally {
+    HW5.saving = false;
+    renderHW5Panel(); renderRail(); renderLedgerIfVisible(); renderProgressIfVisible();
+  }
+}
+
 /* Annotations on disk are usually a bare array (what this app POSTs), but a
    seeded file may wrap them as {"annotations": [...]} with a little
    metadata. Accept either on read; we always write the bare array. */
@@ -663,7 +1204,7 @@ function asAnnotationList(a) {
 
 async function loadAll() {
   const [samples, annotations, suggestions, patterns, graph] = await Promise.all([
-    api.get('/api/samples'), api.get('/api/annotations'),
+    api.get(samplesPath()), api.get(annotationsPath()),
     api.get('/api/suggestions'), api.get('/api/patterns'),
     api.get('/api/graph'),
   ]);
@@ -676,7 +1217,7 @@ async function loadAll() {
 
 /* localStorage backup of human annotations, per SKILL.md */
 function backupAnnotations() {
-  try { localStorage.setItem('cartwheel_annotations', JSON.stringify(state.annotations)); }
+  try { localStorage.setItem(sampleSet() === 'hw5' ? 'cartwheel_hw5_annotations' : 'cartwheel_annotations', JSON.stringify(state.annotations)); }
   catch (e) {}
 }
 // Merge remote annotations that this client did not create (a second
@@ -704,14 +1245,15 @@ async function saveAnnotations() {
   // reviewer, or a script writing the file directly), this save would
   // silently erase it the moment it posts its own stale copy back.
   try {
-    const remote = await api.get('/api/annotations');
+    const remote = await api.get(annotationsPath());
     const merged = mergeRemoteAnnotations(remote);
     if (merged.length !== state.annotations.length) {
       state.annotations = merged;
       renderTrace(); renderRail(); renderProgress(); renderNotes();
     }
   } catch (e) { /* server unreachable; save local state as-is rather than block */ }
-  await api.post('/api/annotations', state.annotations);
+  await api.post(annotationsPath(), state.annotations);
+  renderHW5Panel();  // refresh the evidence prefilled from these notes
 }
 
 /* ------------------------------------------------------------------ *
@@ -791,7 +1333,7 @@ function renderRail() {
     .map((s, i) => i)
     .filter(i => {
       const s = state.samples[i];
-      if (state.railFilter && reviewBucket(s) !== state.railFilter) return false;
+      if (state.railFilter && railBucket(s) !== state.railFilter) return false;
       if (state.batchFilter != null && s.batch !== state.batchFilter) return false;
       if (state.roleFilter && (s.meta || {}).role !== state.roleFilter) return false;
       return true;
@@ -834,6 +1376,8 @@ function renderRail() {
       const cls = status === 'clean' ? 'dim' : 'flagged';
       statusBadge += `<span class="rreviewed ${cls}">${n} note${n === 1 ? '' : 's'}</span>`;
     }
+    statusBadge += hw5Badge(s);
+    if (hw5JudgeMatch(s.trace_id) === 'disagree') statusBadge += '<span class="hw5-badge disagree">judge &ne;</span>';
     let outlineHtml = '';
     if (active) {
       const outline = stepOutline(s);
@@ -863,11 +1407,17 @@ function renderRail() {
     `<select id="rail-role-select"><option value="">All roles</option>` +
     roles.map(r => `<option value="${escape(r)}"${state.roleFilter === r ? ' selected' : ''}>${escape(r)}</option>`).join('') +
     `</select>` +
+    (HW5.judge.judge_id
+      ? `<select id="rail-judge-select"><option value="">Judge: all</option>` +
+        ['hw5:judged', 'hw5:disagree', 'hw5:agree'].map(k =>
+          `<option value="${k}"${state.railFilter === k ? ' selected' : ''}>${HW5_FILTER_LABELS[k]}</option>`).join('') +
+        `</select>`
+      : '') +
     `</div>`;
   const titleBits = [];
   if (state.roleFilter) titleBits.push(escape(state.roleFilter));
   if (state.batchFilter != null) titleBits.push(`batch ${state.batchFilter}`);
-  if (state.railFilter) titleBits.push(escape(filterLabels[state.railFilter]));
+  if (state.railFilter) titleBits.push(escape(filterLabels[state.railFilter] || HW5_FILTER_LABELS[state.railFilter] || state.railFilter));
   const titleHtml = anyFilterActive
     ? `<div class="rail-title">${indices.length} ${titleBits.join(' · ') || 'filtered'}` +
       `<span class="rail-clear-filter" id="rail-clear-filter">clear (${state.samples.length} total)</span></div>`
@@ -880,6 +1430,11 @@ function renderRail() {
   };
   document.getElementById('rail-role-select').onchange = (e) => {
     state.roleFilter = e.target.value || null;
+    renderRail();
+  };
+  const judgeSelect = document.getElementById('rail-judge-select');
+  if (judgeSelect) judgeSelect.onchange = (e) => {
+    state.railFilter = e.target.value || null;
     renderRail();
   };
   const clearBtn = document.getElementById('rail-clear-filter');
@@ -944,6 +1499,7 @@ function renderStatusStrip() {
   toolBadges(s).forEach(b => bits.push(`<span class="badge ${b.cls}">${escape(b.label)}</span>`));
   el.innerHTML = bits.join('');
   document.getElementById('clean-toggle').onclick = () => toggleCleanMarker(s);
+  renderHW5Panel();
 }
 
 /* The trace-level "reviewed, no failure" marker — a distinct annotation
@@ -1329,7 +1885,67 @@ function undoDelete() {
 /* ------------------------------------------------------------------ *
  * Progress view                                                      *
  * ------------------------------------------------------------------ */
+/* HW5 set: the rail filters by HW5 label (hw5:pass / hw5:fail / hw5:none);
+   every other filter value keeps the HW4 review buckets. */
+const HW5_FILTER_LABELS = {'hw5:pass': 'HW5 Pass', 'hw5:fail': 'HW5 Fail', 'hw5:none': 'HW5 unlabeled',
+  'hw5:judged': 'Judged traces', 'hw5:disagree': 'Judge disagrees', 'hw5:agree': 'Judge agrees'};
+function railBucket(s) {
+  const f = state.railFilter;
+  if (f === 'hw5:judged') return HW5.judge.rows[s.trace_id] ? f : '';
+  if (f === 'hw5:disagree' || f === 'hw5:agree') return 'hw5:' + (hw5JudgeMatch(s.trace_id) || 'none');
+  if (state.railFilter && state.railFilter.startsWith('hw5:')) {
+    const cur = hw5Current(s.trace_id);
+    return cur ? (cur.label === 1 ? 'hw5:pass' : 'hw5:fail') : 'hw5:none';
+  }
+  return reviewBucket(s);
+}
+
+/* HW5 set: label status from your HW5 labels. The HW4 sections below the
+   cards (taxonomy, fix table, boundary matrix, batches) are hidden here. */
+function renderProgressHW5() {
+  const view = document.getElementById('progress-view');
+  document.getElementById('progress-title').textContent = `HW5 label status · ${HW5.mode}`;
+  document.getElementById('progress-batch-select').style.display = 'none';
+  let after = false;
+  [...view.children].forEach(ch => {
+    if (ch.id === 'status-summary') { after = true; return; }
+    if (after && ch.id !== 'hw5-progress-note') ch.style.display = 'none';
+  });
+  const labels = state.samples.map(s => hw5Current(s.trace_id));
+  const n = {pass: labels.filter(r => r && r.label === 1).length,
+             fail: labels.filter(r => r && r.label === 0).length,
+             none: labels.filter(r => !r).length};
+  const need = (k) => n[k] >= 30 ? 'meets the 30 minimum' : `${30 - n[k]} short of the 30 minimum`;
+  const cards = [
+    {key: 'hw5:pass', cls: 'clean', label: 'Pass (1)', n: n.pass, sub: need('pass'),
+      title: 'Failure absent for this mode, even if another failure is present.'},
+    {key: 'hw5:fail', cls: 'flagged', label: 'Fail (0)', n: n.fail, sub: need('fail'),
+      title: 'A dispute or contested order that was not escalated.'},
+    {key: 'hw5:none', cls: 'unreviewed', label: 'Unlabeled', n: n.none, sub: '',
+      title: 'No HW5 label saved yet.'},
+  ];
+  const el = document.getElementById('status-summary');
+  el.innerHTML = cards.map(c =>
+    `<button class="stat-card ${c.cls}" data-bucket="${c.key}" title="${escape(c.title)}">` +
+    `<div class="stat-n">${c.n}</div><div class="stat-label">${escape(c.label)}</div>` +
+    (c.sub ? `<div class="stat-label" style="font-size:11.5px;">${escape(c.sub)}</div>` : '') +
+    (c.n > 0 ? `<span class="stat-notes-link">show in Trace &rarr;</span>` : '') + `</button>`
+  ).join('');
+  el.querySelectorAll('.stat-card').forEach(card => { card.onclick = () => filterRailToBucket(card.dataset.bucket); });
+  let note = document.getElementById('hw5-progress-note');
+  if (!note) {
+    note = document.createElement('div');
+    note.id = 'hw5-progress-note';
+    note.className = 'cov-note';
+    note.style.marginTop = '14px';
+    view.appendChild(note);
+  }
+  note.textContent = 'Counts come from your HW5 labels (hw5_labels/' + HW5.mode + '.jsonl), not from margin notes. ' +
+    'The HW4 sections (failure-mode taxonomy, fix table, boundary matrix, batches) are HW4 analyses: switch to the HW4 review set to see them.';
+}
+
 function renderProgress() {
+  if (sampleSet() === 'hw5') { renderProgressHW5(); return; }
   renderStatusSummary();
   renderBatchComposition();
   renderTaxonomySection();
@@ -1387,7 +2003,7 @@ function renderStatusSummary() {
 }
 function filterRailToBucket(bucket) {
   state.railFilter = bucket;
-  const firstMatch = state.samples.findIndex(s => reviewBucket(s) === bucket);
+  const firstMatch = state.samples.findIndex(s => railBucket(s) === bucket);
   if (firstMatch >= 0) state.cur = firstMatch;
   switchView('trace');
   renderHeader(); renderStatusStrip(); renderTrace(); renderRail(); updatePos();
@@ -1599,7 +2215,86 @@ const COVERAGE_DIMS = [
   {field: 'tools_needed', label: 'Tools needed'},
   {field: 'user_style', label: 'User style'},
 ];
+const LEDGER_TITLE_HW4 = 'Scenario coverage <span style="text-transform:none; font-weight:400;">(reviewed / full 250-scenario dataset, across every categorical dimension; batch columns, cell shade = share covered)</span>';
+const LEDGER_TITLE_HW5 = `HW5 label coverage &middot; ${'dispute_not_escalated'} <span style="text-transform:none; font-weight:400;">(traces in the HW5 labeling set, by dimension; Pass / Fail / unlabeled columns from your HW5 labels)</span>`;
+
+/* HW5 set: label coverage instead of batch coverage. Rows are the dimension
+   values of the scenarios behind the traces in this set (HW3 plus the HW5
+   targeted scenarios); columns are the current HW5 label of each trace. */
+function renderLedgerHW5() {
+  document.querySelector('#ledger-view .section-title').innerHTML = LEDGER_TITLE_HW5;
+  const gridEl = document.getElementById('ledger-grid');
+  if (!state.scenarios.length) {
+    gridEl.innerHTML = '<div class="empty">Loading the scenario set&hellip;</div>';
+    return;
+  }
+  const byId = new Map(state.scenarios.map(sc => [sc.id, sc]));
+  const traces = state.samples.map(s => {
+    const sid = ((s.meta && s.meta.scenario_id) || '');
+    const cur = hw5Current(s.trace_id);
+    return {sc: byId.get(sid) || byId.get(sid.replace(/r$/, '')) || {},
+            label: cur ? (cur.label === 1 ? 'pass' : 'fail') : 'none'};
+  });
+  const nPass = traces.filter(t => t.label === 'pass').length;
+  const nFail = traces.filter(t => t.label === 'fail').length;
+  const nNone = traces.length - nPass - nFail;
+  const need = (n) => n >= 30 ? '&#10003;' : `${30 - n} to go`;
+  document.getElementById('ledger-progress').innerHTML =
+    `Showing the <b>HW5 labeling set</b>: ${traces.length} traces &middot; ` +
+    `<b>${nPass} Pass</b> (${need(nPass)}) &middot; <b>${nFail} Fail</b> (${need(nFail)}) of the 30 each the handout requires &middot; ${nNone} unlabeled`;
+
+  const COLS = [['pass', 'Pass', '5,150,105'], ['fail', 'Fail', '220,38,38'], ['none', 'Unlabeled', '138,138,138']];
+  const dimRows = COVERAGE_DIMS.filter(d => !d.filterDq).map(({field, label}) => {
+    const buckets = {};
+    traces.forEach(t => {
+      const key = t.sc[field] == null ? 'unknown' : String(t.sc[field]);
+      buckets[key] = buckets[key] || {pass: 0, fail: 0, none: 0, total: 0};
+      buckets[key][t.label]++; buckets[key].total++;
+    });
+    const rows = Object.entries(buckets).map(([key, c]) => ({key, ...c})).sort((a, b) => b.total - a.total);
+    return {label, rows};
+  });
+  const tile = ({label, rows}) => {
+    const head = `<tr><th>${escape(label)}</th>` + COLS.map(([, name]) => `<th>${name}</th>`).join('') + `<th class="total-col">Total</th></tr>`;
+    const body = rows.map(r => `<tr><td title="${escape(r.key)}">${escape(r.key)}</td>` +
+      COLS.map(([k, , rgb]) => {
+        const n = r[k];
+        const bg = n ? `rgba(${rgb},${Math.min(0.85, 0.2 + (n / r.total) * 0.8).toFixed(2)})` : 'transparent';
+        return `<td style="background:${bg};" title="${escape(r.key)}: ${n} ${k}">${n || ''}</td>`;
+      }).join('') + `<td class="total-col">${r.total}</td></tr>`).join('');
+    return `<div class="coverage-tile"><h3>${escape(label)}</h3><div class="tbl-wrap"><table class="heat-table">${head}${body}</table></div></div>`;
+  };
+  // Rule-based notes: where the Fail class is thin, which matters because
+  // the judge's TNR is measured on Fail labels.
+  const items = [];
+  dimRows.forEach(({label, rows}) => {
+    const noFail = rows.filter(r => r.fail === 0 && r.total >= 3).map(r => r.key);
+    if (label === 'Role' || label === 'Intent') {
+      if (noFail.length) items.push(`<li><b>${escape(label)}</b> values with no Fail label yet: ${noFail.map(k => `<strong>${escape(k)}</strong>`).join(', ')}</li>`);
+    }
+  });
+  const failByRole = (dimRows.find(d => d.label === 'Role') || {rows: []}).rows.filter(r => r.fail).map(r => `${escape(r.key)} ${r.fail}`).join(', ');
+  if (failByRole) items.push(`<li>Fail labels by role: ${failByRole}</li>`);
+  if (nNone) items.push(`<li>${nNone} trace${nNone === 1 ? '' : 's'} in this set still unlabeled.</li>`);
+  const analysis = `<div class="coverage-tile" style="grid-column: span 2;"><h3>Label coverage analysis</h3>` +
+    `<ul class="notes" style="font-size:12px; line-height:1.6;">${items.join('') || '<li>No gaps flagged.</li>'}</ul>` +
+    `<div class="cov-note" style="margin-top:8px;">Rule-based, recomputed from your HW5 labels on every render and after each save -- not a model call.</div></div>`;
+  gridEl.innerHTML = `<div class="coverage-grid">${dimRows.map(tile).join('')}${analysis}</div>`;
+}
+
+function renderProgressIfVisible() {
+  const v = document.getElementById('progress-view');
+  if (v && v.classList.contains('active')) renderProgress();
+}
+
+function renderLedgerIfVisible() {
+  const v = document.getElementById('ledger-view');
+  if (v && v.classList.contains('active')) renderLedger();
+}
+
 function renderLedger() {
+  if (sampleSet() === 'hw5') { renderLedgerHW5(); return; }
+  document.querySelector('#ledger-view .section-title').innerHTML = LEDGER_TITLE_HW4;
   const batchIds = [...new Set(state.samples.map(s => s.batch).filter(b => b != null))].sort((a, b) => a - b);
   // "reviewed" = distinct base scenario ids touched by any sample, stripping
   // the trailing "r" a replacement scenario's id carries (support-0177r is
@@ -1741,13 +2436,18 @@ function renderTreemap() {
     const quotes = m.example_quotes || [];
     const allVals = quotes.length ? quotes : ids;
     const SHOWN_CAP = 12;
-    const items = allVals.slice(0, SHOWN_CAP).map((val, i) => {
-      const tid = quotes.length ? (ids[i] || '') : val;
-      return tid
-        ? `<li><a data-tid="${escape(tid)}">${escape(clip(val, 90))}</a></li>`
-        : `<li>${escape(clip(val, 90))}</li>`;
-    }).join('') + (allVals.length > SHOWN_CAP
-      ? `<li class="more-hint">+${allVals.length - SHOWN_CAP} more &mdash; see the Notes tab</li>`
+    const renderItem = (val, tid) => tid
+      ? `<li><a data-tid="${escape(tid)}">${escape(clip(val, 90))}</a></li>`
+      : `<li>${escape(clip(val, 90))}</li>`;
+    const shown = allVals.slice(0, SHOWN_CAP).map((val, i) =>
+      renderItem(val, quotes.length ? (ids[i] || '') : val)
+    ).join('');
+    const rest = allVals.slice(SHOWN_CAP).map((val, i) =>
+      renderItem(val, quotes.length ? (ids[SHOWN_CAP + i] || '') : val)
+    ).join('');
+    const items = shown + (allVals.length > SHOWN_CAP
+      ? `<li class="more-hint" data-toggle-more="${escape(m.name)}">+${allVals.length - SHOWN_CAP} more &mdash; click to expand</li>` +
+        `<ul class="notes more-items" id="more-${escape(m.name)}" hidden>${rest}</ul>`
       : '');
     const status = m.status || 'candidate';
     const grow = Math.max(1, modeCount(m));
@@ -1776,6 +2476,16 @@ function renderTreemap() {
       `<ul class="notes">${items}</ul>${closeSection}</div>`;
   }).join('');
   el.querySelectorAll('li a[data-tid]').forEach(a => wireTraceLink(a, a.dataset.tid));
+  el.querySelectorAll('[data-toggle-more]').forEach(hint => {
+    hint.onclick = () => {
+      const list = document.getElementById('more-' + hint.dataset.toggleMore);
+      if (!list) return;
+      list.hidden = !list.hidden;
+      hint.textContent = list.hidden
+        ? hint.textContent.replace('(click to hide)', 'click to expand')
+        : hint.textContent.replace('click to expand', '(click to hide)');
+    };
+  });
 }
 
 /* ------------------------------------------------------------------ *
@@ -2241,10 +2951,10 @@ async function refreshFromServer() {
     // not workflow state, so fetch it once and cache rather than refetching
     // on every poll/tab-switch like the four live files below.
     const fetches = [
-      api.get('/api/samples'), api.get('/api/suggestions'),
-      api.get('/api/patterns'), api.get('/api/annotations'),
+      api.get(samplesPath()), api.get('/api/suggestions'),
+      api.get('/api/patterns'), api.get(annotationsPath()),
     ];
-    if (!state.scenarios.length) fetches.push(api.get('/api/scenarios'));
+    if (!state.scenarios.length) fetches.push(api.get(sampleSet() === 'hw5' ? '/api/scenarios?set=hw5' : '/api/scenarios'));
     const [samples, suggestions, patterns, annotations, scenarios] = await Promise.all(fetches);
     if (Array.isArray(samples)) state.samples = samples;
     if (Array.isArray(suggestions)) state.suggestions = suggestions;
@@ -2264,6 +2974,7 @@ function switchView(name, skipPush) {
   if (name === 'notes') renderNotes();
   if (name === 'ledger') renderLedger();
   if (name === 'map') renderMap();
+  if (name === 'judges') { renderJudges(); loadHW5Judge().then(renderJudges); }
   // Render once immediately with whatever's in memory (instant, no flash of
   // empty), then again once fresh data arrives a moment later.
   if (name === 'progress' || name === 'notes' || name === 'ledger') {
@@ -2327,6 +3038,34 @@ function initTabReordering() {
 }
 initTabReordering();
 
+/* Resizable session rail -- a per-viewer convenience, so the width lives in
+   localStorage (and the 250px default applies when it is unavailable). */
+function initRailResize() {
+  const rail = document.getElementById('session-rail');
+  const handle = document.getElementById('rail-resizer');
+  if (!rail || !handle) return;
+  const KEY = 'cartwheel_rail_width', MIN = 180, DEFAULT = 250;
+  const max = () => Math.max(MIN, Math.floor(window.innerWidth * 0.6));
+  const apply = w => { rail.style.width = Math.min(max(), Math.max(MIN, w)) + 'px'; };
+  try { const w = parseInt(localStorage.getItem(KEY), 10); if (w) apply(w); } catch {}
+  const save = () => { try { localStorage.setItem(KEY, String(rail.offsetWidth)); } catch {} };
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const startX = e.clientX, startW = rail.offsetWidth;
+    handle.classList.add('dragging'); document.body.classList.add('rail-resizing');
+    const move = ev => { apply(startW + ev.clientX - startX); layoutMargin(); };
+    const up = () => {
+      handle.classList.remove('dragging'); document.body.classList.remove('rail-resizing');
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      save(); layoutMargin();
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+  handle.addEventListener('dblclick', () => { apply(DEFAULT); save(); layoutMargin(); });
+}
+initRailResize();
+
 function plural(n, word) { return `${n} ${word}${n === 1 ? '' : 's'}`; }
 function updateCounts() {
   document.getElementById('counts').textContent =
@@ -2342,8 +3081,8 @@ let lastSig = '';
 async function poll() {
   try {
     const [samples, suggestions, patterns, annotations] = await Promise.all([
-      api.get('/api/samples'), api.get('/api/suggestions'),
-      api.get('/api/patterns'), api.get('/api/annotations'),
+      api.get(samplesPath()), api.get('/api/suggestions'),
+      api.get('/api/patterns'), api.get(annotationsPath()),
     ]);
     const newSampleCount = Array.isArray(samples) ? samples.length : 0;
     const grewSamples = newSampleCount > state.samples.length;
@@ -2367,6 +3106,7 @@ async function poll() {
       JSON.stringify(merged) + '\u0001' +
       JSON.stringify(suggestions) + '\u0001' +
       sampleFingerprint;
+    if (await loadHW5Labels()) { renderHW5Panel(); renderRail(); renderLedgerIfVisible(); renderProgressIfVisible(); }
     if (sig === lastSig) return;
     lastSig = sig;
 
@@ -2429,7 +3169,22 @@ window.addEventListener('resize', () => {
  * Boot                                                               *
  * ------------------------------------------------------------------ */
 (async function boot() {
+  const setSelect = document.getElementById('sample-set');
+  setSelect.value = sampleSet();
+  setSelect.onchange = () => {
+    try { localStorage.setItem('cartwheel.sampleSet', setSelect.value); } catch (e) { /* private mode */ }
+    // Reload with the other set, staying on the tab you were on.
+    const active = document.querySelector('.views button.active');
+    const view = active ? active.dataset.view : 'trace';
+    location.href = view === 'trace' ? location.pathname : `${location.pathname}?view=${encodeURIComponent(view)}`;
+  };
   await loadAll();
+  await loadHW5Labels();
+  await loadHW5Judge();
+  await loadHW4NotesReadOnly();
+  // An older server without the HW5 endpoints answers with a 404 object.
+  const probe = await api.get(`/api/hw5_labels?mode=${encodeURIComponent(HW5.mode)}`).catch(() => null);
+  if (!Array.isArray(probe)) toast('HW5 endpoints missing: restart analysis/review_app/server.py');
   const params = new URLSearchParams(location.search);
   const initialTrace = params.get('trace');
   const initialView = params.get('view') || 'trace';

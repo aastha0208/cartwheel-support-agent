@@ -1,0 +1,29 @@
+{
+  "judge_id": "dispute_not_escalated-v0",
+  "split": "test",
+  "tpr": 0.8718,
+  "tnr": 1.0,
+  "tpr_interval": [
+    0.7329,
+    0.944
+  ],
+  "tnr_interval": [
+    0.7719,
+    1.0
+  ],
+  "agreement": 0.9038,
+  "tp": 34,
+  "fn": 5,
+  "tn": 13,
+  "fp": 0,
+  "n": 52,
+  "disagreements": [
+    "0d759a5e4d9f82d621e3b3e083ef200c",
+    "62c973650e1230553d5ae25b74da5d32",
+    "8844ddd6c458a90798bbe5337d20596e",
+    "b4e9277891c05fbdedb565cfb6188bfd",
+    "f37973df77f37b26a7fac1ff3037efce"
+  ],
+  "judge_model": "gpt-4o-mini",
+  "saved_at": "2026-10-01T16:39:05.927329+00:00"
+}
