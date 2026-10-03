@@ -38,6 +38,12 @@ Confirm that your Homework 8 results are present:
 test -f optimize/state/final_version.json
 ```
 
+In this handout, your **Homework 8 final run** is the development result saved with `--candidate final` in `optimize/results/`. If you did not finish Homework 8, follow the Preparation section of `hw8.md` to create the case split, including the reference cases patch if you have fewer than six cases. Then run the unchanged agent once, and use that run wherever this handout says Homework 8 final run:
+
+```bash
+uv run python -m optimize.runner --split development --candidate starting
+```
+
 Use only development cases in this homework. You already used the test cases in Homework 8.
 
 Every run in this homework uses `optimize.runner`, which reports the development score, `write_pass_5`, input tokens, cached input tokens, output tokens, cost per 100 conversations, and median latency. Before you use a model for the first time, add its prices to `prices_per_million_tokens_usd` in `optimize/config.json`. Then test it with one request, e.g., "What is your return policy?", and confirm that `--debug` prints a tool call:
