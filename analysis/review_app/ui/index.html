@@ -607,6 +607,11 @@
   .jr-cm { border-collapse: collapse; margin-top: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
   .jr-cm td, .jr-cm th { border: 1px solid var(--line); padding: 2px 8px; text-align: center; }
   .jr-cm th { font-weight: 600; color: var(--muted); }
+  .jr-cm td.jr-cell { cursor: pointer; text-decoration: underline dotted; }
+  .jr-cm td.jr-cell:hover { background: rgba(99, 102, 241, 0.12); }
+  .jr-cm td.jr-cell.sel { background: rgba(99, 102, 241, 0.25); font-weight: 700; }
+  .jr-filter { margin: 4px 0 8px; font-size: 12.5px; display: flex; align-items: center; gap: 8px; }
+  .jr-cm tr.jr-total td, .jr-cm tr.jr-total th { font-weight: 700; color: var(--text, inherit); }
   .jr-cm td.err { background: #fef3c7; color: #92400e; font-weight: 700; }
   .jr-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
   .jr-controls select { font: inherit; font-size: 12.5px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: inherit; }
@@ -712,7 +717,9 @@
 </div>
 
 <div id="judges-view" class="view">
-  <div class="section-title" style="margin-top:0;">Judge runs <span style="text-transform:none; font-weight:400;">(Pass is the positive class: TPR on your Pass labels, TNR on your Fail labels; Wilson 95% intervals; computed from your current labels and the saved predictions, no model calls)</span></div>
+  <div class="section-title" style="margin-top:0;">Labeled data <span style="text-transform:none; font-weight:400;">(your latest label per conversation)</span></div>
+  <div id="judges-dataset"></div>
+  <div class="section-title">Judge runs <span style="text-transform:none; font-weight:400;">(Pass is the positive class: TPR on your Pass labels, TNR on your Fail labels; Wilson 95% intervals; computed from your current labels and the saved predictions, no model calls)</span></div>
   <div id="judges-cards"></div>
   <div class="section-title">Every judged trace <span style="text-transform:none; font-weight:400;">(click a row to open the conversation)</span></div>
   <div id="judges-table"></div>
@@ -791,6 +798,7 @@ const HW5 = {
   // Every run from /api/hw5_judge_runs: each version plus saved reruns
   // (test rows only for a frozen version).
   runs: [],
+  dataset: null,  // label counts per split, from the same endpoint
   section: {tid: null, name: null},  // open panel section, per trace
   runSel: {tid: null, id: null},     // run whose critique is shown, per trace
   draft: {tid: null, text: null},    // unsaved evidence, kept across redraws
@@ -802,6 +810,7 @@ async function loadHW5Judge() {
       // Run order: the versions as registered, then the reruns (each rerun
       // was made after the version history, e.g. v0 -> v1 -> v0 rerun).
       HW5.runs = [...r.runs.filter(x => x.official), ...r.runs.filter(x => !x.official)];
+      HW5.dataset = r.dataset || null;
       const official = r.runs.filter(x => x.official);
       const primary = official.find(x => x.status === 'frozen') || official[official.length - 1];
       if (primary) HW5.judge = {judge_id: primary.judge_id, model: primary.model,
@@ -900,8 +909,23 @@ function hw5ScenarioOf(tid) {
   const cur = hw5Current(tid);
   return (s && (s.meta || {}).scenario_id) || (cur && cur.scenario_id) || tid.slice(0, 8);
 }
+function renderDataset() {
+  const el = document.getElementById('judges-dataset');
+  const d = HW5.dataset;
+  if (!d) { el.innerHTML = ''; return; }
+  const names = Object.keys(d.splits).filter(n => n !== 'unsplit' || d.splits[n].pass + d.splits[n].fail);
+  const sum = k => names.reduce((t, n) => t + d.splits[n][k], 0);
+  const row = (label, p, f, cls) => `<tr${cls ? ` class="${cls}"` : ''}><th>${label}</th><td>${p}</td><td>${f}</td><td>${p + f}</td></tr>`;
+  el.innerHTML = `<div class="jr-card" style="max-width:520px; margin-bottom:18px;">` +
+    `<table class="jr-cm" style="margin-top:0"><tr><th>split</th><th>Pass</th><th>Fail</th><th>total</th></tr>` +
+    names.map(n => row(escape(n), d.splits[n].pass, d.splits[n].fail)).join('') +
+    row('all', sum('pass'), sum('fail'), 'jr-total') + `</table>` +
+    `<div class="jr-tag" style="margin:8px 0 0">${d.labeled} conversations labeled · ${d.excluded} near-duplicates removed · ` +
+    `${d.evaluated} evaluated. Train supplies the prompt examples and is never judged.</div></div>`;
+}
 function renderJudges() {
   const cardsEl = document.getElementById('judges-cards');
+  renderDataset();
   const tableEl = document.getElementById('judges-table');
   if (!HW5.runs.length) {
     cardsEl.innerHTML = '<div class="empty">No judge runs saved yet.</div>'; tableEl.innerHTML = ''; return;
@@ -912,14 +936,23 @@ function renderJudges() {
       if (!Object.values(run.rows).some(j => j.split === split)) continue;
       const m = hw5RunMetrics(run, split);
       const tag = !run.official ? 'Rerun of the same prompt (not an official version)'
-        : run.status === 'frozen' ? (split === 'test' ? 'Frozen judge · final result (test run once)' : 'Frozen judge')
+        : run.status === 'frozen' && split === 'test' ? 'Frozen judge · final result (test run once)'
         : 'Development version';
+      // "frozen" only on the test card: the dev run happened before the freeze.
+      const name = split === 'test' ? hw5RunName(run) : hw5RunName(run).replace(/ frozen$/, '');
+      // Each count is clickable: it lists those traces in the table below.
+      const sel = HW5.jr && HW5.jr.cell;
+      const cell = (human, judge, n, cls) => {
+        const on = sel && sel.run === run.run_id && sel.split === split && sel.human === human && sel.judge === judge;
+        return `<td class="jr-cell ${cls}${on ? ' sel' : ''}" title="List these traces" data-run="${escape(run.run_id)}" ` +
+          `data-split="${split}" data-human="${human}" data-judge="${judge}" data-name="${escape(name)}">${n}</td>`;
+      };
       cards.push(`<div class="jr-card${run.status === 'frozen' && split === 'test' ? ' frozen' : ''}">` +
-        `<h3>${escape(hw5RunName(run))} · ${split}</h3><div class="jr-tag">${escape(tag)} · ${escape(run.model || '')}</div>` +
+        `<h3>${escape(name)} · ${split}</h3><div class="jr-tag">${escape(tag)} · ${escape(run.model || '')}</div>` +
         hw5RateHtml('TPR', m.tp, m.tp + m.fn) + hw5RateHtml('TNR', m.tn, m.tn + m.fp) +
         `<table class="jr-cm"><tr><th></th><th>judge Pass</th><th>judge Fail</th></tr>` +
-        `<tr><th>you Pass</th><td>${m.tp}</td><td class="${m.fn ? 'err' : ''}">${m.fn}</td></tr>` +
-        `<tr><th>you Fail</th><td class="${m.fp ? 'err' : ''}">${m.fp}</td><td>${m.tn}</td></tr></table>` +
+        `<tr><th>you Pass</th>${cell('Pass', 'Pass', m.tp, '')}${cell('Pass', 'Fail', m.fn, m.fn ? 'err' : '')}</tr>` +
+        `<tr><th>you Fail</th>${cell('Fail', 'Pass', m.fp, m.fp ? 'err' : '')}${cell('Fail', 'Fail', m.tn, '')}</tr></table>` +
         `<div class="jr-tag" style="margin:6px 0 0">${m.fn + m.fp} disagreement${m.fn + m.fp === 1 ? '' : 's'}` +
         (m.unlabeled ? ` · ${m.unlabeled} without your label` : '') + `</div></div>`);
     }
@@ -933,8 +966,16 @@ function renderJudges() {
   let tids = Object.keys(split_of).filter(t => !f.split || split_of[t] === f.split);
   const offOn = t => HW5.runs.some(r => hw5RunMatch(r, t) === 'disagree');
   const runsDiffer = t => new Set(HW5.runs.filter(r => r.rows[t]).map(r => r.rows[t].verdict)).size > 1;
-  if (f.show === 'disagree') tids = tids.filter(offOn);
-  if (f.show === 'differ') tids = tids.filter(runsDiffer);
+  const c = f.cell, cRun = c && HW5.runs.find(r => r.run_id === c.run);
+  if (c && cRun) {
+    tids = Object.keys(cRun.rows).filter(t => {
+      const j = cRun.rows[t], cur = hw5Current(t);
+      return j.split === c.split && j.verdict === c.judge && cur && (cur.label === 1 ? 'Pass' : 'Fail') === c.human;
+    });
+  } else {
+    if (f.show === 'disagree') tids = tids.filter(offOn);
+    if (f.show === 'differ') tids = tids.filter(runsDiffer);
+  }
   const order = {dev: 0, test: 1};
   tids.sort((a, b) => (order[split_of[a]] ?? 2) - (order[split_of[b]] ?? 2) ||
     hw5ScenarioOf(a).localeCompare(hw5ScenarioOf(b)));
@@ -958,13 +999,24 @@ function renderJudges() {
     `<option value="differ"${f.show === 'differ' ? ' selected' : ''}>Runs disagree with each other</option>` +
     `<option value="all"${f.show === 'all' ? ' selected' : ''}>All judged traces</option></select>` +
     `<span class="hw5-history">${tids.length} trace${tids.length === 1 ? '' : 's'}</span></div>` +
+    (c && cRun ? `<div class="jr-filter">Showing ${escape(c.name)} · ${escape(c.split)}: you ${c.human}, judge ${c.judge} ` +
+      `<button id="jr-clear">Show all</button></div>` : '') +
     `<div class="jr-note">Train traces are the judge's examples and are not judged. Test results appear only for the frozen version. ✗ marks a verdict that differs from your label.</div>` +
     `<div class="jr-table-wrap"><table class="jr-table"><thead><tr><th>Scenario</th><th>Split</th><th>Your label</th>` +
     HW5.runs.map(r => `<th>${escape(hw5RunName(r))}</th>`).join('') + `</tr></thead><tbody>` +
     (rows || `<tr><td colspan="${3 + HW5.runs.length}" class="hw5-history">No traces match.</td></tr>`) +
     `</tbody></table></div>`;
-  document.getElementById('jr-split').onchange = e => { f.split = e.target.value; renderJudges(); };
-  document.getElementById('jr-show').onchange = e => { f.show = e.target.value; renderJudges(); };
+  document.getElementById('jr-split').onchange = e => { f.split = e.target.value; f.cell = null; renderJudges(); };
+  document.getElementById('jr-show').onchange = e => { f.show = e.target.value; f.cell = null; renderJudges(); };
+  const clear = document.getElementById('jr-clear');
+  if (clear) clear.onclick = () => { f.cell = null; renderJudges(); };
+  cardsEl.querySelectorAll('td.jr-cell').forEach(td => td.onclick = () => {
+    const d = td.dataset;
+    const same = f.cell && f.cell.run === d.run && f.cell.split === d.split && f.cell.human === d.human && f.cell.judge === d.judge;
+    f.cell = same ? null : {run: d.run, split: d.split, human: d.human, judge: d.judge, name: d.name};
+    renderJudges();
+    if (f.cell) tableEl.scrollIntoView({behavior: 'smooth', block: 'start'});
+  });
   tableEl.querySelectorAll('tbody tr[data-tid]').forEach(tr => tr.onclick = () => {
     if (sampleSet() !== 'hw5') { toast('Switch to the HW5 labeling set to open this trace'); return; }
     gotoTrace(tr.dataset.tid);

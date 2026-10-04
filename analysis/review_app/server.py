@@ -275,7 +275,28 @@ def _judge_runs(mode: str) -> dict[str, Any]:
             runs.append({"run_id": f"{jid}-rerun", "judge_id": jid, "official": False,
                          "status": "rerun", "model": rerun.get("model"),
                          "note": rerun.get("note", ""), "rows": rows})
-    return {"runs": runs}
+    return {"runs": runs, "dataset": _label_dataset(mode, split_of)}
+
+
+def _label_dataset(mode: str, split_of: dict[str, str]) -> dict[str, Any]:
+    """Pass/Fail counts per split from the latest human label of each
+    evaluated trace (``hw5_trace_inputs.json``), plus how many labeled
+    traces were left out as near-duplicates. Labels only, no predictions."""
+    latest = {}
+    path = _hw5_label_path(mode)
+    for r in _read_hw5_labels(path) if path else []:
+        latest[r.get("trace_id")] = int(r.get("label"))
+    inputs = [r.get("trace_id") for r in _read_json(STATE_DIR / "hw5_trace_inputs.json", [])]
+    splits = {name: {"pass": 0, "fail": 0} for name in ("train", "dev", "test")}
+    for tid in inputs:
+        bucket = splits.setdefault(split_of.get(tid) or "unsplit", {"pass": 0, "fail": 0})
+        if latest.get(tid) == 1:
+            bucket["pass"] += 1
+        elif latest.get(tid) == 0:
+            bucket["fail"] += 1
+    excluded = _read_json(STATE_DIR / "hw5_excluded_variants.json", {}).get("excluded", [])
+    return {"labeled": len(latest), "evaluated": len(inputs),
+            "excluded": len(excluded), "splits": splits}
 
 
 def _backup_annotations() -> None:
