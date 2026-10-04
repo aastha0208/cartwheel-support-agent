@@ -13,6 +13,8 @@ from replay.rollout import EVAL_CASES_PATH, load_frozen_judge
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / ".harbor" / "tasks"
+# Generated files run on Linux, so keep UTF-8 and LF endings on every host.
+_GENERATED = {"encoding": "utf-8", "newline": "\n"}
 SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SOURCE_PACKAGES = ("agent", "observability", "seed", "replay", "harbor_adapter")
 STUB_PACKAGES = ("scenarios", "server", "analysis", "optimize")
@@ -364,24 +366,27 @@ def _write_task(root: Path, case: dict[str, Any]) -> None:
         judges.append(judge)
         filename = f"judge_{mode}"
         judge_names.append(filename)
-        (tests / f"{filename}.py").write_text(_judge_py(mode, expected, judge))
+        (tests / f"{filename}.py").write_text(
+            _judge_py(mode, expected, judge), **_GENERATED
+        )
 
-    (task_dir / "task.toml").write_text(_task_toml(case, judges))
-    (task_dir / "instruction.md").write_text(_instruction(case))
-    (environment / "Dockerfile").write_text(_dockerfile())
-    (tests / "checks.py").write_text(_checks_py())
-    (tests / "reward.toml").write_text(_reward_toml(judge_names))
+    (task_dir / "task.toml").write_text(_task_toml(case, judges), **_GENERATED)
+    (task_dir / "instruction.md").write_text(_instruction(case), **_GENERATED)
+    (environment / "Dockerfile").write_text(_dockerfile(), **_GENERATED)
+    (tests / "checks.py").write_text(_checks_py(), **_GENERATED)
+    (tests / "reward.toml").write_text(_reward_toml(judge_names), **_GENERATED)
     test_sh = tests / "test.sh"
     test_sh.write_text(
         "#!/bin/sh\nset -eu\n"
         "uvx --from 'harbor-rewardkit==0.2.1' --with 'docetl==0.3.0' "
-        "rewardkit /tests\n"
+        "rewardkit /tests\n",
+        **_GENERATED,
     )
     test_sh.chmod(0o755)
 
     _copy_runtime(task_dir)
     (environment / "cartwheel" / "case.json").write_text(
-        json.dumps(case, indent=2, ensure_ascii=False) + "\n"
+        json.dumps(case, indent=2, ensure_ascii=False) + "\n", **_GENERATED
     )
 
 
