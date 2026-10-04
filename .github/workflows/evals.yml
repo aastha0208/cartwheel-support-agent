@@ -14,8 +14,10 @@ jobs:
           lfs: true
       - uses: astral-sh/setup-uv@v5
       - run: uv sync
+      # Skips one course test that checks the course demo data in analysis/state/,
+      # which HW4/HW5 replaced with the student's own work.
       - name: Run checks that do not call a model
-        run: uv run pytest tests/eval tests/test_cli.py tests/test_db.py tests/test_hw_holes.py tests/test_harbor_adapter.py tests/test_replay_harness.py -q
+        run: uv run pytest tests/eval tests/test_cli.py tests/test_db.py tests/test_hw_holes.py tests/test_harbor_adapter.py tests/test_replay_harness.py -q --deselect tests/test_hw_holes.py::test_m2_failure_report_matches_artifact_l_schema
 
   complete-evaluations:
     name: Harbor evaluations
