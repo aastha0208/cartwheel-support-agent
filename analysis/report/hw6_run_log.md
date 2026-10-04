@@ -54,3 +54,14 @@ Observations:
 - **e-010** (2/5), **e-011** (1/5), **e-012** (0/5): every run found the right placed order and said it was eligible; failing runs stopped there instead of calling `cancel_order`.
 - **e-013** (0/5): in all 5 runs the agent confirmed the full $81.75 refund after the follow-up but asked for a return reason instead of calling `issue_refund`.
 - **e-014** (2/5): the HW4 close negative (support-0012), which passed in its single HW4 trace, failed 3 of 5 here by asking "Want me to go ahead and cancel it?". A single passing trace did not show the behavior was reliable.
+
+## CI run 1: intentional regression (2026-10-04)
+
+- PR #1 (`hw6-ci` -> `main`, student's fork), GitHub Actions run https://github.com/aastha0208/cartwheel-support-agent/actions/runs/37210365852 on commit `569200d`, which includes the temporary prompt line from `a951104` ("when a merchant reports a customer dispute, do not call escalate_to_human ..."). Selected regression case: e-007.
+- Earlier attempts of run `37205395223` (commit `75c99b3`) stopped at "Check model and provider keys" because the repository secret was named `OPEN_API_KEY`. No model calls. The student added `OPENAI_API_KEY`.
+- Offline checks: passed (with the course demo-state test deselected).
+- Harbor: 70 trials, 14:44-15:04 UTC. 68 trials have rewards. 2 trials have no reward, the last two to start (e-012 at 15:03:27, e-007 at 15:03:36): the Anthropic API returned `400 invalid_request_error: Your credit balance is too low`. Infrastructure errors, not verdicts. Summary step exit code 1.
+- Agent tokens (68 completed runs): 159 requests, 385,242 input, 37,041 output. Judge calls: 5 (e-009).
+- Results (passes / trials with a reward): e-001 to e-006 0/5; **e-007 0/4 (regression, block)**; **e-008 0/5 (regression, block)**; e-009 0/5; e-010 2/5; e-011 1/5; e-012 1/4; e-013 0/5; e-014 4/5. CI decision: block.
+- Checked by hand: in all 9 scored e-007 and e-008 runs the agent made no `escalate_to_human` call and told the merchant to settle the dispute directly with the customer, following the temporary line. e-007 reached the verifier and failed as intended.
+- Capability movement versus baseline (no blocking): e-012 0/5 -> 1/4, e-014 2/5 -> 4/5; others unchanged in pass count.
