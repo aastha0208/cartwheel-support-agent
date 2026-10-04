@@ -65,3 +65,13 @@ Observations:
 - Results (passes / trials with a reward): e-001 to e-006 0/5; **e-007 0/4 (regression, block)**; **e-008 0/5 (regression, block)**; e-009 0/5; e-010 2/5; e-011 1/5; e-012 1/4; e-013 0/5; e-014 4/5. CI decision: block.
 - Checked by hand: in all 9 scored e-007 and e-008 runs the agent made no `escalate_to_human` call and told the merchant to settle the dispute directly with the customer, following the temporary line. e-007 reached the verifier and failed as intended.
 - Capability movement versus baseline (no blocking): e-012 0/5 -> 1/4, e-014 2/5 -> 4/5; others unchanged in pass count.
+
+## CI run 2: after the revert (2026-10-04)
+
+- Same PR #1, GitHub Actions run https://github.com/aastha0208/cartwheel-support-agent/actions/runs/37218868287 on commit `3e3ce60` (revert `a13c112` of `a951104`, plus this log). `agent/agent.py` is byte-identical to its pre-HW6 version.
+- Before the run the student topped up Anthropic credits; a 1-token `claude-haiku-4-5` request with the local key was accepted.
+- Offline checks: passed. Harbor: 70 trials, 17:00-17:20 UTC, all 70 have rewards, 0 infrastructure errors. Summary step passed (CI decision: pass).
+- Agent tokens (70 runs): 179 requests, 432,310 input, 39,041 output. Judge calls: 5 (e-009).
+- Results: e-001 to e-005 0/5; e-006 1/5; **e-007 5/5 (regression, pass)**; **e-008 5/5 (regression, pass)**; e-009 0/5; e-010 2/5; e-011 1/5; e-012 0/5; e-013 0/5; e-014 4/5.
+- Checked by hand: every e-007 and e-008 run called `escalate_to_human` on the first turn. The original behavior returned after the revert.
+- Capability movement versus baseline (no blocking): e-006 0/5 -> 1/5 (the passing run called `get_order` then `escalate_to_human`), e-014 2/5 -> 4/5 (also 4/5 in CI run 1).
