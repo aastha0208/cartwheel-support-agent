@@ -1,0 +1,117 @@
+{
+  "case_id": "e-014",
+  "model": "claude-opus-4-6",
+  "trial_order": "trial result.json files ordered by started_at, then trial_name",
+  "trials": [
+    {
+      "trial_name": "e-014__xT8ujnL",
+      "passed": 0
+    },
+    {
+      "trial_name": "e-014__x7zUaJz",
+      "passed": 0
+    },
+    {
+      "trial_name": "e-014__uFPuWM7",
+      "passed": 1
+    },
+    {
+      "trial_name": "e-014__Pv5cwEE",
+      "passed": 0
+    },
+    {
+      "trial_name": "e-014__qfu8RSE",
+      "passed": 0
+    },
+    {
+      "trial_name": "e-014__yktkddM",
+      "passed": 1
+    },
+    {
+      "trial_name": "e-014__PvXqDyf",
+      "passed": 1
+    },
+    {
+      "trial_name": "e-014__fHKcqUM",
+      "passed": 1
+    },
+    {
+      "trial_name": "e-014__HhvX7Fm",
+      "passed": 0
+    },
+    {
+      "trial_name": "e-014__Nwd4Nj5",
+      "passed": 1
+    },
+    {
+      "trial_name": "e-014__jL4DEtV",
+      "passed": 0
+    },
+    {
+      "trial_name": "e-014__NePpZxF",
+      "passed": 1
+    },
+    {
+      "trial_name": "e-014__CtSYjU2",
+      "passed": 1
+    },
+    {
+      "trial_name": "e-014__7S2QwRg",
+      "passed": 0
+    },
+    {
+      "trial_name": "e-014__oi544QB",
+      "passed": 1
+    }
+  ],
+  "rewards": [
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    1
+  ],
+  "n": 15,
+  "successes": 8,
+  "comparisons": [
+    {
+      "n": 5,
+      "successes": 1,
+      "pass_at_k": {
+        "1": 0.19999999999999996,
+        "3": 0.6,
+        "5": 1.0
+      }
+    },
+    {
+      "n": 10,
+      "successes": 5,
+      "pass_at_k": {
+        "1": 0.5,
+        "3": 0.9166666666666666,
+        "5": 0.996031746031746
+      }
+    },
+    {
+      "n": 15,
+      "successes": 8,
+      "pass_at_k": {
+        "1": 0.5333333333333333,
+        "3": 0.9230769230769231,
+        "5": 0.993006993006993,
+        "10": 1.0,
+        "15": 1.0
+      }
+    }
+  ]
+}

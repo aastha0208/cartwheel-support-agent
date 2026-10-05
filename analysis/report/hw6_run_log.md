@@ -75,3 +75,20 @@ Observations:
 - Results: e-001 to e-005 0/5; e-006 1/5; **e-007 5/5 (regression, pass)**; **e-008 5/5 (regression, pass)**; e-009 0/5; e-010 2/5; e-011 1/5; e-012 0/5; e-013 0/5; e-014 4/5.
 - Checked by hand: every e-007 and e-008 run called `escalate_to_human` on the first turn. The original behavior returned after the revert.
 - Capability movement versus baseline (no blocking): e-006 0/5 -> 1/5 (the passing run called `get_order` then `escalate_to_human`), e-014 2/5 -> 4/5 (also 4/5 in CI run 1).
+
+## Part E: e-014 fifteen runs (2026-10-04)
+
+- Local Harbor job `hw6-capability-15`, final classified tasks filtered with `--include-task-name "*e-014"`, `--n-attempts 15`, Docker, `claude-opus-4-6`. 15 agent runs, 0 judge calls, 0 exceptions, all 15 rewards present. Runtime 8m 0s.
+- Tokens (15 runs): 39 requests, 95,841 input, 8,923 output.
+- Result: 8/15 passed. Every passing run called `cancel_order`; every failing run found order 10, said it could be cancelled, and asked "Want me to go ahead and cancel it?" instead (`incomplete_write_left_undone`).
+- Trial order used by the analysis: trial `result.json` files ordered by `started_at`, then `trial_name` (Harbor 0.23.0 omits `trial_results` from the job `result.json`). Rewards in that order: 0 0 1 0 0 1 1 1 0 1 0 1 1 0 1.
+- `eval_results/e-014-15.json`:
+
+| Runs observed | Passes | pass@1 | pass@3 | pass@5 | pass@10 | pass@15 |
+|---|---|---|---|---|---|---|
+| n = 5 | 1 | 0.200 | 0.600 | 1.000 | | |
+| n = 10 | 5 | 0.500 | 0.917 | 0.996 | | |
+| n = 15 | 8 | 0.533 | 0.923 | 0.993 | 1.000 | 1.000 |
+
+- Observed: at each n, pass@k does not decrease as k grows. pass@1 moved +0.300 from n = 5 to n = 10 and +0.033 from n = 10 to n = 15. Earlier e-014 observations from separate jobs (not part of this analysis): baseline 2/5, CI run 1 4/5, CI run 2 4/5.
+- Stability assessment: left to the student.
