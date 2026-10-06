@@ -91,4 +91,4 @@ Observations:
 | n = 15 | 8 | 0.533 | 0.923 | 0.993 | 1.000 | 1.000 |
 
 - Observed: at each n, pass@k does not decrease as k grows. pass@1 moved +0.300 from n = 5 to n = 10 and +0.033 from n = 10 to n = 15. Earlier e-014 observations from separate jobs (not part of this analysis): baseline 2/5, CI run 1 4/5, CI run 2 4/5.
-- Stability assessment: left to the student.
+- Stability assessment (student's conclusion): the estimate is stable from 10 to 15 runs. pass@1 moved from 0.50 to 0.53, less than one run flipping would change it (about 0.07 at n = 15), so 15 runs produced a stable estimate.
