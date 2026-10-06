@@ -17,6 +17,32 @@ def _case_id(task_name: str, known_ids: set[str]) -> str | None:
     return max(matches, key=len) if matches else None
 
 
+JOB_TRIAL_ORDER = "result.json trial_results order"
+DIRECTORY_TRIAL_ORDER = "trial result.json files ordered by started_at, then trial_name"
+
+
+def load_trial_results(job_dir: Path) -> tuple[list[dict[str, Any]], str]:
+    """Return a job's trial results in a reproducible order, and that order.
+
+    Harbor 0.23.0 writes the job's result.json without ``trial_results``, so
+    fall back to each trial directory's own result.json."""
+    result_path = job_dir / "result.json"
+    if not result_path.exists():
+        raise FileNotFoundError(f"Harbor result not found: {result_path}")
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    if "trial_results" in result:
+        return list(result["trial_results"]), JOB_TRIAL_ORDER
+    trials = [
+        json.loads(path.read_text(encoding="utf-8"))
+        for path in job_dir.glob("*/result.json")
+    ]
+    ordered = sorted(
+        (trial for trial in trials if "trial_name" in trial),
+        key=lambda trial: (str(trial.get("started_at", "")), str(trial["trial_name"])),
+    )
+    return ordered, DIRECTORY_TRIAL_ORDER
+
+
 def _reward(trial: dict[str, Any]) -> float | None:
     verifier = trial.get("verifier_result")
     if not isinstance(verifier, dict):
@@ -43,13 +69,9 @@ def summarize_job(
     else:
         cases = load_cases(cases_path)
     by_id = {case["id"]: case for case in cases}
-    result_path = job_dir / "result.json"
-    if not result_path.exists():
-        raise FileNotFoundError(f"Harbor result not found: {result_path}")
-    result = json.loads(result_path.read_text())
     trials: dict[str, list[dict[str, Any]]] = defaultdict(list)
     unknown: list[str] = []
-    for trial in result.get("trial_results", []):
+    for trial in load_trial_results(job_dir)[0]:
         case_id = _case_id(str(trial.get("task_name", "")), set(by_id))
         if case_id is None:
             unknown.append(str(trial.get("task_name", "")))

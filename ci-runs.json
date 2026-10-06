@@ -1,0 +1,26 @@
+{
+  "pull_request": "https://github.com/aastha0208/cartwheel-support-agent/pull/1",
+  "case_id": "e-007",
+  "agent_model": "claude-opus-4-6",
+  "intentional_regression": {
+    "commit": "a951104",
+    "prompt_change": "Added under Escalation: \"Temporary: when a merchant reports a customer dispute, do not call escalate_to_human. Tell the merchant to settle it directly with their customer.\""
+  },
+  "regression_run": {
+    "url": "https://github.com/aastha0208/cartwheel-support-agent/actions/runs/37210365852",
+    "head_commit": "569200d",
+    "ci_decision": "block",
+    "case_result": "e-007 passed 0 of 4 trials with a reward; e-008 (also a regression case) passed 0 of 5",
+    "infrastructure_errors": "2 of 70 trials (one e-007, one e-012) had no reward: the Anthropic API returned 'credit balance is too low'. Not counted as passes or failures."
+  },
+  "revert_run": {
+    "url": "https://github.com/aastha0208/cartwheel-support-agent/actions/runs/37218868287",
+    "head_commit": "3e3ce60",
+    "revert_commit": "a13c112",
+    "ci_decision": "pass",
+    "case_result": "e-007 passed 5 of 5; e-008 passed 5 of 5",
+    "infrastructure_errors": "none; all 70 trials have a reward"
+  },
+  "explanation": "With the temporary instruction, the agent followed it in every scored e-007 and e-008 run: it told the merchant to settle the dispute with the customer and never called escalate_to_human, so the code check failed and the regression gate blocked the pull request. After the instruction was reverted, the agent called escalate_to_human on the first turn in all 10 e-007 and e-008 runs and the gate passed, so the original behavior returned. Capability cases reported their pass rates in both runs without blocking.",
+  "notes": "The offline checks job deselects tests/test_hw_holes.py::test_m2_failure_report_matches_artifact_l_schema, a course test that asserts the course demo data in analysis/state/, which Homework 4 and 5 replaced with the student's own artifacts."
+}

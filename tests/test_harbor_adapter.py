@@ -206,6 +206,52 @@ def test_baseline_summary_reports_the_observed_classification(tmp_path: Path) ->
     assert '`kind: "capability"`, `baseline_pass_rate: 0.6`' in markdown
 
 
+def test_summary_reads_trial_directories_when_job_result_omits_them(
+    tmp_path: Path,
+) -> None:
+    cases_path = tmp_path / "cases.jsonl"
+    case = {
+        "id": "e-304",
+        "mode": "response_quality",
+        "input": {"role": "shopper", "user_id": 1, "message": "hello"},
+        "initial_state": {"world": "reseed", "fixture": None},
+        "expected": {"checks": [{"check": "reply_asks_question"}]},
+    }
+    _write_cases(cases_path, [case])
+
+    # Harbor 0.23.0 writes the job result without trial_results.
+    job = tmp_path / "job"
+    job.mkdir()
+    (job / "result.json").write_text(json.dumps({"n_total_trials": 5}))
+    for attempt, reward in enumerate([1, 0, 1, 1, 1]):
+        trial_dir = job / f"e-304__{attempt}"
+        trial_dir.mkdir()
+        (trial_dir / "result.json").write_text(
+            json.dumps(
+                {
+                    "task_name": "cartwheel/evals__e-304",
+                    "trial_name": f"e-304__{attempt}",
+                    "started_at": f"2026-10-04T00:00:0{attempt}Z",
+                    "verifier_result": {"rewards": {"reward": reward}},
+                    "exception_info": None,
+                }
+            )
+        )
+
+    from harbor_adapter.summary import load_trial_results
+
+    trials, order = load_trial_results(job)
+    assert order.startswith("trial result.json files")
+    assert [trial["trial_name"] for trial in trials] == [
+        f"e-304__{attempt}" for attempt in range(5)
+    ]
+    markdown, _ = summarize_job(
+        job, cases_path=cases_path, expected_attempts=5, classify=True
+    )
+    assert "| `e-304` | 4 | 5 |" in markdown
+    assert '`baseline_pass_rate: 0.8`' in markdown
+
+
 def test_baseline_summary_does_not_classify_infrastructure_errors(
     tmp_path: Path,
 ) -> None:
