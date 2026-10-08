@@ -51,6 +51,10 @@ unchanged):
                               (test split hidden until the judge is frozen)
     GET  /api/hw5_judge_runs?mode=<mode>   every version plus saved reruns,
                               same test-split rule
+    GET  /api/hw7_risk_groups?mode=<mode>  HW5 labels by HW7 risk group
+                              (rules from monitoring/sample.py, read-only)
+    GET  /api/hw7_monitor_periods          the monitor's saved before/after runs
+                              (monitoring/output/, read-only)
 
 Run it:
 
@@ -278,6 +282,112 @@ def _judge_runs(mode: str) -> dict[str, Any]:
     return {"runs": runs, "dataset": _label_dataset(mode, split_of)}
 
 
+REPO_ROOT = HERE.parent.parent
+MONITOR_CONFIG = REPO_ROOT / "monitoring" / "config.json"
+# The three groups the HW7 handout supplies. Any other name in
+# monitoring.sample.DEFAULT_RISK_GROUPS was added by the student (custom).
+COURSE_RISK_GROUPS = ("policy_lookup", "write_action", "multi_turn")
+RISK_GROUP_RULES = {
+    "policy_lookup": "called get_policy or search_help_center",
+    "write_action": "called issue_refund or cancel_order",
+    "multi_turn": "more than one user turn",
+    "order_lookup_no_escalation": "called find_order, never called escalate_to_human",
+}
+
+
+def _risk_groups(mode: str) -> dict[str, Any]:
+    """HW5 labels by HW7 risk group, for the Risk groups tab (read-only).
+
+    Applies the predicates in ``monitoring/sample.py`` (the same ones the
+    monitor uses) to the tools and user turns recorded in each evaluated HW5
+    trace (``hw5_trace_inputs.json``), and pairs each with its latest label.
+    """
+    import sys
+
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    from monitoring.sample import DEFAULT_RISK_GROUPS
+
+    split_of = {
+        tid: name
+        for name, tids in _read_json(STATE_DIR / "splits.json", {}).get(mode, {}).items()
+        if isinstance(tids, list)
+        for tid in tids
+    }
+    latest: dict[str, int] = {}
+    path = _hw5_label_path(mode)
+    for r in _read_hw5_labels(path) if path else []:
+        if not r.get("superseded_by"):
+            latest[r.get("trace_id")] = int(r.get("label"))
+    samples = {s.get("trace_id"): s for s in _read_json(STATE_DIR / "hw5_samples.json", [])}
+    rows = []
+    for rec in _read_json(STATE_DIR / "hw5_trace_inputs.json", []):
+        tid = rec.get("trace_id")
+        sample = samples.get(tid)
+        if sample is None or tid not in latest:
+            continue
+        msgs = sample.get("trace", [])
+        tools = sorted({m["name"] for m in msgs if m.get("role") == "tool_call" and m.get("name")})
+        turns = sum(1 for m in msgs if m.get("role") == "user")
+        trace = {"id": tid, "tools": tools, "turn_count": turns}
+        meta = sample.get("meta", {})
+        rows.append({
+            "trace_id": tid,
+            "scenario_id": meta.get("scenario_id"),
+            "role": meta.get("role"),
+            "split": split_of.get(tid),
+            "fail": latest[tid] == 0,  # HW5 labels: 1 = Pass, 0 = Fail
+            "tools": tools,
+            "turns": turns,
+            "groups": [name for name, match in DEFAULT_RISK_GROUPS.items() if match(trace)],
+        })
+    chosen = _read_json(MONITOR_CONFIG, {}).get("risk_groups", [])
+    groups = [{"id": name, "custom": name not in COURSE_RISK_GROUPS, "chosen": name in chosen,
+               "rule": RISK_GROUP_RULES.get(name, "")}
+              for name in DEFAULT_RISK_GROUPS]
+    return {"mode": mode, "groups": groups, "rows": rows}
+
+
+MONITOR_OUTPUT_DIR = REPO_ROOT / "monitoring" / "output"
+
+
+def _monitor_periods() -> dict[str, Any]:
+    """The monitor's saved before/after runs, for the Monitor periods view.
+
+    Reads ``monitoring/output/<label>.json`` (written by monitoring.run) for
+    each configured period, plus an optional ``<label>-stability.json`` side
+    check. Read-only; returns what the monitor actually selected and judged.
+    """
+    config = _read_json(MONITOR_CONFIG, {})
+    chosen = config.get("risk_groups", [])
+    periods = []
+    for period in config.get("periods", []):
+        label = period["label"]
+        run = _read_json(MONITOR_OUTPUT_DIR / f"{label}.json", None)
+        if not run or "conversations" not in run:
+            periods.append({"label": label, "window": period, "missing": True})
+            continue
+        side = _read_json(MONITOR_OUTPUT_DIR / f"{label}-stability.json", {}).get("verdicts", {})
+        random_ids = set(run.get("random_ids", []))
+        verdicts = {**run.get("risk_verdicts", {}), **run.get("random_verdicts", {})}
+        rows = []
+        for conv in run["conversations"]:
+            tid = conv["id"]
+            rows.append({
+                **conv,
+                "random": tid in random_ids,
+                "groups": [g for g, ids in run.get("risk_groups", {}).items() if tid in ids],
+                "verdict": verdicts.get(tid),  # 1 = failure flagged, 0 = not, None = not judged
+                "side_verdict": side.get(tid),
+            })
+        periods.append({"label": label, "window": run.get("window"), "estimate": run.get("estimate"),
+                        "threshold": run.get("threshold"), "crossed": run.get("crossed_threshold"),
+                        "n_judged": run.get("n_judged"), "has_side_check": bool(side), "rows": rows})
+    groups = [{"id": g, "custom": g not in COURSE_RISK_GROUPS} for g in chosen]
+    return {"mode": config.get("judge_mode"), "judge_id": config.get("judge_id"),
+            "threshold": config.get("threshold"), "groups": groups, "periods": periods}
+
+
 def _label_dataset(mode: str, split_of: dict[str, str]) -> dict[str, Any]:
     """Pass/Fail counts per split from the latest human label of each
     evaluated trace (``hw5_trace_inputs.json``), plus how many labeled
@@ -415,6 +525,18 @@ class ReviewHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": "unknown mode"}, status=400)
                 return
             self._send_json(_judge_runs(mode))
+            return
+
+        if path == "/api/hw7_risk_groups":
+            mode = parse_qs(urlsplit(self.path).query).get("mode", [""])[0]
+            if _hw5_label_path(mode) is None:
+                self._send_json({"error": "unknown mode"}, status=400)
+                return
+            self._send_json(_risk_groups(mode))
+            return
+
+        if path == "/api/hw7_monitor_periods":
+            self._send_json(_monitor_periods())
             return
 
         self._send_json({"error": f"unknown path: {path}"}, status=404)

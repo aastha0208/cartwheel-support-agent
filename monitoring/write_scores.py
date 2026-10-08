@@ -70,8 +70,27 @@ def build_score_records(
         A list of score record dicts with keys: score_id, name, value,
         data_type, trace_id, comment (comment is None for verdicts).
     """
-    ### YOUR CODE HERE (hw7)
-    raise NotImplementedError("hw7: implement build_score_records")
+    records: list[dict[str, Any]] = []
+    for kind, verdicts in (("verdict", random_verdicts), ("risk_verdict", risk_verdicts)):
+        for trace_id, verdict in verdicts.items():
+            records.append({
+                "score_id": _stable_id(mode, kind, trace_id),
+                "name": f"{mode}_{kind}",
+                "value": float(verdict),
+                "data_type": "NUMERIC",
+                "trace_id": trace_id,
+                "comment": None,
+            })
+    e = estimate
+    records.append({
+        "score_id": _stable_id(mode, "prevalence", batch_label),
+        "name": f"{mode}_corrected_prevalence",
+        "value": float(e["corrected"]),
+        "data_type": "NUMERIC",
+        "trace_id": None,
+        "comment": f"95% CI {e['ci_low']}-{e['ci_high']}, raw {e['raw']}, n={e['n_sample']}",
+    })
+    return records
 
 
 # ---------------------------------------------------------------------------
@@ -105,6 +124,10 @@ def post_scores(records: list[dict[str, Any]]) -> int:
         }
         if record.get("trace_id") is not None:
             kwargs["trace_id"] = record["trace_id"]
+        elif record.get("session_id") is not None:
+            # The Langfuse server rejects a score with no trace, session, or
+            # dataset run, so a period-level score is attached to a session.
+            kwargs["session_id"] = record["session_id"]
         if record.get("comment"):
             kwargs["comment"] = record["comment"]
         client.create_score(**kwargs)

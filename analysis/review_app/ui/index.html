@@ -624,6 +624,67 @@
   .jr-table td.off { background: rgba(217,119,6,.15); }
   .jr-table td .hw5-badge { margin-left: 0; }
   .jr-note { color: var(--muted); font-size: 12px; margin: 4px 0 12px; }
+
+  /* ---- HW7 risk groups view ---- */
+  :root { --risk-fail: #dc2626; --risk-pass: #2563eb; --risk-custom: #7c3aed; --risk-chosen: #d97706; }
+  :root[data-theme="dark"] { --risk-fail: #f87171; --risk-pass: #60a5fa; --risk-custom: #a78bfa; --risk-chosen: #f59e0b; }
+  #risk-view { padding: 18px; max-width: 1100px; margin: 0 auto; }
+  .risk-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+  .risk-toggle button { font: inherit; font-size: 13px; padding: 6px 14px; border: 0; background: var(--panel); color: var(--ink); cursor: pointer; }
+  .risk-toggle button.on { background: var(--ink); color: var(--bg); font-weight: 600; }
+  .risk-legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--muted); font-size: 12.5px; margin: 6px 0 12px; align-items: center; }
+  .risk-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -2px; margin-right: 4px; }
+  .risk-dot.fail { background: var(--risk-fail); } .risk-dot.pass { background: var(--risk-pass); }
+  .risk-tag { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 4px; padding: 0 5px; margin-left: 4px; vertical-align: 1px; color: #fff; text-transform: uppercase; letter-spacing: .03em; }
+  .risk-tag.custom { background: var(--risk-custom); } .risk-tag.chosen { background: var(--risk-chosen); }
+  .risk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+  .risk-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
+  .risk-card.custom { border: 2px solid var(--risk-custom); background: color-mix(in srgb, var(--risk-custom) 7%, var(--panel)); }
+  .risk-card.on { outline: 2px solid var(--risk-chosen); outline-offset: 1px; }
+  .risk-card .rname { font-weight: 600; font-family: ui-monospace, monospace; font-size: 13px; word-break: break-word; }
+  .risk-card .rrule { color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
+  .risk-card .rnum { font-variant-numeric: tabular-nums; font-size: 13px; }
+  .risk-card .rsub { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .risk-bar { position: relative; height: 9px; background: var(--line); border-radius: 5px; margin: 6px 0; }
+  .risk-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--risk-fail); border-radius: 5px; }
+  .risk-bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+  .risk-combo { display: grid; grid-template-columns: 320px 1fr; gap: 10px; align-items: start; padding: 7px 0; border-top: 1px solid var(--line); }
+  .risk-combo .clab { font-family: ui-monospace, monospace; font-size: 12.5px; word-break: break-word; }
+  .risk-combo .clab .cg.custom { color: var(--risk-custom); font-weight: 700; }
+  .risk-combo .clab small { display: block; color: var(--muted); font-family: system-ui, sans-serif; }
+  .risk-combo.has-custom { border-left: 3px solid var(--risk-custom); padding-left: 8px; }
+  .risk-dots { display: flex; flex-wrap: wrap; gap: 4px; }
+  .risk-dots span { width: 13px; height: 13px; border-radius: 50%; transition: opacity .15s; }
+  .risk-dots span.fail { background: var(--risk-fail); } .risk-dots span.pass { background: var(--risk-pass); }
+  .risk-dots span.dim { opacity: .15; }
+  .risk-note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--risk-chosen); border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: 13px; }
+  .risk-note.custom { border-left-color: var(--risk-custom); }
+  .risk-caveat { color: var(--muted); font-size: 12px; margin-top: 14px; }
+  #risk-tip { position: fixed; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.15); display: none; max-width: 340px; z-index: 50; }
+  @media (max-width: 700px) { .risk-combo { grid-template-columns: 1fr; } }
+  /* Monitor periods view */
+  .mp-dot { display: inline-block; width: 15px; height: 15px; border-radius: 50%; vertical-align: -3px; margin-right: 4px; box-sizing: border-box; }
+  .mp-dot.fail { background: var(--risk-fail); } .mp-dot.pass { background: var(--risk-pass); }
+  .mp-dot.none { background: transparent; border: 2px solid var(--muted); }
+  .mp-dot.flip { outline: 2px dashed var(--risk-chosen); outline-offset: 2px; }
+  .mp-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+  .mp-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .mp-card.crossed { border-color: var(--risk-fail); }
+  .mp-card .rname { font-weight: 600; font-size: 14px; }
+  .mp-card .rrule { color: var(--muted); font-size: 12px; margin: 2px 0 6px; font-variant-numeric: tabular-nums; }
+  .risk-tag.crossed { background: var(--risk-fail); } .risk-tag.ok { background: var(--risk-pass); }
+  .mp-grid { display: grid; gap: 6px 4px; align-items: center; overflow-x: auto; padding: 4px 0; }
+  .mp-col { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); text-align: center; }
+  .mp-cell { text-align: center; }
+  .mp-cell .mp-dot { margin: 0; }
+  .mp-rowlab { font-size: 12.5px; font-weight: 600; min-width: 52px; display: inline-block; }
+  .mp-group { border-top: 1px solid var(--line); padding: 8px 0; }
+  .mp-group.custom { border-left: 3px solid var(--risk-custom); padding-left: 8px; }
+  .mp-glab { font-family: ui-monospace, monospace; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .mp-group.custom .mp-glab { color: var(--risk-custom); }
+  .mp-gper { display: flex; align-items: center; gap: 10px; margin: 3px 0; flex-wrap: wrap; }
+  .mp-gcount { color: var(--muted); font-size: 12px; min-width: 90px; font-variant-numeric: tabular-nums; }
+  .mp-none { color: var(--muted); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -636,6 +697,7 @@
     <button data-view="ledger">Coverage</button>
     <button data-view="map">Map</button>
     <button data-view="judges">Judge results</button>
+    <button data-view="risk">Risk groups</button>
   </div>
   <div class="spacer"></div>
   <select id="sample-set" title="Which sample set to show">
@@ -714,6 +776,25 @@
   <div id="map-zoom-controls" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"></div>
   <canvas id="map" style="width:100%; height:560px; border:1px solid var(--line); border-radius:8px; cursor:pointer;"></canvas>
   <div id="map-legend" style="margin-top:12px;"></div>
+</div>
+
+<div id="risk-view" class="view">
+  <div class="risk-toggle" id="risk-toggle">
+    <button data-risk="default" class="on">Course default groups</button>
+    <button data-risk="custom">Default + custom</button>
+    <button data-risk="periods">Monitor periods</button>
+  </div>
+  <div id="risk-periods" style="display:none;"></div>
+  <div id="risk-labeled">
+  <div class="section-title" style="margin-top:6px;">HW5 labels by HW7 risk group <span style="text-transform:none; font-weight:400;">(dispute_not_escalated &middot; your latest label per evaluated conversation &middot; rules from monitoring/sample.py applied to the tools and user turns in each trace &middot; no model calls)</span></div>
+  <div class="risk-legend"><span><span class="risk-dot fail"></span>Fail (your label)</span><span><span class="risk-dot pass"></span>Pass</span><span><span class="risk-tag chosen">chosen</span> in monitoring/config.json</span><span><span class="risk-tag custom">custom</span> added by me, not the handout</span><span>Click a card to highlight its conversations; hover a dot for details.</span></div>
+  <div class="risk-cards" id="risk-cards"></div>
+  <div class="section-title">Every conversation, by the groups it belongs to</div>
+  <div id="risk-combos"></div>
+  <div class="section-title">What this view shows</div>
+  <div id="risk-notes"></div>
+  <div class="risk-caveat">The HW5 labeling set was chosen to include failures, so these rates show where failures cluster, not how often they happen. Only the HW7 random sample estimates the failure rate. The custom group was designed from these same labels, so the after period is its real test.</div>
+  </div>
 </div>
 
 <div id="judges-view" class="view">
@@ -3027,6 +3108,7 @@ function switchView(name, skipPush) {
   if (name === 'ledger') renderLedger();
   if (name === 'map') renderMap();
   if (name === 'judges') { renderJudges(); loadHW5Judge().then(renderJudges); }
+  if (name === 'risk') loadRiskGroups();
   // Render once immediately with whatever's in memory (instant, no flash of
   // empty), then again once fresh data arrives a moment later.
   if (name === 'progress' || name === 'notes' || name === 'ledger') {
@@ -3177,6 +3259,222 @@ async function poll() {
 /* ------------------------------------------------------------------ *
  * Utilities                                                          *
  * ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ *
+ * HW7 risk groups: HW5 labels grouped by the monitor's risk groups.  *
+ * Two views: the handout's default groups only, and default + the    *
+ * custom group(s) added in monitoring/sample.py (marked "custom").   *
+ * ------------------------------------------------------------------ */
+// ?view=risk&risk=custom (or =periods) opens that view directly.
+const RISK = {data: null, periods: null, active: null,
+  view: ({custom: 'custom', periods: 'periods'})[new URLSearchParams(location.search).get('risk')] || 'default'};
+
+async function loadRiskGroups() {
+  if (!RISK.data) {
+    try {
+      const d = await api.get(`/api/hw7_risk_groups?mode=${encodeURIComponent(HW5.mode)}`);
+      if (!d || !Array.isArray(d.rows)) { toast('Risk groups endpoint missing: restart analysis/review_app/server.py'); return; }
+      RISK.data = d;
+    } catch (e) { toast('Could not load risk groups'); return; }
+  }
+  renderRiskGroups();
+}
+
+function wireRiskToggle() {
+  document.querySelectorAll('#risk-toggle button').forEach(b => {
+    b.classList.toggle('on', b.dataset.risk === RISK.view);
+    b.onclick = () => { RISK.view = b.dataset.risk; RISK.active = null; renderRiskGroups(); };
+  });
+  const periods = RISK.view === 'periods';
+  document.getElementById('risk-periods').style.display = periods ? '' : 'none';
+  document.getElementById('risk-labeled').style.display = periods ? 'none' : '';
+}
+
+/* Monitor periods: what monitoring.run actually selected and judged in each
+   period (monitoring/output/<label>.json), with verdict colors. */
+async function renderMonitorPeriods() {
+  const el = document.getElementById('risk-periods');
+  if (!RISK.periods) {
+    el.innerHTML = '<div class="risk-caveat">Loading the monitor runs&hellip;</div>';
+    try { RISK.periods = await api.get('/api/hw7_monitor_periods'); } catch (e) { RISK.periods = null; }
+    if (!RISK.periods || !Array.isArray(RISK.periods.periods)) { el.innerHTML = '<div class="risk-caveat">Monitor periods endpoint missing: restart analysis/review_app/server.py</div>'; return; }
+  }
+  const d = RISK.periods;
+  const ready = d.periods.filter(p => !p.missing);
+  if (!ready.length) { el.innerHTML = '<div class="risk-caveat">No judged monitor runs yet (run monitoring.run for a period).</div>'; return; }
+  const pct = v => v === null || v === undefined ? '-' : `${Math.round(v * 100)}%`;
+  const dot = (p, r) => {
+    const cls = r.verdict === 1 ? 'fail' : r.verdict === 0 ? 'pass' : 'none';
+    const flip = r.side_verdict !== undefined && r.side_verdict !== null && r.side_verdict !== r.verdict;
+    return `<span class="mp-dot ${cls}${flip ? ' flip' : ''}" data-pid="${escape(p.label)}" data-tid="${escape(r.id)}"></span>`;
+  };
+
+  // 1. Summary cards.
+  const cards = ready.map(p => {
+    const e = p.estimate || {}, rnd = p.rows.filter(r => r.random), fl = rnd.filter(r => r.verdict === 1).length;
+    return `<div class="mp-card${p.crossed ? ' crossed' : ''}">
+      <div class="rname">${escape(p.label)} <span class="risk-tag ${p.crossed ? 'crossed' : 'ok'}">${p.crossed ? 'threshold crossed' : 'below threshold'}</span></div>
+      <div class="rrule">${escape((p.window || {}).from || '')} &rarr; ${escape((p.window || {}).to || '')}</div>
+      <div class="rnum">random sample flagged <b>${fl} / ${rnd.length}</b> &middot; raw ${pct(e.raw)} &rarr; corrected <b>${pct(e.corrected)}</b></div>
+      <div class="rsub">95% CI ${pct(e.ci_low)} to ${pct(e.ci_high)} &middot; threshold ${pct(p.threshold)} &middot; ${p.n_judged} conversations judged of ${p.rows.length}</div></div>`;
+  }).join('');
+
+  // 2. Random sample, lined up by scenario so periods compare column by column.
+  const scenarios = [...new Set(ready.flatMap(p => p.rows.filter(r => r.random).map(r => r.scenario_id)))].sort();
+  const randomGrid = `<div class="mp-grid" style="grid-template-columns: 90px repeat(${scenarios.length}, minmax(34px, 1fr));">
+    <div></div>${scenarios.map(s => `<div class="mp-col">${escape(String(s).replace('support-', ''))}</div>`).join('')}
+    ${ready.map(p => `<div class="mp-rowlab">${escape(p.label)}</div>` + scenarios.map(s => {
+      const r = p.rows.find(x => x.random && x.scenario_id === s);
+      return `<div class="mp-cell">${r ? dot(p, r) : ''}</div>`;
+    }).join('')).join('')}</div>`;
+
+  // 3. Risk groups (inspection only).
+  const riskRows = d.groups.map(g => `<div class="mp-group${g.custom ? ' custom' : ''}">
+      <div class="mp-glab">${escape(g.id)}${g.custom ? '<span class="risk-tag custom">custom</span>' : ''}</div>
+      ${ready.map(p => {
+        const m = p.rows.filter(r => r.groups.includes(g.id));
+        return `<div class="mp-gper"><span class="mp-rowlab">${escape(p.label)}</span><span class="mp-gcount">${m.filter(r => r.verdict === 1).length} flagged / ${m.length}</span><span class="risk-dots">${m.slice().sort((a, b) => (b.verdict || 0) - (a.verdict || 0)).map(r => dot(p, r)).join('') || '<i class="mp-none">none</i>'}</span></div>`;
+      }).join('')}</div>`).join('');
+
+  // 4. What stands out (computed from the runs).
+  const notes = [];
+  if (ready.length >= 2) {
+    const [a, b] = ready;
+    const changed = scenarios.filter(s => {
+      const x = a.rows.find(r => r.random && r.scenario_id === s), y = b.rows.find(r => r.random && r.scenario_id === s);
+      return x && y && x.verdict !== y.verdict;
+    });
+    notes.push({t: `Same ${scenarios.length} random scenarios in both periods. Verdict changed on <b>${changed.length}</b>: ${changed.map(s => `<code>${escape(s)}</code>`).join(', ') || 'none'}.`});
+  }
+  ready.filter(p => p.has_side_check).forEach(p => {
+    const rnd = p.rows.filter(r => r.random);
+    const flips = p.rows.filter(r => r.verdict !== null && r.side_verdict !== null && r.side_verdict !== undefined && r.side_verdict !== r.verdict);
+    notes.push({t: `Side check on <b>${escape(p.label)}</b> (same judge, fresh cache, not posted): random sample flagged <b>${rnd.filter(r => r.side_verdict === 1).length} / ${rnd.length}</b> instead of ${rnd.filter(r => r.verdict === 1).length}; ${flips.length} of ${p.rows.filter(r => r.verdict !== null).length} verdicts changed (dashed ring): ${flips.map(r => `<code>${escape(r.scenario_id)}</code>`).join(', ')}.`});
+  });
+  const customIds = d.groups.filter(g => g.custom).map(g => g.id);
+  ready.forEach(p => {
+    const riskFlag = p.rows.filter(r => r.groups.length && r.verdict === 1);
+    const inCustomOnly = riskFlag.filter(r => r.groups.every(g => customIds.includes(g))).length;
+    if (customIds.length && riskFlag.length) notes.push({custom: true, t: `<b>${escape(p.label)}</b>: ${riskFlag.length} risk-group conversations flagged, ${inCustomOnly} of them only in the custom group.`});
+  });
+
+  el.innerHTML = `
+    <div class="section-title" style="margin-top:6px;">Monitor periods <span style="text-transform:none; font-weight:400;">(${escape(d.mode || '')} &middot; judge ${escape(d.judge_id || '')} &middot; what monitoring.run selected and judged, from monitoring/output/ &middot; no model calls)</span></div>
+    <div class="risk-legend"><span><span class="mp-dot fail"></span>judge: Fail</span><span><span class="mp-dot pass"></span>judge: Pass</span><span><span class="mp-dot none"></span>not judged</span><span><span class="mp-dot pass flip"></span>verdict changed in the side check</span><span>Hover a dot for details.</span></div>
+    <div class="mp-cards">${cards}</div>
+    <div class="section-title">Random sample <span style="text-transform:none; font-weight:400;">(the only conversations that count toward the failure rate; columns are scenarios)</span></div>
+    ${randomGrid}
+    <div class="section-title">Risk groups <span style="text-transform:none; font-weight:400;">(judged for inspection only; not part of the rate)</span></div>
+    ${riskRows}
+    <div class="section-title">Not graded</div>
+    <div class="rnum">${ready.map(p => `${escape(p.label)}: <b>${p.rows.filter(r => r.verdict === null || r.verdict === undefined).length}</b> of ${p.rows.length} conversations (neither random nor in a chosen risk group)`).join(' &middot; ')}</div>
+    <div class="section-title">What stands out</div>
+    ${notes.map(n => `<div class="risk-note${n.custom ? ' custom' : ''}">${n.t}</div>`).join('')}
+    <div class="risk-caveat">Verdicts come from the judge, not human labels. On identical conversations the judge's answers can change between runs, so a single run's flags are evidence to inspect, not confirmed failures.</div>`;
+}
+
+function renderRiskGroups() {
+  wireRiskToggle();
+  if (RISK.view === 'periods') { renderMonitorPeriods(); return; }
+  const d = RISK.data;
+  if (!d) return;
+  const groups = d.groups.filter(g => RISK.view === 'custom' || !g.custom);
+  const ids = groups.map(g => g.id);
+  // Membership restricted to the groups shown in this view.
+  const rows = d.rows.map(r => ({...r, shown: r.groups.filter(g => ids.includes(g))}));
+  const chosen = groups.filter(g => g.chosen).map(g => g.id);
+  const isCustom = id => d.groups.some(g => g.id === id && g.custom);
+  const stat = sel => { const f = sel.filter(r => r.fail).length; return {f, p: sel.length - f, n: sel.length, rate: sel.length ? f / sel.length : 0}; };
+  const all = stat(rows);
+  const member = (r, id) => id === 'all' ? true : id === 'none' ? !r.shown.length
+    : id === 'chosen' ? r.shown.some(g => chosen.includes(g)) : r.shown.includes(id);
+  const code = s => `<code>${escape(s)}</code>`;
+
+  const cards = [{id: 'all', name: 'all labeled conversations', rule: 'baseline'}]
+    .concat(groups.map(g => ({id: g.id, name: g.id, rule: g.rule, custom: g.custom, chosen: g.chosen})))
+    .concat([{id: 'chosen', name: 'chosen groups combined', rule: chosen.join(' or ') || 'none chosen in this view'},
+             {id: 'none', name: 'no group', rule: `in none of the ${groups.length} groups shown`}]);
+  document.getElementById('risk-cards').innerHTML = cards.map(c => {
+    const s = stat(rows.filter(r => member(r, c.id)));
+    return `<div class="risk-card${c.custom ? ' custom' : ''}${RISK.active === c.id ? ' on' : ''}" data-g="${escape(c.id)}">
+      <div class="rname">${escape(c.name)}${c.custom ? '<span class="risk-tag custom">custom</span>' : ''}${c.chosen ? '<span class="risk-tag chosen">chosen</span>' : ''}</div>
+      <div class="rrule">${escape(c.rule)}</div>
+      <div class="rnum"><b>${s.f}</b> Fail / ${s.p} Pass &middot; rate <b>${s.rate.toFixed(2)}</b></div>
+      <div class="risk-bar" title="black line = baseline ${all.rate.toFixed(2)}"><i style="width:${s.rate * 100}%"></i><b style="left:${all.rate * 100}%"></b></div>
+      <div class="rsub">holds ${s.f} of ${all.f} labeled failures (${all.f ? Math.round(100 * s.f / all.f) : 0}%)</div></div>`;
+  }).join('');
+
+  const byKey = {};
+  rows.forEach(r => { const k = r.shown.join(' + ') || 'no group'; (byKey[k] = byKey[k] || []).push(r); });
+  const keys = Object.keys(byKey).sort((a, b) => (a === 'no group') - (b === 'no group') || byKey[b].length - byKey[a].length);
+  document.getElementById('risk-combos').innerHTML = keys.map(k => {
+    const sel = byKey[k].slice().sort((a, b) => b.fail - a.fail), s = stat(sel);
+    const hasCustom = sel[0].shown.some(isCustom);
+    const label = k === 'no group' ? 'no group' : sel[0].shown.map(g => `<span class="cg${isCustom(g) ? ' custom' : ''}">${escape(g)}</span>`).join(' + ');
+    return `<div class="risk-combo${hasCustom ? ' has-custom' : ''}"><div class="clab">${label}<small>${s.f} Fail / ${s.p} Pass</small></div>
+      <div class="risk-dots">${sel.map(r => `<span class="${r.fail ? 'fail' : 'pass'}${!RISK.active || member(r, RISK.active) ? '' : ' dim'}" data-tid="${escape(r.trace_id)}"></span>`).join('')}</div></div>`;
+  }).join('');
+
+  // Notes: always compare against the default-only view so the custom
+  // group's contribution is explicit.
+  const defaultIds = d.groups.filter(g => !g.custom).map(g => g.id);
+  const customIds = d.groups.filter(g => g.custom).map(g => g.id);
+  const noDefault = stat(d.rows.filter(r => !r.groups.some(g => defaultIds.includes(g))));
+  const noAny = stat(d.rows.filter(r => !r.groups.length));
+  const ch = stat(rows.filter(r => member(r, 'chosen')));
+  const notes = [];
+  if (RISK.view === 'default') {
+    notes.push({t: `With only the handout's groups, <b>${noDefault.f} of ${all.f}</b> labeled failures (${Math.round(100 * noDefault.f / all.f)}%) are in no group. No default risk group would bring them up for inspection; only the random sample can.`});
+    notes.push({t: `The chosen default groups (${chosen.map(code).join(', ') || 'none'}) hold <b>${ch.f} of ${all.f}</b> failures.`});
+    if (customIds.length) notes.push({custom: true, t: `Switch to <b>Default + custom</b> to see what ${customIds.map(code).join(', ')} adds.`});
+  } else {
+    customIds.forEach(id => {
+      const s = stat(d.rows.filter(r => r.groups.includes(id)));
+      const caught = d.rows.filter(r => r.fail && r.groups.includes(id) && !r.groups.some(g => defaultIds.includes(g))).length;
+      notes.push({custom: true, t: `${code(id)} (custom) holds <b>${s.f} of ${all.f}</b> failures at a rate of ${s.rate.toFixed(2)} vs ${all.rate.toFixed(2)} overall, including <b>${caught}</b> that no default group contains.`});
+    });
+    notes.push({custom: true, t: `Failures in no group: <b>${noDefault.f}</b> with the default groups only, <b>${noAny.f}</b> once the custom group is added.`});
+    notes.push({t: `Your chosen groups (${chosen.map(code).join(', ')}) hold <b>${ch.f} of ${all.f}</b> failures; the rest sit only in groups you did not choose.`});
+  }
+  document.getElementById('risk-notes').innerHTML = notes.map(n => `<div class="risk-note${n.custom ? ' custom' : ''}">${n.t}</div>`).join('');
+
+  document.querySelectorAll('#risk-cards .risk-card').forEach(c => c.onclick = () => {
+    RISK.active = RISK.active === c.dataset.g ? null : c.dataset.g; renderRiskGroups();
+  });
+}
+
+document.addEventListener('mousemove', e => {
+  let tip = document.getElementById('risk-tip');
+  const mp = e.target.closest && e.target.closest('.mp-dot[data-tid]');
+  if (mp && RISK.periods) {
+    if (!tip) { tip = document.createElement('div'); tip.id = 'risk-tip'; document.body.appendChild(tip); }
+    const p = RISK.periods.periods.find(x => x.label === mp.dataset.pid);
+    const r = p && p.rows.find(x => x.id === mp.dataset.tid);
+    if (!r) return;
+    const v = x => x === 1 ? '<b style="color:var(--risk-fail)">Fail</b>' : x === 0 ? '<b style="color:var(--risk-pass)">Pass</b>' : 'not judged';
+    const side = r.side_verdict !== undefined && r.side_verdict !== null ? `<br>side check: ${v(r.side_verdict)}` : '';
+    tip.innerHTML = `<b>${escape(r.scenario_id)}</b> &middot; ${escape(p.label)} &middot; judge: ${v(r.verdict)}${side}<br>
+      ${r.random ? 'random sample (counts toward the rate)' : 'not in the random sample'}<br>
+      user turns: ${r.turn_count}<br>tools: ${escape(r.tools.join(', ') || 'none')}<br>
+      <span style="color:var(--muted)">risk groups: ${escape(r.groups.join(', ') || 'none')}</span>`;
+    tip.style.display = 'block';
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - 360) + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+    return;
+  }
+  const dot = e.target.closest && e.target.closest('.risk-dots span');
+  if (!dot || !RISK.data) { if (tip) tip.style.display = 'none'; return; }
+  if (!tip) { tip = document.createElement('div'); tip.id = 'risk-tip'; document.body.appendChild(tip); }
+  const r = RISK.data.rows.find(x => x.trace_id === dot.dataset.tid);
+  if (!r) return;
+  const shown = RISK.data.groups.filter(g => RISK.view === 'custom' || !g.custom).map(g => g.id);
+  tip.innerHTML = `<b>${escape(r.scenario_id)}</b> &middot; ${escape(r.role || '')} &middot; <b style="color:var(${r.fail ? '--risk-fail' : '--risk-pass'})">${r.fail ? 'Fail' : 'Pass'}</b> &middot; ${escape(r.split || '')}<br>
+    user turns: ${r.turns}<br>tools: ${escape(r.tools.join(', ') || 'none')}<br>
+    <span style="color:var(--muted)">groups: ${escape(r.groups.filter(g => shown.includes(g)).join(', ') || 'none')}</span>`;
+  tip.style.display = 'block';
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - 360) + 'px';
+  tip.style.top = (e.clientY + 14) + 'px';
+});
+
 function escape(s) {
   return String(s === undefined || s === null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

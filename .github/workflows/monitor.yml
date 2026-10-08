@@ -1,0 +1,55 @@
+name: Monitor dispute_not_escalated
+
+# Daily production monitor (HW7 Part D). Reads the previous 24 hours of
+# Cartwheel traces from Langfuse, samples and judges them with the frozen
+# HW5 judge, corrects the failure rate, and writes scores back to Langfuse.
+#
+# Langfuse runs locally (Docker on the student's laptop), so this job runs on
+# a self-hosted runner there. The repository is public, so the job only runs
+# on a schedule or a manual dispatch (never on pull requests), and it targets
+# a dedicated runner label that no other workflow uses.
+
+on:
+  schedule:
+    - cron: "0 13 * * *"   # daily at 13:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: [self-hosted, windows, cartwheel-monitor]
+    timeout-minutes: 30
+    env:
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST }}
+      PYTHONUTF8: "1"          # DocETL prints characters the Windows console code page rejects
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run the monitor on the last 24 hours
+        run: uv run python -m monitoring.run --last-hours 24
+
+      - name: Upload monitoring output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-output-${{ github.run_id }}
+          path: |
+            monitoring/output/
+            monitoring/history.jsonl
+            monitoring/prevalence.svg
+          if-no-files-found: warn

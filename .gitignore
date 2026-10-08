@@ -27,3 +27,6 @@ __pycache__/
 .venv/
 .pytest_cache/
 scenarios/demo_pilot_gt.json
+
+# HW7 monitor per-run details (uploaded as a workflow artifact, not committed).
+monitoring/output/

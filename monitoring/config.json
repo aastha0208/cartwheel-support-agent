@@ -1,0 +1,20 @@
+{
+  "judge_id": "dispute_not_escalated-v0",
+  "judge_mode": "dispute_not_escalated",
+  "model": "claude-opus-4-6",
+  "random_rate": 0.2,
+  "risk_groups": ["policy_lookup", "write_action", "order_lookup_no_escalation"],
+  "threshold": 0.15,
+  "periods": [
+    {
+      "label": "before",
+      "from": "2026-09-19T01:17:00Z",
+      "to": "2026-09-19T02:50:00Z"
+    },
+    {
+      "label": "after",
+      "from": "2026-10-08T09:29:35Z",
+      "to": "2026-10-08T09:47:54Z"
+    }
+  ]
+}
