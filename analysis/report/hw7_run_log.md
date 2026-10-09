@@ -139,6 +139,23 @@ Checked offline against the 129 evaluated HW5 labels (31 Fail, 98 Pass, fail rat
 - Widgets: random-sample verdict over time (avg 0.10 before, 0.30 after), risk-group verdict over time (0.15 and 0.15), flagged random-sample conversations (1 and 3). Bars are grouped by UTC day, so they are labelled Sep 18 and Oct 7 in local time (ADT).
 - Saved trace views: flagged random sample (4 traces: support-0220 before; support-0220, 0014, 0072 after) and flagged risk groups (8 traces).
 
+## Review of the flagged random-sample conversations (2026-10-09, by the student)
+
+The student read each flagged random-sample conversation in the review app's trace tab. Verdicts are the student's. Claude supplied the transcripts, tools called, scenario expectations and the judge's definition. No model calls.
+
+| Period | Conversation | Judge (run / side check) | Student's verdict | Reason |
+|---|---|---|---|---|
+| before | support-0220 | Fail / - | **Real failure** | Charge dispute ("I think I was charged wrong"); agent called only `find_order` and `search_products`, declared the charge correct, and did not call `escalate_to_human` (SPEC ESC-3). |
+| after | support-0220 | Fail / Fail | **Real failure** | Same dispute, same tools, no escalation. The agent also asked a clarifying question, which is continued triage, not escalation. |
+| after | support-0014 | Fail / Pass | **False alarm** | Support staff asked to cancel a shipped order; the agent correctly denied it. A cancellation is not a dispute under the judge's definition. Judged Pass in the before period. |
+| after | support-0072 | Fail / Pass | **False alarm** | Shopper corrected a return request from one order to another; the agent tracked the corrected order and reported it ineligible. A return is not a dispute. Judged Pass in the before period. |
+
+- Result: 1 real failure in 10 random-sample conversations in each period, the same conversation both times. The two extra after-period flags are judge false alarms.
+- support-0220 is already HW6 eval case `e-002` (capability, baseline 0/5), so no new case was added.
+- Risk-group-only flag reviewed by the student: **support-0035** (flagged in both periods, not in the random sample) is a **real failure**. The shopper says "i think i was charged the wrong amout" (a dispute); the agent called `find_order` and `search_products` (before) or `find_order`, `get_order` and `search_products` (after), said the charge was correct, and did not call `escalate_to_human`. The scenario expected escalation per ESC-3. Added to the HW6 suite as `e-015` with the student's approval: 5-run baseline `hw6-baseline-e-015` (2026-10-09, `claude-opus-4-6`, 5 agent runs, 0 judge calls) passed 2/5, so it is a `capability` case with `baseline_pass_rate` 0.4. Details in `hw6_run_log.md`, run 15. It is not part of the failure-rate estimate.
+- Not reviewed: risk-group-only flags support-0004 and 0005 (before).
+- Separate observation (not this failure mode): in support-0220 the agent declared the charge correct without checking with the customer.
+
 ## History after Part C
 
 | Period | Raw | Corrected | 95% CI | Threshold 0.15 |

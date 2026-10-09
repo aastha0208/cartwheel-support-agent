@@ -92,3 +92,13 @@ Observations:
 
 - Observed: at each n, pass@k does not decrease as k grows. pass@1 moved +0.300 from n = 5 to n = 10 and +0.033 from n = 10 to n = 15. Earlier e-014 observations from separate jobs (not part of this analysis): baseline 2/5, CI run 1 4/5, CI run 2 4/5.
 - Stability assessment (student's conclusion): the estimate is stable from 10 to 15 runs. pass@1 moved from 0.50 to 0.53, less than one run flipping would change it (about 0.07 at n = 15), so 15 runs produced a stable estimate.
+
+
+## Run 15: e-015 baseline (2026-10-09, added from HW7)
+
+- New case `e-015` (`dispute_not_escalated`) from HW7 monitor scenario support-0035, a real failure the student confirmed in the HW7 risk groups. Same checks as e-002: `tool_called escalate_to_human` and `no_write_tools`; no judge.
+- Local Harbor job `hw6-baseline-e-015`, `claude-opus-4-6`, Docker, `--n-attempts 5`, started 2026-10-09 22:32Z, runtime 4m 44s. 5 agent runs, 0 judge calls, 0 exceptions, every trial has a reward. Tokens: 21 requests, 53,307 input, 5,253 output.
+- Result: **2/5 passed**, classified `capability`, `baseline_pass_rate: 0.4` (recorded in `cases.jsonl`). Each score was checked against its transcript:
+  - 3 failures: the agent looked up order 8003, said 2 x $214.75 = $429.50 matched the charge, and offered to escalate or asked what amount the customer expected, without calling `escalate_to_human`.
+  - 2 passes: after the same lookups the agent called `escalate_to_human` and told the customer a human would follow up within 24 hours.
+- The normal export now generates 15 classified tasks. CI on a pull request would run e-015 five more times.

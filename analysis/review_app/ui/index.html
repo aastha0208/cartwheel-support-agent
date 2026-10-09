@@ -660,6 +660,8 @@
   .risk-note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--risk-chosen); border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: 13px; }
   .risk-note.custom { border-left-color: var(--risk-custom); }
   .risk-note.todo { border-left-color: var(--risk-fail); }
+  .risk-note a.mp-open { color: var(--risk-pass); text-decoration: underline; }
+  .risk-note a.mp-open code { color: inherit; }
   .risk-caveat { color: var(--muted); font-size: 12px; margin-top: 14px; }
   #risk-tip { position: fixed; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.15); display: none; max-width: 340px; z-index: 50; }
   @media (max-width: 700px) { .risk-combo { grid-template-columns: 1fr; } }
@@ -3335,12 +3337,20 @@ async function renderMonitorPeriods() {
     }).join('')).join('')}</div>`;
 
   // 3. Risk groups (inspection only).
-  const riskRows = d.groups.map(g => `<div class="mp-group${g.custom ? ' custom' : ''}">
-      <div class="mp-glab">${escape(g.id)}${g.custom ? '<span class="risk-tag custom">custom</span>' : ''}</div>
+  // Lined up by scenario like the random sample; a blank cell means that
+  // scenario was not in the group in that period (the agent called other tools).
+  const riskRows = d.groups.map(g => {
+    const cols = [...new Set(ready.flatMap(p => p.rows.filter(r => r.groups.includes(g.id)).map(r => r.scenario_id)))].sort();
+    const grid = cols.length ? `<div class="mp-grid" style="grid-template-columns: 150px repeat(${cols.length}, minmax(34px, 1fr));">
+      <div></div>${cols.map(s => `<div class="mp-col">${escape(String(s).replace('support-', ''))}</div>`).join('')}
       ${ready.map(p => {
         const m = p.rows.filter(r => r.groups.includes(g.id));
-        return `<div class="mp-gper"><span class="mp-rowlab">${escape(p.label)}</span><span class="mp-gcount">${m.filter(r => r.verdict === 1).length} flagged / ${m.length}</span><span class="risk-dots">${m.slice().sort((a, b) => (b.verdict || 0) - (a.verdict || 0)).map(r => dot(p, r)).join('') || '<i class="mp-none">none</i>'}</span></div>`;
-      }).join('')}</div>`).join('');
+        return `<div class="mp-rowlab">${escape(p.label)} <span class="mp-gcount">${m.filter(r => r.verdict === 1).length} / ${m.length} flagged</span></div>` +
+          cols.map(s => { const r = m.find(x => x.scenario_id === s); return `<div class="mp-cell">${r ? dot(p, r) : ''}</div>`; }).join('');
+      }).join('')}</div>` : '<i class="mp-none">no conversations in either period</i>';
+    return `<div class="mp-group${g.custom ? ' custom' : ''}">
+      <div class="mp-glab">${escape(g.id)}${g.custom ? '<span class="risk-tag custom">custom</span>' : ''}</div>${grid}</div>`;
+  }).join('');
 
   // 4. What stands out (computed from the runs).
   const notes = [];
@@ -3391,7 +3401,7 @@ async function renderMonitorPeriods() {
     <div class="mp-cards">${cards}</div>
     <div class="section-title">Random sample <span style="text-transform:none; font-weight:400;">(the only conversations that count toward the failure rate; columns are scenarios)</span></div>
     ${randomGrid}
-    <div class="section-title">Risk groups <span style="text-transform:none; font-weight:400;">(judged for inspection only; not part of the rate)</span></div>
+    <div class="section-title">Risk groups <span style="text-transform:none; font-weight:400;">(judged for inspection only; not part of the rate; columns are scenarios, and a blank cell means the scenario was not in that group in that period)</span></div>
     ${riskRows}
     <div class="section-title">Not graded</div>
     <div class="rnum">${ready.map(p => `${escape(p.label)}: <b>${p.rows.filter(r => r.verdict === null || r.verdict === undefined).length}</b> of ${p.rows.length} conversations (neither random nor in a chosen risk group)`).join(' &middot; ')}</div>
