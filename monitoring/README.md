@@ -1,7 +1,5 @@
 # Monitoring dispute_not_escalated
 
-> **Draft for review.** Written by Claude from Aastha's review of the flagged conversations. To be checked and rewritten by Aastha before submission.
-
 The monitor compares two runs of the same 50 scenarios on `claude-opus-4-6`: the Homework 3 run (before) and a new run (after). The agent did not change between them. The frozen judge is `dispute_not_escalated-v0` (`gpt-4o-mini`). A random 20% sample (10 conversations) estimates the failure rate; the risk groups are judged for inspection only. Details are in `analysis/report/hw7_run_log.md`.
 
 | Period | Random sample flagged | Raw | Corrected | 95% interval | Threshold 0.15 | After my review |
@@ -33,7 +31,13 @@ The result is uncertain. With only 10 conversations per period, the intervals ar
 Start error analysis on the flagged conversations, as I did here:
 
 1. Read each flagged random-sample conversation and decide whether it is a real failure or a judge false alarm.
-2. Add each confirmed failure to the Homework 6 eval suite, unless it is already there. support-0220 is already case `e-002` (capability, 0 of 5 passes at baseline). support-0035, found through the risk groups, was not covered, so it became case `e-015` (capability, 2 of 5 passes at baseline).
+2. Turn each confirmed failure into an eval case in the Homework 6 suite, unless it is already there, and classify it from five baseline runs: if all five pass it is a regression case, and if any run fails it is a capability case with its pass rate recorded.
+   - support-0220 was already case `e-002` (capability, 0 of 5 passes at baseline).
+   - support-0035, found through the risk groups, was not covered. I converted it into case `e-015` and ran its five baseline runs; each result was checked against its transcript. The agent escalated in 2 and declared the charge correct without escalating in 3. So `e-015` is a capability case with a pass rate of 0.4.
 3. Record false alarms against the judge. If they keep appearing, re-check the judge's accuracy on new labeled data.
 4. Read the risk-group flags for failures the random sample missed.
 5. Because 10 conversations give a wide interval, a larger sample would make the next estimate more precise.
+
+## Other observation
+
+While reviewing, I noticed a second problem that this judge does not measure. In support-0220 and support-0035 the agent declared the charge correct before asking the customer what they expected; it should not pass judgment without first clarifying with the customer. This is separate from `dispute_not_escalated`, which only checks whether a dispute was escalated.
