@@ -667,6 +667,7 @@
   .mp-dot { display: inline-block; width: 15px; height: 15px; border-radius: 50%; vertical-align: -3px; margin-right: 4px; box-sizing: border-box; }
   .mp-dot.fail { background: var(--risk-fail); } .mp-dot.pass { background: var(--risk-pass); }
   .mp-dot.none { background: transparent; border: 2px solid var(--muted); }
+  .mp-dot[data-tid] { cursor: pointer; }
   .mp-dot.flip { outline: 2px dashed var(--risk-chosen); outline-offset: 2px; }
   .mp-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
   .mp-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
@@ -704,6 +705,7 @@
   <select id="sample-set" title="Which sample set to show">
     <option value="hw4">HW4 review set</option>
     <option value="hw5">HW5 labeling set</option>
+    <option value="hw7">HW7 monitor (both periods)</option>
   </select>
   <div class="nav" id="trace-nav">
     <button id="prev">&larr;</button>
@@ -1125,13 +1127,13 @@ function hw5EvidenceTitle(rec) {
   return rec.source === 'human:hw4' ? 'HW4 annotation notes (may concern other modes)' : 'Evidence';
 }
 function sampleSet() {
-  try { return localStorage.getItem('cartwheel.sampleSet') === 'hw5' ? 'hw5' : 'hw4'; }
+  try { const v = localStorage.getItem('cartwheel.sampleSet'); return v === 'hw5' || v === 'hw7' ? v : 'hw4'; }
   catch (e) { return 'hw4'; }
 }
-function samplesPath() { return sampleSet() === 'hw5' ? '/api/hw5_samples' : '/api/samples'; }
+function samplesPath() { return {hw5: '/api/hw5_samples', hw7: '/api/hw7_samples'}[sampleSet()] || '/api/samples'; }
 /* Notes written in the HW5 set go to hw5_annotations.json, so the HW4
    annotations.json only ever holds HW4 review notes. */
-function annotationsPath() { return sampleSet() === 'hw5' ? '/api/hw5_annotations' : '/api/annotations'; }
+function annotationsPath() { return {hw5: '/api/hw5_annotations', hw7: '/api/hw7_annotations'}[sampleSet()] || '/api/annotations'; }
 /* In the HW5 set, HW4 notes on reused traces are shown read-only in the
    panel (never saved back from here). */
 async function loadHW4NotesReadOnly() {
@@ -1351,7 +1353,7 @@ async function loadAll() {
 
 /* localStorage backup of human annotations, per SKILL.md */
 function backupAnnotations() {
-  try { localStorage.setItem(sampleSet() === 'hw5' ? 'cartwheel_hw5_annotations' : 'cartwheel_annotations', JSON.stringify(state.annotations)); }
+  try { localStorage.setItem({hw5: 'cartwheel_hw5_annotations', hw7: 'cartwheel_hw7_annotations'}[sampleSet()] || 'cartwheel_annotations', JSON.stringify(state.annotations)); }
   catch (e) {}
 }
 // Merge remote annotations that this client did not create (a second
@@ -3091,6 +3093,10 @@ async function refreshFromServer() {
     if (!state.scenarios.length) fetches.push(api.get(sampleSet() === 'hw5' ? '/api/scenarios?set=hw5' : '/api/scenarios'));
     const [samples, suggestions, patterns, annotations, scenarios] = await Promise.all(fetches);
     if (Array.isArray(samples)) state.samples = samples;
+    else if (samples && samples.error && !state.missingSetWarned) {
+      state.missingSetWarned = true;
+      toast('This sample set needs a newer server: restart analysis/review_app/server.py');
+    }
     if (Array.isArray(suggestions)) state.suggestions = suggestions;
     if (patterns && typeof patterns === 'object') state.patterns = patterns;
     state.annotations = mergeRemoteAnnotations(annotations);
@@ -3361,7 +3367,9 @@ async function renderMonitorPeriods() {
   // 5. What to review: the flagged conversations a person still has to read.
   const ids = rows => rows.map(r => {
     const flip = r.side_verdict !== undefined && r.side_verdict !== null && r.side_verdict !== r.verdict;
-    return `<code>${escape(r.scenario_id)}</code>${flip ? ' (side check: Pass)' : ''}`;
+    const id = `<code>${escape(r.scenario_id)}</code>`;
+    return `<a href="#" class="mp-open" data-tid="${escape(r.id)}" title="Open this conversation in the trace tab">${id}</a>` +
+      (flip ? ' (side check: Pass)' : '');
   }).join(', ') || 'none';
   const todos = ready.map(p => {
     const flagged = p.rows.filter(r => r.verdict === 1);
@@ -3379,7 +3387,7 @@ async function renderMonitorPeriods() {
 
   el.innerHTML = `
     <div class="section-title" style="margin-top:6px;">Monitor periods <span style="text-transform:none; font-weight:400;">(${escape(d.mode || '')} &middot; judge ${escape(d.judge_id || '')} &middot; what monitoring.run selected and judged, from monitoring/output/ &middot; no model calls)</span></div>
-    <div class="risk-legend"><span><span class="mp-dot fail"></span>judge: Fail</span><span><span class="mp-dot pass"></span>judge: Pass</span><span><span class="mp-dot none"></span>not judged</span><span><span class="mp-dot pass flip"></span>verdict changed in the side check</span><span>Hover a dot for details.</span></div>
+    <div class="risk-legend"><span><span class="mp-dot fail"></span>judge: Fail</span><span><span class="mp-dot pass"></span>judge: Pass</span><span><span class="mp-dot none"></span>not judged</span><span><span class="mp-dot pass flip"></span>verdict changed in the side check</span><span>Hover a dot for details; click it to open the conversation in the trace tab.</span></div>
     <div class="mp-cards">${cards}</div>
     <div class="section-title">Random sample <span style="text-transform:none; font-weight:400;">(the only conversations that count toward the failure rate; columns are scenarios)</span></div>
     ${randomGrid}
@@ -3464,6 +3472,24 @@ function renderRiskGroups() {
   });
 }
 
+/* Monitor periods: open a monitored conversation in the trace tab. They live
+   in the HW7 monitor set, so switch to it first (a reload) when needed. */
+function openMonitorTrace(tid) {
+  if (sampleSet() === 'hw7') { gotoTrace(tid); return; }
+  try { localStorage.setItem('cartwheel.sampleSet', 'hw7'); } catch (e) { toast('Switch to the HW7 monitor set to open this trace'); return; }
+  location.href = `${location.pathname}?trace=${encodeURIComponent(tid)}`;
+}
+// Monitor periods: clicking a dot opens that conversation in the trace tab.
+document.addEventListener('click', e => {
+  const link = e.target.closest && e.target.closest('.mp-open[data-tid]');
+  if (link) { e.preventDefault(); openMonitorTrace(link.dataset.tid); return; }
+  const mp = e.target.closest && e.target.closest('.mp-dot[data-tid]');
+  if (!mp || !RISK.periods) return;
+  const p = RISK.periods.periods.find(x => x.label === mp.dataset.pid);
+  const r = p && p.rows.find(x => x.id === mp.dataset.tid);
+  if (r) openMonitorTrace(r.id);
+});
+
 document.addEventListener('mousemove', e => {
   let tip = document.getElementById('risk-tip');
   const mp = e.target.closest && e.target.closest('.mp-dot[data-tid]');
@@ -3477,7 +3503,7 @@ document.addEventListener('mousemove', e => {
     tip.innerHTML = `<b>${escape(r.scenario_id)}</b> &middot; ${escape(p.label)} &middot; judge: ${v(r.verdict)}${side}<br>
       ${r.random ? 'random sample (counts toward the rate)' : 'not in the random sample'}<br>
       user turns: ${r.turn_count}<br>tools: ${escape(r.tools.join(', ') || 'none')}<br>
-      <span style="color:var(--muted)">risk groups: ${escape(r.groups.join(', ') || 'none')}</span>`;
+      <span style="color:var(--muted)">risk groups: ${escape(r.groups.join(', ') || 'none')}</span><br><i>click to open in the trace tab</i>`;
     tip.style.display = 'block';
     tip.style.left = Math.min(e.clientX + 14, innerWidth - 360) + 'px';
     tip.style.top = (e.clientY + 14) + 'px';

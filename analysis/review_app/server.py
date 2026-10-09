@@ -45,6 +45,9 @@ unchanged):
     POST /api/hw5_samples     push the HW5 labeling sample set
     GET  /api/hw5_annotations notes written in the HW5 set (hw5_annotations.json)
     POST /api/hw5_annotations save them (the HW4 annotations.json is untouched)
+    GET  /api/hw7_samples     HW7 monitored conversations (both periods)
+    GET  /api/hw7_annotations notes written in the HW7 set (hw7_annotations.json)
+    POST /api/hw7_annotations save them
     GET  /api/hw5_labels?mode=<mode>   every HW5 label record for a mode (history)
     POST /api/hw5_labels      append one label {mode, trace_id, label, evidence}
     GET  /api/hw5_judge?mode=<mode>[&judge=<id>]   judge verdicts + critiques
@@ -104,6 +107,11 @@ API_FILES: dict[str, Path] = {
     "/api/hw5_samples": STATE_DIR / "hw5_samples.json",
     # Notes written while viewing the HW5 set, kept out of the HW4 file.
     "/api/hw5_annotations": STATE_DIR / "hw5_annotations.json",
+    # HW7: the monitored conversations (scripts/build_hw7_review_set.py), so
+    # the Monitor periods view can open them in the trace tab, plus notes
+    # written while viewing them.
+    "/api/hw7_samples": STATE_DIR / "hw7_samples.json",
+    "/api/hw7_annotations": STATE_DIR / "hw7_annotations.json",
 }
 
 # HW5 labels live in state/hw5_labels/<mode>.jsonl (1 = Pass, 0 = Fail). They
@@ -124,6 +132,8 @@ API_DEFAULTS: dict[str, Any] = {
     "/api/suggestions": [],
     "/api/hw5_samples": [],
     "/api/hw5_annotations": [],
+    "/api/hw7_samples": [],
+    "/api/hw7_annotations": [],
 }
 
 

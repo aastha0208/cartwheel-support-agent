@@ -17,6 +17,10 @@ replay/results/
 # local recovery safety net, not meant to be committed.
 analysis/state/.annotation_backups/
 
+# HW7 monitored conversations copied from Langfuse for the review app's trace
+# tab; rebuilt by scripts/build_hw7_review_set.py, so not committed.
+analysis/state/hw7_samples.json
+
 # Scratch/debug files (dumps, one-off check scripts, artifact preview copies) —
 # session working files, not deliverables.
 .tmp/
