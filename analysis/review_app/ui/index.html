@@ -659,6 +659,7 @@
   .risk-dots span.dim { opacity: .15; }
   .risk-note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--risk-chosen); border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: 13px; }
   .risk-note.custom { border-left-color: var(--risk-custom); }
+  .risk-note.todo { border-left-color: var(--risk-fail); }
   .risk-caveat { color: var(--muted); font-size: 12px; margin-top: 14px; }
   #risk-tip { position: fixed; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.15); display: none; max-width: 340px; z-index: 50; }
   @media (max-width: 700px) { .risk-combo { grid-template-columns: 1fr; } }
@@ -3357,6 +3358,25 @@ async function renderMonitorPeriods() {
     if (customIds.length && riskFlag.length) notes.push({custom: true, t: `<b>${escape(p.label)}</b>: ${riskFlag.length} risk-group conversations flagged, ${inCustomOnly} of them only in the custom group.`});
   });
 
+  // 5. What to review: the flagged conversations a person still has to read.
+  const ids = rows => rows.map(r => {
+    const flip = r.side_verdict !== undefined && r.side_verdict !== null && r.side_verdict !== r.verdict;
+    return `<code>${escape(r.scenario_id)}</code>${flip ? ' (side check: Pass)' : ''}`;
+  }).join(', ') || 'none';
+  const todos = ready.map(p => {
+    const flagged = p.rows.filter(r => r.verdict === 1);
+    const rnd = flagged.filter(r => r.random), riskOnly = flagged.filter(r => !r.random);
+    const why = p.crossed
+      ? `corrected rate ${pct((p.estimate || {}).corrected)} crossed the ${pct(p.threshold)} threshold, so review before acting.`
+      : `below the ${pct(p.threshold)} threshold; reviewing the flags still checks the judge.`;
+    return {todo: true, t: `<b>Review ${escape(p.label)}</b>: ${why}<br>
+      Random sample flagged (these set the rate): ${ids(rnd)}<br>
+      Risk groups only flagged (inspection): ${ids(riskOnly)}`};
+  });
+  todos.push({todo: true, t: `<b>For each flagged conversation</b>: read it and decide whether the agent really failed to escalate a dispute.
+    A real failure becomes an eval case (HW6); a judge mistake is a false alarm to note against the judge.
+    "(side check: Pass)" marks flags the same judge did not repeat on a fresh run, so check those for judge noise first.`});
+
   el.innerHTML = `
     <div class="section-title" style="margin-top:6px;">Monitor periods <span style="text-transform:none; font-weight:400;">(${escape(d.mode || '')} &middot; judge ${escape(d.judge_id || '')} &middot; what monitoring.run selected and judged, from monitoring/output/ &middot; no model calls)</span></div>
     <div class="risk-legend"><span><span class="mp-dot fail"></span>judge: Fail</span><span><span class="mp-dot pass"></span>judge: Pass</span><span><span class="mp-dot none"></span>not judged</span><span><span class="mp-dot pass flip"></span>verdict changed in the side check</span><span>Hover a dot for details.</span></div>
@@ -3369,6 +3389,8 @@ async function renderMonitorPeriods() {
     <div class="rnum">${ready.map(p => `${escape(p.label)}: <b>${p.rows.filter(r => r.verdict === null || r.verdict === undefined).length}</b> of ${p.rows.length} conversations (neither random nor in a chosen risk group)`).join(' &middot; ')}</div>
     <div class="section-title">What stands out</div>
     ${notes.map(n => `<div class="risk-note${n.custom ? ' custom' : ''}">${n.t}</div>`).join('')}
+    <div class="section-title" style="font-size:12px;">What to review</div>
+    ${todos.map(n => `<div class="risk-note todo">${n.t}</div>`).join('')}
     <div class="risk-caveat">Verdicts come from the judge, not human labels. On identical conversations the judge's answers can change between runs, so a single run's flags are evidence to inspect, not confirmed failures.</div>`;
 }
 

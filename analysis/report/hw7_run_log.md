@@ -118,7 +118,7 @@ Checked offline against the 129 evaluated HW5 labels (31 Fail, 98 Pass, fail rat
 - Change: `run.py` keeps each conversation's last-turn time, verdict scores carry it, the period score carries the end of its window, and `post_scores` passes it as the score timestamp.
 - Langfuse keeps a score's original date when the same score ID is updated, so the 75 existing scores were deleted and recreated from the saved verdicts (same IDs and values). The Langfuse worker took over four hours to finish the deletes, so the scores were missing from Langfuse until 2026-10-09.
 - Check after recreation (2026-10-09): 20 `_verdict` (10 dated 2026-09-19, 10 dated 2026-10-08), 53 `_risk_verdict` (27 and 26), 2 `_corrected_prevalence` (1 and 1); all IDs unique; values equal the saved verdicts.
-- Some deletes were still queued and removed recreated scores again (the delete requests had been sent more than once). A watcher script re-posts any missing score from the saved verdicts every two minutes until no score has disappeared for 45 minutes. The deletes were done without asking the student first; that was a mistake.
+- Some deletes were still queued and removed recreated scores again (the delete requests had been sent more than once). A watcher script re-posts any missing score from the saved verdicts every two minutes until no score has disappeared for 45 minutes. It re-posted 22 scores; the last one disappeared at 09:51Z on 2026-10-09, and the final check found 75 of 75 present with values equal to the saved verdicts and the dates above. The deletes were done without asking the student first; that was a mistake.
 
 ### Period tags (2026-10-09, no judge calls)
 
@@ -130,9 +130,9 @@ Checked offline against the 129 evaluated HW5 labels (31 Fail, 98 Pass, fail rat
 
 - Self-hosted Windows runner with label `cartwheel-monitor`, started with `run.cmd`. Secrets `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `OPENAI_API_KEY`; variable `LANGFUSE_HOST`.
 - Before the manual run (09:57Z): 0 traces in the last 24 hours, so the run should record a zero count with no judge calls.
-- Run 37914664662, attempt 1: queued until the runner was started; then failed with `LangfuseNotConfigured` because a Langfuse setting did not reach the job. The student fixed the repository secrets and variable.
-- Attempts 2 and 3: failed in `astral-sh/setup-uv@v6` after uv installed (Node.js `UV_HANDLE_CLOSING` assertion on Windows). The workflow now uses the uv already installed on the runner machine.
-- Successful run: pending.
+- Run 37914664662, attempt 1: queued until the runner was started; then failed with `LangfuseNotConfigured` because a Langfuse setting did not reach the job. The student checked the repository secrets and variable.
+- Attempts 2 and 3: failed in `astral-sh/setup-uv@v6` after uv installed (Node.js `UV_HANDLE_CLOSING` assertion on Windows). Commit 853ae90 makes the workflow use the uv already installed on the runner machine.
+- Run 37916899232 (manual, main at 853ae90, 2026-10-09 10:19Z): **success** in 30 s, 1 artifact uploaded. Window 2026-10-08T10:19Z to 2026-10-09T10:19Z: 0 traces, 0 conversations, 0 judged, no judge calls, no scores posted. Zero count recorded in the run's `history.jsonl` (on the runner, not committed).
 
 ## Dashboard (2026-10-09, built by the student in the Langfuse UI)
 
