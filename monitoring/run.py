@@ -165,6 +165,7 @@ def build_conversations(
             "models": models,
             "tools": sorted({str(m["name"]) for m in messages if m.get("role") == "tool_call" and m.get("name")}),
             "turn_count": sum(m.get("role") == "user" for m in messages),
+            "timestamp": group[-1].get("timestamp"),
             "text": judge_text(messages),
         })
     records.sort(key=lambda r: (r["scenario_id"] or "", r["id"]))
@@ -186,7 +187,7 @@ def check_period(records: list[dict[str, Any]], scenario_ids: set[str]) -> None:
 
 def conversation_summaries(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Per-conversation facts kept with a run's output (no conversation text)."""
-    keys = ("id", "scenario_id", "session_id", "trace_ids", "tools", "turn_count")
+    keys = ("id", "scenario_id", "session_id", "trace_ids", "tools", "turn_count", "timestamp")
     return [{key: record[key] for key in keys} for record in records]
 
 
@@ -278,14 +279,23 @@ def run(label: str, start: datetime, end: datetime, check_scenarios: bool, dry_r
 
 
 def score_records(config: dict[str, Any], result: dict[str, Any], label: str) -> list[dict[str, Any]]:
-    """Score records for one run; the period-level rate goes on a monitor session."""
+    """Score records for one run; the period-level rate goes on a monitor session.
+
+    Each score is dated by what it measures, so dashboards plot it over time:
+    a verdict at its conversation's last turn, the period rate at the end of
+    the window.
+    """
     from monitoring.write_scores import build_score_records
 
     records = build_score_records(config["judge_mode"], result["random_verdicts"],
                                   result["risk_verdicts"], result["estimate"], label)
+    when = {c["id"]: c.get("timestamp") for c in result.get("conversations", [])}
     for record in records:
         if record["trace_id"] is None:
             record["session_id"] = f"hw7-monitor-{config['judge_mode']}"
+            record["timestamp"] = result["window"]["to"]
+        else:
+            record["timestamp"] = when.get(record["trace_id"])
     return records
 
 

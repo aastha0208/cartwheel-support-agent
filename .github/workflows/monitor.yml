@@ -35,7 +35,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v6
+      # uv is already installed on the self-hosted runner's machine. The
+      # setup-uv action crashed on this Windows runner after installing uv
+      # (a Node.js handle assertion), so the job uses the installed uv.
+      - name: Check uv
+        run: uv --version
 
       - name: Install dependencies
         run: uv sync

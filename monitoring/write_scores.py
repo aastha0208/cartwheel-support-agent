@@ -130,6 +130,12 @@ def post_scores(records: list[dict[str, Any]]) -> int:
             kwargs["session_id"] = record["session_id"]
         if record.get("comment"):
             kwargs["comment"] = record["comment"]
+        if record.get("timestamp"):
+            # Date the score by what it measures (the conversation or the
+            # period), not by when the monitor ran, so charts show periods.
+            from datetime import datetime
+
+            kwargs["timestamp"] = datetime.fromisoformat(str(record["timestamp"]).replace("Z", "+00:00"))
         client.create_score(**kwargs)
     client.flush()
     return len(records)

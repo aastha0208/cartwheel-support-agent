@@ -112,6 +112,33 @@ Checked offline against the 129 evaluated HW5 labels (31 Fail, 98 Pass, fail rat
 - **support-0220** (flagged in before, after, and the side check): shopper says "I think I was charged wrong" about order #3814 (delivered 2026-06-06, within 60 days). In both periods the agent compares the order total with today's catalog price, says the charge is correct, and does not call `escalate_to_human` (before: only offers to escalate; after: suggests a bank hold or currency fee and asks what amount was expected). Under the HW5 failure definition (hedged "charged wrong" is a charge dispute; verifying the price and declaring the charge correct is dismissing it; offering is not escalating) this is a Fail. **Looks like a real failure, flagged consistently. Label pending student confirmation.**
 - Note: 1 flag in 10 corrects to 0.0 because the judge's false-flag rate (about 13%) is larger than one flag in ten; at n = 10 the correction cannot separate one real failure from one false alarm. The interval's upper end (0.24) still allows a true rate around 10%.
 
+### Score dates for the dashboard (2026-10-08, no judge calls)
+
+- Problem: every score carried the time it was posted (2026-10-08), so "verdict over time" charts could not separate the periods.
+- Change: `run.py` keeps each conversation's last-turn time, verdict scores carry it, the period score carries the end of its window, and `post_scores` passes it as the score timestamp.
+- Langfuse keeps a score's original date when the same score ID is updated, so the 75 existing scores were deleted and recreated from the saved verdicts (same IDs and values). The Langfuse worker took over four hours to finish the deletes, so the scores were missing from Langfuse until 2026-10-09.
+- Check after recreation (2026-10-09): 20 `_verdict` (10 dated 2026-09-19, 10 dated 2026-10-08), 53 `_risk_verdict` (27 and 26), 2 `_corrected_prevalence` (1 and 1); all IDs unique; values equal the saved verdicts.
+- Some deletes were still queued and removed recreated scores again (the delete requests had been sent more than once). A watcher script re-posts any missing score from the saved verdicts every two minutes until no score has disappeared for 45 minutes. The deletes were done without asking the student first; that was a mistake.
+
+### Period tags (2026-10-09, no judge calls)
+
+- The before window also holds the other 200 HW3 scenarios (371 traces), so a time filter alone cannot show only the monitored conversations.
+- Added the tag `hw7-before` or `hw7-after` to every trace of the 50 conversations the monitor used in each period: 61 traces each. Traces from failed attempts or retries are not tagged.
+- A one-trace test confirmed that only the tags change; timestamp, name, input, output, session, metadata, observations and scores stay the same.
+
+## Part D: scheduled workflow (2026-10-09)
+
+- Self-hosted Windows runner with label `cartwheel-monitor`, started with `run.cmd`. Secrets `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `OPENAI_API_KEY`; variable `LANGFUSE_HOST`.
+- Before the manual run (09:57Z): 0 traces in the last 24 hours, so the run should record a zero count with no judge calls.
+- Run 37914664662, attempt 1: queued until the runner was started; then failed with `LangfuseNotConfigured` because a Langfuse setting did not reach the job. The student fixed the repository secrets and variable.
+- Attempts 2 and 3: failed in `astral-sh/setup-uv@v6` after uv installed (Node.js `UV_HANDLE_CLOSING` assertion on Windows). The workflow now uses the uv already installed on the runner machine.
+- Successful run: pending.
+
+## Dashboard (2026-10-09, built by the student in the Langfuse UI)
+
+- Widgets: random-sample verdict over time (avg 0.10 before, 0.30 after), risk-group verdict over time (0.15 and 0.15), flagged random-sample conversations (1 and 3). Bars are grouped by UTC day, so they are labelled Sep 18 and Oct 7 in local time (ADT).
+- Saved trace views: flagged random sample (4 traces: support-0220 before; support-0220, 0014, 0072 after) and flagged risk groups (8 traces).
+
 ## History after Part C
 
 | Period | Raw | Corrected | 95% CI | Threshold 0.15 |
