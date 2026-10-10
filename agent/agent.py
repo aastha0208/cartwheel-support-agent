@@ -105,7 +105,7 @@ def prompt_version(template: str | None = None) -> str:
 # mistakes in this synthetic world, which leaves too few failures to study.
 # ---------------------------------------------------------------------------
 
-DEFAULT_MODEL = "gpt-5-mini"
+DEFAULT_MODEL = "gpt-4o-mini"
 
 # Course model name -> LiteLLM model string (for the non-OpenAI models).
 LITELLM_COURSE_MODELS = {

@@ -38,7 +38,7 @@ git apply homework/module-1/hw2-reference.patch
 
 If you completed Homework 2, keep your own implementation and do not apply the patch.
 
-Choose one model provider and confirm that its key is in `.env`. Set `CARTWHEEL_MODEL` in `.env` to the model you will use for every run in the assignment, before starting the server. Choose a small model such as `gpt-5-mini` (the default), `gpt-5-nano`, or `claude-haiku-4-5`. Frontier models such as `gpt-5.5` or `claude-opus-4-6` rarely fail in this synthetic world, and Homework 4 needs failures to analyze. The runner commands below also take the model name, so that each result records the model that produced it. Use the same value in both places.
+Choose one model provider and confirm that its key is in `.env`. Set `CARTWHEEL_MODEL` in `.env` to the model you will use for every run in the assignment, before starting the server. Choose a small model such as `gpt-4o-mini` (the default), `gpt-5-nano`, or `claude-haiku-4-5`. Frontier models such as `gpt-5.5` or `claude-opus-4-6` rarely fail in this synthetic world, and Homework 4 needs failures to analyze. The runner commands below also take the model name, so that each result records the model that produced it. Use the same value in both places.
 
 Generate the local data and start Langfuse:
 
@@ -121,7 +121,7 @@ Create `scenarios/pilot_review.jsonl` with one record for each scenario you revi
 
 Count a failure only when `scenario_valid` is `true` and the observed behavior conflicts with the recorded extra metadata or a clear requirement in `SPEC.md`.
 
-The pilot review must contain at least five confirmed failures. If the first 30 scenarios contain fewer than five, add 20 challenge scenarios, reset the data with `uv run python -m seed.generate`, and run the pilot again. You may instead choose a lower capability model from the same provider, e.g. `gpt-5-nano` instead of `gpt-5-mini`. Use the selected model for the final run as well.
+The pilot review must contain at least five confirmed failures. If the first 30 scenarios contain fewer than five, add 20 challenge scenarios, reset the data with `uv run python -m seed.generate`, and run the pilot again. You may instead choose a lower capability model from the same provider, e.g. `gpt-4.1-nano` instead of `gpt-4o-mini`. Use the selected model for the final run as well.
 
 Do not name or group failure modes in Homework 3. Homework 4 begins the open coding and taxonomy work.
 

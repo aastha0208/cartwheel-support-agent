@@ -186,7 +186,7 @@ def main() -> None:
     parser.add_argument(
         "--model",
         default=None,
-        help="gpt-5-mini | claude-haiku-4-5 | glm-5.2 | ... (default: $CARTWHEEL_MODEL or gpt-5-mini)",
+        help="gpt-4o-mini | claude-haiku-4-5 | glm-5.2 | ... (default: $CARTWHEEL_MODEL or gpt-4o-mini)",
     )
     tracing_options = parser.add_mutually_exclusive_group()
     tracing_options.add_argument(

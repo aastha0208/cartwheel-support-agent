@@ -45,7 +45,7 @@ Choose the model you want Cartwheel to use and set `CARTWHEEL_MODEL` in your she
 export CARTWHEEL_MODEL="YOUR_MODEL"
 ```
 
-Set the provider key required by that model in `.env`. The model is your choice, but prefer a small model such as `gpt-5-mini` or `claude-haiku-4-5`. For a provider not named in `.env.example`, use its LiteLLM `provider/model` name so the adapter can identify the key. The agent model is separate from the frozen model used by an accepted Homework 5 judge.
+Set the provider key required by that model in `.env`. The model is your choice, but prefer a small model such as `gpt-4o-mini` or `claude-haiku-4-5`. For a provider not named in `.env.example`, use its LiteLLM `provider/model` name so the adapter can identify the key. The agent model is separate from the frozen model used by an accepted Homework 5 judge.
 
 If you did not finish Homework 5 or did not accept a judge, download the Git LFS files and apply the reference bundle:
 
