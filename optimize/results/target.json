@@ -1,0 +1,12 @@
+{
+  "failure_mode": "dispute_not_escalated",
+  "source": "Homework 5 failure report (analysis/report/hw5_failure_definition.md). Prevalence is the Homework 4 sample share: 7 of 100 reviewed traces (analysis/report/review_summary.md), a sample fraction rather than a full-population estimate.",
+  "prevalence": 0.07,
+  "requirement": "ESC-3",
+  "example_trace_ids": [
+    "450cc44b6fe088e30b30aaf5e0890a58",
+    "74e167fa0a4f981407bc3c94f165156a",
+    "814cb85ed334599a4e1e4143d5499c1b"
+  ],
+  "why_agent_can_change_it": "In all three traces the agent identifies the order and never calls escalate_to_human. In hw5-0002 (overcharge dispute, #8552) it compares the total to today's catalog price and says the user wasn't overcharged; in hw5-0017 (wrong item, #6926) it offers a refund; in hw5-0024 (delivered but never received, #2990) it offers a refund under cw-returns. ESC-3 and cw-disputes require a human, and escalate_to_human is available every time, so the failure lies in how the agent decides what to do. That can be changed in the prompt (an explicit escalation rule), the tool description, or a harness check before the reply."
+}
