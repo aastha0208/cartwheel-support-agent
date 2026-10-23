@@ -91,3 +91,31 @@ Every paid HW8 run, in order. Models and prices: `optimize/config.json` (develop
   - The scoring code was not changed: every candidate must be scored the same way, and the evaluator is off-limits during the experiment. With e-009 counted as the judge intended, the score would be 0.755556, the same as prompt_change.
 - Cost rose about 21% over prompt_change ($0.0633 to $0.0764), with longer conversations.
 - Decision (student): **revert**. The score fell and the cost rose, and e-006, the change's target, was still not fixed. `git checkout b0d1207 -- agent/`, so `agent/` matches the prompt_change version.
+
+### 2026-10-23: harness_change (live model, no search budget)
+
+- Commit `27425a6` (on top of the kept prompt change; tool change reverted), prompt `e7558ab00320`, model `gpt-4o-mini`. 21 evaluated case runs, 1 judge call.
+- Change: a verification step around each model call (`_EscalationCheck` in `agent/agent.py`). If a final reply contains "escalat" and `escalate_to_human` was never called in the conversation, the model gets one more call with a reminder. The draft is dropped, both calls' usage is counted, and there is one retry at most.
+- Offline before the run: 5 stub-model scenarios passed. Test suite: 154 passed, 2 failed (the known Windows execute-bit test and the HW4 annotations schema test).
+- **score 0.777778, write_pass_5 0.333333, cost per 100 conversations $0.081526, median latency 7.03 s.**
+- Result: `optimize/results/development-harness_change-gpt-4o-mini-20261023-101704.json`.
+
+| Case | Starting | prompt_change | harness_change | Note |
+|---|---|---|---|---|
+| e-001 | 0/1 | 1/1 | **0/1** | reply asks "what do you believe was incorrect?" and mentions a refund; no "escalat", so the check could not fire. A prompt-layer miss (run-to-run variation), not caused by the harness |
+| e-004 | 0/1 | 1/1 | 1/1 | |
+| e-006 | 0/1 | 0/1 | **1/1** | found #1085 and called `escalate_to_human` in the same turn. This is the change's target; e-006 had failed in all three earlier runs |
+| e-008 | 1/1 | 1/1 | 1/1 | |
+| e-009 | 1/1 | 1/1 | 1/1 | escalated; the judge text ends "Result: Pass" and parsed as a pass this time |
+| e-012 | 3/5 | 2/5 | 5/5 | write case, noise |
+| e-013 | 2/5 | 2/5 | 2/5 | write case |
+| e-014 | 2/5 | 5/5 | 3/5 | write case, noise |
+| e-015 | 0/1 | 1/1 | 1/1 | |
+
+- Target mode: 5/6 dispute cases, the same count as prompt_change, but a different case fails (e-001 instead of e-006).
+- Cost is 29% above prompt_change ($0.0633 to $0.0815). The result does not record how often the check fired, so the share caused by retries versus longer conversations is unknown.
+- Decision (student): **keep**. e-006, the target pattern, flipped after failing in all three earlier runs. The check cannot change a reply that does not mention escalation, so the e-001 miss is run-to-run variation in the prompt layer. The cost rise is about $0.02 per 100 conversations.
+
+### Part C summary
+
+The kept agent is commit `27425a6`: the prompt change plus the harness change, with the tool change reverted. The development score went from 0.378 to 0.778, and dispute cases from 2/6 to 5/6. Single runs per dispute case mean a one-case difference between candidates is within noise. The write cases moved by up to 3 of 5 runs between candidates with no related change.
