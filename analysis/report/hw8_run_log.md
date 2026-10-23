@@ -130,3 +130,16 @@ The student chose the improve loop. One method only, as the handout asks. The st
 - **score 0.688889, write_pass_5 0.333333, cost per 100 conversations $0.067529.** The same agent scored 0.777778 in Part C, so two runs of an unchanged agent differ by about 0.09, roughly one case.
 - Failures: e-001 0/1, e-015 0/1, e-012 2/5, e-013 4/5. e-004, e-006, e-008, e-009 and e-014 passed (e-014 5/5).
 - **A shared pattern across both modes:** in every failed run the agent asks the user for the order ID ("Could you please provide me with the order ID…?") instead of searching with `find_order` or `list_my_orders`. This happened in e-001 and e-015 (disputes) and in 3 runs of e-012 and 1 run of e-013 (writes).
+
+### 2026-10-23: loop-1-lookup-before-asking (live model, **search budget 21**, used 42/150)
+
+- Commit `baf8aa1`, prompt `bb3e84972af0`, `gpt-4o-mini`. 21 evaluated case runs, 1 judge call.
+- Change (prompt, Tool guidance): "Never ask the user for an order id before searching. Look the order up with find_order using the product, store, or other details the user gives (shoppers and merchants can also use list_my_orders). Ask only when the lookup finds no match or several equally likely matches."
+- **score 0.822222 (baseline 0.688889), write_pass_5 0.333333 (unchanged), cost per 100 conversations $0.084458.**
+- e-001 1/1, e-004 1/1, e-006 **0/1**, e-008 1/1, e-009 1/1, e-012 **5/5**, e-013 3/5, e-014 4/5, e-015 1/1.
+- Keep rule (score up, write_pass_5 not down): **keep**.
+  - The gain (+0.13, about 1.2 cases) is only a little above the 0.09 run-to-run spread seen for the unchanged agent, so it is treated with caution.
+  - The supporting evidence is in the replies: no run asked for an order id before searching. e-001 and e-015 looked the order up and escalated, and e-012 went from 2/5 to 5/5.
+- Remaining failures:
+  - e-006: `find_order("stationery")` found nothing, because product titles do not contain "stationery". The agent then asked the user instead of trying `list_my_orders`. It had written "I will escalate" earlier in the turn, but the final model response did not contain the word, so the harness check (which reads only the final response) did not fire.
+  - e-013: 2 runs asked the user for a return reason instead of issuing the refund. That is the `incomplete_write_left_undone` pattern, not the target.

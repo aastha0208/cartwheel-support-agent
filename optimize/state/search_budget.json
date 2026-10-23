@@ -5,7 +5,12 @@
       "calls": 21,
       "label": "loop-baseline",
       "reserved_at": "2026-10-23T13:46:32.488500+00:00"
+    },
+    {
+      "calls": 21,
+      "label": "loop-1-lookup-before-asking",
+      "reserved_at": "2026-10-23T14:30:34.746923+00:00"
     }
   ],
-  "used_calls": 21
+  "used_calls": 42
 }
