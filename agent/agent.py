@@ -206,29 +206,12 @@ def _field(item: Any, key: str) -> Any:
     return item.get(key) if isinstance(item, dict) else getattr(item, key, None)
 
 
-def _message_text(item: Any) -> str:
-    content = _field(item, "content") or []
-    if isinstance(content, str):
-        return content
-    return " ".join(_field(part, "text") or "" for part in content)
-
-
 def _reply_text(output: list[Any]) -> str:
-    return " ".join(_message_text(item) for item in output if _field(item, "type") == "message")
-
-
-def _turn_text(input_items: Any) -> str:
-    """The assistant's messages since the user's last message."""
-    if not isinstance(input_items, list):
-        return ""
-    last_user = max(
-        (i for i, item in enumerate(input_items) if _field(item, "role") == "user"), default=-1
-    )
-    return " ".join(
-        _message_text(item)
-        for item in input_items[last_user + 1:]
-        if _field(item, "role") == "assistant"
-    )
+    parts = []
+    for item in output:
+        if _field(item, "type") == "message":
+            parts.extend(_field(part, "text") or "" for part in _field(item, "content") or [])
+    return " ".join(parts)
 
 
 def needs_escalation_retry(input_items: Any, output: list[Any]) -> bool:
@@ -241,9 +224,7 @@ def needs_escalation_retry(input_items: Any, output: list[Any]) -> bool:
         for item in input_items
     ):
         return False
-    # The promise can come before a lookup, so read every assistant message
-    # since the user's last message, plus the draft.
-    return "escalat" in (_turn_text(input_items) + " " + _reply_text(output)).lower()
+    return "escalat" in _reply_text(output).lower()
 
 
 class _EscalationCheck:
