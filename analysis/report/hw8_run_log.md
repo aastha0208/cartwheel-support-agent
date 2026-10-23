@@ -63,3 +63,31 @@ Every paid HW8 run, in order. Models and prices: `optimize/config.json` (develop
 
 - Target mode: dispute cases went from 2/6 to 5/6.
 - The write-case changes (e-012 down by 1, e-014 up by 3) come from a change that doesn't mention cancellations or refunds, so they are most likely run-to-run noise. The write_pass_5 gain should not be credited to the prompt change.
+
+### 2026-10-23: tool_change (live model, no search budget)
+
+- Commit `e6a7fa9` (on top of the kept prompt change), prompt `e7558ab00320`, model `gpt-4o-mini`. 21 evaluated case runs, 1 judge call.
+- Change: the `escalate_to_human` description now names disputes, says an order id is not required, and says to call the tool rather than offer it.
+- **score 0.644444, write_pass_5 0.0, cost per 100 conversations $0.076439, median latency 6.45 s.**
+- Result: `optimize/results/development-tool_change-gpt-4o-mini-20261023-093427.json`.
+
+| Case | prompt_change | tool_change | Note |
+|---|---|---|---|
+| e-001 | 1/1 | 1/1 | |
+| e-004 | 1/1 | 1/1 | |
+| e-006 | 0/1 | 0/1 | found order 1085, then asked "please confirm if this is the correct order" and promised to escalate afterwards; no tool call. Not fixed |
+| e-008 | 1/1 | 1/1 | |
+| e-009 | 1/1 | **0/1** | scoring artefact, see below |
+| e-012 | 2/5 | 3/5 | write case, noise |
+| e-013 | 2/5 | 4/5 | write case, noise |
+| e-014 | 5/5 | 2/5 | write case, noise; write_pass_5 back to 0 |
+| e-015 | 1/1 | 1/1 | |
+
+- **e-009 is a parser artefact, not an agent failure.**
+  - The agent escalated the 61-day dispute. Under the HW5 definition, escalating past the window is a Pass for this mode (the over-escalation decision for hw5-0030).
+  - The judge's own text ends "the failure is absent. Result: Pass".
+  - The verdict parser (`judge_reply_with_text` in `replay/rollout.py`) looks for a JSON `"answer"` field first. This reply had none, so the fallback returns "fail" whenever the substring "fail" appears, and "failure is absent" contains it.
+  - The judge also sees only the reply text and retrieved documents, not the tool calls ("the specific tool call is not shown").
+  - The scoring code was not changed: every candidate must be scored the same way, and the evaluator is off-limits during the experiment. With e-009 counted as the judge intended, the score would be 0.755556, the same as prompt_change.
+- Cost rose about 21% over prompt_change ($0.0633 to $0.0764), with longer conversations.
+- Decision (student): **revert**. The score fell and the cost rose, and e-006, the change's target, was still not fixed. `git checkout b0d1207 -- agent/`, so `agent/` matches the prompt_change version.
