@@ -153,3 +153,26 @@ The student chose the improve loop. One method only, as the handout asks. The st
 - Keep rule: the score did not improve, so **revert**. `git checkout baf8aa1 -- agent/`.
 - e-006, the target, still failed. The reply says "I couldn't find any order for stationery under your account". `list_my_orders` results carry product ids, not product names, so a lookup by product type cannot match even when the agent tries it. That makes this the wrong layer for the fix. e-012 fell from 5/5 to 2/5: in 3 runs it found order 4137 (placed) and described it without calling `cancel_order`. That pattern is unrelated to this change and most likely noise.
 - First consecutive non-improving attempt. Under `program.md` (via the skill), one more non-improving attempt stops the loop.
+
+### 2026-10-23: loop-3-turn-wide-check (live model, **search budget 21**, used 84/150)
+
+- Commit `eb7d7ad`, prompt `bb3e84972af0` (prompt unchanged from loop-1), `gpt-4o-mini`. 21 evaluated case runs, 1 judge call.
+- Change (harness, `needs_escalation_retry`): the escalation check now reads every assistant message since the user's last message, plus the draft, instead of only the draft. Offline: 7/7 stub scenarios passed; test suite unchanged (154 passed, the same 2 known failures).
+- **score 0.911111 (best 0.822222), write_pass_5 0.0 (best 0.333333), cost per 100 conversations $0.091541.**
+- e-001 1/1, e-004 1/1, **e-006 1/1** (found order 1085 and escalated), e-008 1/1, e-009 1/1, e-012 3/5, e-013 4/5, e-014 4/5, e-015 1/1. **All 6 dispute cases passed**, the first run to do so.
+- Keep rule (score up **and** write_pass_5 not down): write_pass_5 dropped from 0.333 to 0, so **revert**. `git checkout baf8aa1 -- agent/`.
+- Evidence that the write drop is noise rather than an effect of this change: no write-case final reply mentions "escalat", so the check could not have fired in those runs. The failed write runs are the familiar patterns: found the placed order but did not call `cancel_order` (e-012 runs 1 and 3, e-014 run 3), or asked for confirmation before refunding (e-013 run 1). The rule was applied as written anyway; the loop does not override it.
+- Second consecutive non-improving attempt, so **the loop stops** (skill: stop after two changes in a row that do not improve).
+
+### Improve loop summary
+
+| Attempt | Layer | Score | write_pass_5 | Decision |
+|---|---|---|---|---|
+| baseline | none | 0.689 | 0.333 | baseline |
+| loop-1-lookup-before-asking | prompt | 0.822 | 0.333 | keep |
+| loop-2-list-orders-fallback | prompt | 0.800 | 0.333 | revert |
+| loop-3-turn-wide-check | harness | 0.911 | 0.000 | revert (write_pass_5 dropped) |
+
+- Budget used: 84 of 150. The loop's kept agent is `baf8aa1` (Part C agent plus the loop-1 prompt rule).
+- Remaining failures: write cases where the agent finds the order but does not complete the cancel or refund (`incomplete_write_left_undone`), and run-to-run variation of about one case.
+- loop-3 (`eb7d7ad`) is still a recorded candidate. The Part E choice of final candidate is the student's.
