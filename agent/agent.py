@@ -16,11 +16,12 @@ The mapping from concept to SDK primitive, stated once: the loop is
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 from typing import Any
 
-from agents import Agent, ModelSettings, RunContextWrapper, function_tool
+from agents import Agent, Model, ModelSettings, RunContextWrapper, function_tool
 
 from agent import db
 from agent import tools as hw_tools
@@ -149,7 +150,7 @@ def resolve_model(name: str | None) -> Any:
     litellm_id = LITELLM_COURSE_MODELS.get(name, name)
     from agents.extensions.models.litellm_model import LitellmModel
 
-    return LitellmModel(model=litellm_id)
+    return _with_escalation_check(LitellmModel)(model=litellm_id)
 
 
 def model_settings_for(model: Any) -> ModelSettings:
@@ -179,6 +180,111 @@ def model_settings_for(model: Any) -> ModelSettings:
             include_usage=True,
         )
     return ModelSettings()
+
+
+# ---------------------------------------------------------------------------
+# Harness check (Homework 8). A final reply that offers or promises escalation
+# must come with an escalate_to_human call. When a draft reply mentions
+# escalation and the conversation has no such call, the model gets one more
+# call with a reminder; the draft is dropped and both calls' usage is counted.
+# ---------------------------------------------------------------------------
+
+ESCALATION_REMINDER = (
+    "Check before replying: your draft reply offers or promises escalation to a "
+    "human, but escalate_to_human has not been called in this conversation. If "
+    "the case needs a human, for example a dispute, call escalate_to_human now "
+    "instead of offering it or waiting for the user. If it does not, reply "
+    "without offering escalation."
+)
+
+
+def _field(item: Any, key: str) -> Any:
+    return item.get(key) if isinstance(item, dict) else getattr(item, key, None)
+
+
+def _reply_text(output: list[Any]) -> str:
+    parts = []
+    for item in output:
+        if _field(item, "type") == "message":
+            parts.extend(_field(part, "text") or "" for part in _field(item, "content") or [])
+    return " ".join(parts)
+
+
+def needs_escalation_retry(input_items: Any, output: list[Any]) -> bool:
+    """Whether a final reply talks about escalating without having escalated."""
+    if any(_field(item, "type") == "function_call" for item in output):
+        return False  # the model is still calling tools; not a final reply
+    if isinstance(input_items, list) and any(
+        _field(item, "type") == "function_call"
+        and _field(item, "name") == "escalate_to_human"
+        for item in input_items
+    ):
+        return False
+    return "escalat" in _reply_text(output).lower()
+
+
+class _EscalationCheck:
+    """Mixin for a Model: verify the final reply before the runner returns it."""
+
+    async def get_response(
+        self, system_instructions, input, model_settings, tools, output_schema,
+        handoffs, tracing, **kwargs,
+    ):
+        response = await super().get_response(
+            system_instructions, input, model_settings, tools, output_schema,
+            handoffs, tracing, **kwargs,
+        )
+        if not needs_escalation_retry(input, response.output):
+            return response
+        from agents.items import ModelResponse
+        from agents.usage import Usage
+
+        items = [{"role": "user", "content": input}] if isinstance(input, str) else list(input)
+        retry = await super().get_response(
+            system_instructions,
+            [*items, *response.to_input_items(), {"role": "system", "content": ESCALATION_REMINDER}],
+            model_settings, tools, output_schema, handoffs, tracing, **kwargs,
+        )
+        usage = Usage()
+        usage.add(response.usage)
+        usage.add(retry.usage)
+        return ModelResponse(
+            output=retry.output, usage=usage,
+            response_id=retry.response_id, request_id=retry.request_id,
+        )
+
+
+class _OpenAIModelByName(Model):
+    """An OpenAI model resolved by name on first use, as Agent(model=str) does."""
+
+    def __init__(self, name: str) -> None:
+        self.model = name
+        self._inner = None
+
+    def _resolved(self) -> Any:
+        if self._inner is None:
+            from agents.models.openai_provider import OpenAIProvider
+
+            self._inner = OpenAIProvider().get_model(self.model)
+        return self._inner
+
+    async def get_response(self, *args: Any, **kwargs: Any) -> Any:
+        return await self._resolved().get_response(*args, **kwargs)
+
+    def stream_response(self, *args: Any, **kwargs: Any) -> Any:
+        return self._resolved().stream_response(*args, **kwargs)
+
+
+@functools.cache
+def _with_escalation_check(model_class: type) -> type:
+    return type(f"EscalationChecked{model_class.__name__}", (_EscalationCheck, model_class), {})
+
+
+def harness_model(resolved: Any) -> Any:
+    """Attach the escalation check to a resolved course model."""
+    if isinstance(resolved, str):
+        return _with_escalation_check(_OpenAIModelByName)(resolved)
+    return resolved
 
 
 # ---------------------------------------------------------------------------
@@ -531,13 +637,15 @@ def build_agent(
     """
     resolved = resolve_model(model)
     configure_model_tracing(openai_model=isinstance(resolved, str))
+    settings = model_settings_for(resolved)
+    resolved_model = harness_model(resolved)
     if not defenses:
         return Agent[AuthContext](
             name="cartwheel-support",
             instructions=render_system_prompt(ctx, prompt_template),
             tools=TOOLS_BY_ROLE[ctx.role],
-            model=resolved,
-            model_settings=model_settings_for(resolved),
+            model=resolved_model,
+            model_settings=settings,
         )
 
     # Module 4 defenses on (PROVIDED wiring; the guard bodies are your holes).
@@ -547,8 +655,8 @@ def build_agent(
         name="cartwheel-support",
         instructions=render_system_prompt(ctx, prompt_template),
         tools=_tools_with_defenses(ctx.role),
-        model=resolved,
-        model_settings=model_settings_for(resolved),
+        model=resolved_model,
+        model_settings=settings,
         input_guardrails=[injection_input_guardrail],
         output_guardrails=[link_output_guardrail],
     )
