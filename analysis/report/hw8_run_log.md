@@ -231,3 +231,9 @@ The student could not choose between A (loop-1, `baf8aa1`) and B (loop-3, `eb7d7
   - e-015: found two orders, neither matching, and asked the user (a clarifying question, which the HW5 definition allows but this case's check does not).
 - Over all three runs of B: disputes 15/18, write runs 33/45, scores 0.911, 0.822 and 0.667 (mean 0.80). A over two runs: disputes 8/12, mean 0.70. The single-run spread for the same agent is now 0.24 (0.667 to 0.911).
 - Student confirmed B after seeing this run. `optimize.save_version final --layer prompt --layer harness --method manual --method improve-loop` (offline) wrote `optimize/state/final_version.json`: commit `116bad6`, prompt `bb3e84972af0`, development score 0.666667, write_pass_5 0.0, search budget 126/150. The grader hash check passed. **The final configuration is now fixed; no test case has been run.**
+
+## Part F: test set comparison
+
+### 2026-10-23: `optimize.frontier plan` (offline)
+
+- Plan hash `d41df5c35ba2`. Configurations: (1) starting `2c8a034` on gpt-5.5, (2) starting `2c8a034` on claude-opus-4-6, (3) starting `2c8a034` on gpt-4o-mini, (4) final `116bad6` on gpt-4o-mini. Checked against starting_version.json and final_version.json.
