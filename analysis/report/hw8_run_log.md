@@ -213,3 +213,21 @@ The student could not choose between A (loop-1, `baf8aa1`) and B (loop-3, `eb7d7
   - Mean score: A 0.70, B 0.867.
 - Under the reading rule fixed in advance, B is clearly ahead on disputes and the write runs are equal, so the evidence favours B. The final choice is the student's (Part E).
 - The agent in `HEAD` is currently B's.
+
+## Part E: final agent configuration
+
+### 2026-10-23: student's choice, candidate **B** (loop-3, agent identical to `eb7d7ad`)
+
+- Reasoning (student): the handout ranks the target failure first. Over two runs each, B passed 11/12 dispute cases against A's 8/12, with identical cancel and refund results (23/30 each). The earlier write_pass_5 drop was noise.
+- Layers: prompt and harness. Methods: manual (Part C prompt and harness) and improve-loop (loop-1 prompt rule, loop-3 harness change).
+
+### 2026-10-23: `optimize.runner --split development --candidate final` (live model, no search budget)
+
+- Commit `116bad6` (agent identical to `eb7d7ad`), prompt `bb3e84972af0`, `gpt-4o-mini`. 21 evaluated case runs, 1 judge call. Search budget unchanged at 126/150.
+- **score 0.666667, write_pass_5 0.0, cost per 100 conversations $0.0791, median latency 5.32 s.**
+- Result: `optimize/results/development-final-gpt-4o-mini-20261023-141310.json`.
+- e-001 1/1, e-004 1/1, **e-006 0/1**, e-008 1/1, e-009 1/1, e-012 3/5, e-013 3/5, e-014 4/5, **e-015 0/1**. Disputes 4/6, write runs 10/15.
+  - e-006: the reply said the case "qualifies as a dispute" and that it would search, then ended without escalating. The wording never contained "escalat", so the harness check had nothing to catch.
+  - e-015: found two orders, neither matching, and asked the user (a clarifying question, which the HW5 definition allows but this case's check does not).
+- Over all three runs of B: disputes 15/18, write runs 33/45, scores 0.911, 0.822 and 0.667 (mean 0.80). A over two runs: disputes 8/12, mean 0.70. The single-run spread for the same agent is now 0.24 (0.667 to 0.911).
+- Student confirmed B after seeing this run. `optimize.save_version final --layer prompt --layer harness --method manual --method improve-loop` (offline) wrote `optimize/state/final_version.json`: commit `116bad6`, prompt `bb3e84972af0`, development score 0.666667, write_pass_5 0.0, search budget 126/150. The grader hash check passed. **The final configuration is now fixed; no test case has been run.**

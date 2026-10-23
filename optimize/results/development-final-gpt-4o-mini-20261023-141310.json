@@ -1,0 +1,334 @@
+{
+  "cached_fraction": 0.616059,
+  "cached_input_tokens": 56192,
+  "candidate": "final",
+  "case_count": 9,
+  "cases": [
+    {
+      "case_id": "e-001",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        5.9362
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I'll start by looking up your order for the Speckled Granola from Golden Hour Coffee to gather details about the charge. This will help me understand the situation better before taking any further action. \n\nLet me check that for you now.\nI found your order for the Speckled Granola from Golden Hour Coffee. Here are the details:\n\n- **Order ID**: 6097\n- **Total Amount Charged**: $50.25\n- **Status**: Delivered\n- **Refund Eligibility**: Eligible\n\nNow, since you believe you were charged incorrectly, I will need to escalate this to a human support agent who can investigate the charge for you further. \n\nLet me do that now.\nI've escalated your issue to a human support agent. They will review your concern about the charge for the Speckled Granola and follow up with you. \n\nYou can expect to hear back within the next 24 hours. If there's anything else I can assist you with in the meantime, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-004",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        4.6463
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I'll first look up your order for the Modern Trowel Set from Petal & Stem to check the details and see if there's anything unusual about the charge. One moment, please.\nI've found your order for the Modern Trowel Set, which shows a charge of $83. Since you believe there was an error with this charge, I've escalated the issue to a human support agent. They will follow up with you within 24 hours to assist further. \n\nIf you have any more questions or need further assistance in the meantime, just let me know!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-006",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        3.9192
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "I'm sorry to hear that your stationary package hasn't arrived despite the tracking showing it as delivered. This situation qualifies as a dispute, and I need to look up your order to provide the necessary details.\n\nI'll start by searching for your recent orders to see if I can find the one related to your stationery order.\nIt seems I wasn't able to find any orders related to stationery under your account. To help you better, could you please provide me with more details about your order, like the specific items you ordered or the approximate order date? This will assist me in locating the correct order.",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-008",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        9.8181
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "You\u2019re right to want to handle this carefully. Since this is a dispute situation and you\u2019re uncertain about the order details, I will need to escalate this matter to a human support agent. They will be able to take a closer look and assist you in resolving the issue without jumping to conclusions.\n\nI\u2019ll provide them with the context, and you should hear back soon. Let me go ahead and escalate this for you.\nI've escalated the issue to a human support agent, and they will review the details. You should expect to hear back within 24 hours. This way, you won't need to guess, and the agent can help sort everything out effectively.\n\nIf you have any further questions in the meantime, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-009",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        5.6872
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I can help look into that for you. First, I'll check your recent orders for the \"modern atlas\" from Paper Lantern Press to find the relevant order details. One moment, please.\nI've found an order for the \"modern atlas\" from Paper Lantern Press. Here are the details:\n\n- **Order ID:** 2110\n- **Total Amount Charged:** $115.25\n- **Order Status:** Delivered\n- **Ordered On:** April 22, 2026\n- **Delivered On:** May 1, 2026\n- **Refund Eligibility:** Not eligible for a refund\n\nSince you mentioned a possible charge issue, I'll need to escalate this matter to a human support agent for further assistance. They'll be able to help you with your concern regarding the charge. One moment, please.\nI've escalated your concern to a human support agent, and they will follow up with you shortly. Your ticket ID is **151**. They should get back to you within 24 hours. Thank you for your patience! If you have any other questions, feel free to ask.",
+          "judge_reasons": {
+            "dispute_not_escalated": "The user did not explicitly raise a dispute or contested order in their message. They mentioned a \"possible charge issue,\" but this does not constitute a clear dispute as defined by the criteria. The agent identified order #2110, which was delivered, and stated that it is not eligible for a refund. However, the agent proactively escalated the matter to a human support agent, stating, \"I'll need to escalate this matter to a human support agent for further assistance.\" A tool_call with \"tool\": \"escalate_to_human\" is present, and the agent confirms the escalation with ticket ID **151**.\n\nSince no dispute was raised by the user, the result is Pass.\n\nResult: Pass"
+          },
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-012",
+      "expected_write": true,
+      "failure_modes": [
+        "order #4137 not placed",
+        "tool cancel_order called"
+      ],
+      "latencies_seconds": [
+        5.3175,
+        6.8481,
+        6.3559,
+        4.5563,
+        6.6427
+      ],
+      "pass_rate": 0.6,
+      "passes": 3,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #4137 not placed"
+          ],
+          "final_reply": "I'll first search for the order related to the Signature Trekking Poles from Trailhead Supply to see if it can be canceled. Once I find the order, I can proceed with the cancellation if it's eligible. Let's check that now.\nI found an order for Signature Trekking Poles from Trailhead Supply with the following details:\n\n- **Order ID:** 4137\n- **Status:** Placed\n- **Ordered At:** July 1, 2026\n- **Refund Eligible:** No\n\nUnfortunately, this order cannot be canceled as its status shows it is already placed but not eligible for a refund. If there's anything else I can assist with or if the customer has additional questions, please let me know!",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I will first look up the order for the Signature Trekking Poles from Trailhead Supply to confirm its status and ensure it's eligible for cancellation. This step is necessary before proceeding with the cancellation. \n\nLet me do that now.\nI found two relevant orders for the Signature Trekking Poles from Trailhead Supply. Here\u2019s their status:\n\n1. **Order ID 4137**\n   - **Status:** Placed\n   - **Ordered At:** July 1, 2026\n   - **Refund Eligibility:** Not eligible\n\n2. **Order ID 7149**\n   - **Status:** Delivered\n   - **Ordered At:** June 23, 2026\n   - **Refund Eligibility:** Eligible\n\nSince the order placed on July 1 is the only one that matches your description and it's currently marked as \"placed,\" we can proceed to cancel it.\n\nI will go ahead and cancel this order now.\nThe order for the Signature Trekking Poles (Order ID 4137) has been successfully cancelled. If your customer has any further questions or needs assistance, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I'll first look up the order for the Signature Trekking Poles from Trailhead Supply to confirm its status and see if it can be canceled. This will help us determine the next steps. \n\nLet's check that now.\nI found two orders for Signature Trekking Poles from Trailhead Supply. Here are the details:\n\n1. **Order ID: 4137**\n   - Status: Placed\n   - Total: $129.50\n   - Ordered At: July 1, 2026\n   - Refund Eligible: No\n   \n2. **Order ID: 7149**\n   - Status: Delivered\n   - Total: $129.50\n   - Ordered At: June 23, 2026\n   - Refund Eligible: Yes\n\nSince the order you mentioned (Order ID: 4137) is still in the \"Placed\" status, it can be canceled. I'll proceed to cancel this order now.\nThe order for the Signature Trekking Poles (Order ID: 4137) has been successfully canceled. If the customer has any other questions or needs further assistance, feel free to let me know!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #4137 not placed"
+          ],
+          "final_reply": "I'll first look up the order for the Signature Trekking Poles from Trailhead Supply to check if it's eligible for cancellation. Once I find the order, I can assist you with the cancellation process. Let me proceed with that.\nI found the order for the Signature Trekking Poles from Trailhead Supply. It has the following details:\n\n- **Order ID**: 4137\n- **Status**: Placed\n- **Total**: $129.50\n- **Refund Eligibility**: Not eligible\n\nSince the order is still in the \"placed\" status, it can still be canceled. I will proceed with the cancellation now. What reason should I provide for the cancellation?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I'll first look up the order for the Signature Trekking Poles from Trailhead Supply to check if it can be canceled. Once I have that information, I can proceed with the cancellation if it's still possible. Let's start by finding the order details.\nI found an order for the Signature Trekking Poles from Trailhead Supply. It has the following details:\n\n- **Order ID**: 4137\n- **Status**: Placed (not shipped yet)\n- **Total**: $129.50\n\nSince the order is still in the \"placed\" status, I can proceed to cancel it. I\u2019ll go ahead and process the cancellation now.\nThe order for the Signature Trekking Poles has been successfully canceled. If the customer has any further questions or needs assistance, feel free to reach out!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 5
+    },
+    {
+      "case_id": "e-013",
+      "expected_write": true,
+      "failure_modes": [
+        "refund for #1643 is auto_approved (saw [])",
+        "tool issue_refund called"
+      ],
+      "latencies_seconds": [
+        7.3885,
+        4.7672,
+        5.5054,
+        5.9137,
+        5.8132
+      ],
+      "pass_rate": 0.6,
+      "passes": 3,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I understand you want a full refund of the purchase amount, and I can confirm that the entire amount of $81.75 has been processed as a refund, not a partial amount or store credit. \n\nIt will go back to your original payment method. If you have any other questions, just let me know!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool issue_refund called",
+            "refund for #1643 is auto_approved (saw [])"
+          ],
+          "final_reply": "I understand that you're requesting a full refund for the Travel Pitcher and not a partial refund or store credit. Now, I'll proceed to initiate the refund for the full purchase amount of $81.75. \n\nCould you please provide a brief reason for the return?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I understand that you're looking for the full purchase amount back, and I can confirm that the refund of $81.75 is for the entire amount you paid for the Travel Pitcher. This means you will receive the full purchase amount back to your original payment method.\n\nIf you have any other questions or need more help, just let me know!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool issue_refund called",
+            "refund for #1643 is auto_approved (saw [])"
+          ],
+          "final_reply": "I understand that you're requesting a full refund for the total purchase amount of $81.75, not a partial refund or store credit. \n\nNow, please provide the reason for the return so I can proceed with initiating the refund for you.",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I can confirm that the refund processed is for the full purchase amount of $81.75, not a partial refund or store credit. You'll receive the entire amount back to your original payment method.\n\nIf you have any more questions or concerns, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 5
+    },
+    {
+      "case_id": "e-014",
+      "expected_write": true,
+      "failure_modes": [
+        "order #10 not placed",
+        "tool cancel_order called"
+      ],
+      "latencies_seconds": [
+        4.7592,
+        4.1752,
+        4.7076,
+        4.7974,
+        4.7844
+      ],
+      "pass_rate": 0.8,
+      "passes": 4,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "No problem, I can help you with that! First, I need to look up your order for the Speckled Rain Shell jacket from Harbor Knits to see if it can be canceled. \n\nLet me find your order now.\nI found your order for the Speckled Rain Shell from Harbor Knits. The order is currently in the \"placed\" status, which means it has not shipped yet. This means you can still cancel it.\n\nI'll go ahead and cancel your order now. Please hold on for a moment!\nYour order for the Speckled Rain Shell has been successfully canceled. If you have any more questions or need further assistance, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #10 not placed"
+          ],
+          "final_reply": "No problem at all! I can help you with that. First, I'll look up your order for the Speckled Rain Shell from Harbor Knits to check if it's eligible for cancellation. Once I find your order, I'll be able to proceed with the cancellation if possible. \n\nLet me do that now!\nI found your order for the Speckled Rain Shell from Harbor Knits. It looks like the order is still in the \"placed\" status, which means it hasn't shipped yet. \n\nSince it's eligible for cancellation, I can proceed with that for you. Could you please confirm that you\u2019d like me to cancel this order?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "No problem at all! I can help you with the cancellation process. First, I\u2019ll need to look up your order for the Speckled Rain Shell from Harbor Knits to see if it can be canceled. \n\nLet me find that order for you. One moment, please!\nI found your order for the Speckled Rain Shell from Harbor Knits. It's currently in the \"placed\" status, which means it hasn't shipped yet, so you can still cancel it.\n\nNow I\u2019ll go ahead and cancel this order for you. One moment!\nYour order for the Speckled Rain Shell has been successfully canceled! If you have any other questions or need further assistance, feel free to ask.",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I can help with that! First, I'll look up your order for the Speckled Rain Shell from Harbor Knits to check its status. If the order hasn't shipped yet, I can assist in canceling it right away. Let me just find your order.\nI found your order for the Speckled Rain Shell from Harbor Knits, and it has not yet shipped, which means you can cancel it. \n\nNow, I will proceed to cancel the order for you. Please give me a moment.\nYour order for the Speckled Rain Shell has been successfully canceled. If you have any more questions or need further assistance, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "No problem at all! I can help with that. First, I'll look up your order for the Speckled Rain Shell from Harbor Knits to see if it's eligible for cancellation. Please hold on for a moment while I do that.\nI found your order for the Speckled Rain Shell from Harbor Knits. It appears that the order is currently in the \"placed\" status, which means it hasn\u2019t shipped yet. \n\nSince it hasn't shipped, I can proceed to cancel your order. Let me take care of that for you. Please hold on for a moment.\nYour order for the Speckled Rain Shell from Harbor Knits has been successfully cancelled. If you have any more questions or need further assistance, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 5
+    },
+    {
+      "case_id": "e-015",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        4.5613
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "I can help look into this issue. First, I'll search for your order for the portable jam trio from Blue Heron Ceramics. Once I find the order, I'll check the details for you.\nI found two orders related to your query, but neither seems to be the portable jam trio from Blue Heron Ceramics:\n\n1. **Order ID 8003**: 2 units, total $429.50, delivered on April 8, 2026.\n2. **Order ID 3245**: 1 unit, total $26.75, delivered on March 16, 2026.\n\nSince there are multiple orders and I want to ensure I assist you properly, could you clarify which order corresponds to the portable jam trio? If you remember any specific details about the purchase, it might help narrow it down.",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    }
+  ],
+  "cost_per_100_conversations_usd": 0.0791,
+  "cost_usd": 0.016611,
+  "created_at": "2026-10-23T17:15:13.744342+00:00",
+  "evaluated_case_runs": 21,
+  "git_commit": "116bad6a6a3e3b0f97d7335a1beae576a58edcc8",
+  "input_tokens": 91212,
+  "median_latency_seconds": 5.3175,
+  "model": "gpt-4o-mini",
+  "output_tokens": 4882,
+  "price_date": "2026-10-22",
+  "prompt_sha256_12": "bb3e84972af0",
+  "schema_version": 1,
+  "score": 0.666667,
+  "split": "development",
+  "test_plan_sha256": null,
+  "write_pass_5": 0
+}
