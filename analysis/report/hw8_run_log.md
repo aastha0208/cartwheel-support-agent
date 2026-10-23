@@ -39,3 +39,27 @@ Every paid HW8 run, in order. Models and prices: `optimize/config.json` (develop
 - Target mode on development: 2 of 6 dispute cases passed. The 4 failures all lack the `escalate_to_human` call.
 - Observation on e-009: it passed, but the judge's reason says "the user did not raise a dispute." The case is the 61-day boundary (support-0059), where declining is a Pass. So the verdict may be right for the wrong reason. This matches the HW5 note that the v0 judge is noisy. Nothing was changed.
 - `optimize.save_version starting` (offline) wrote `optimize/state/starting_version.json`.
+
+## Part C: manual changes
+
+### 2026-10-23: prompt_change (live model, no search budget)
+
+- Commit `b0d1207`, prompt `e7558ab00320`, model `gpt-4o-mini`. 21 evaluated case runs, 1 judge call.
+- Change: the Escalation section of `SYSTEM_PROMPT_TEMPLATE` now defines a dispute (a contested charge, a wrong item, delivered but not received). It says to look up the order, then escalate in the same turn without triage. It allows one clarifying question when the order is unknown, and keeps the 60-day `cw-disputes` exception.
+- **score 0.755556 (starting 0.377778), write_pass_5 0.333333 (starting 0), cost per 100 conversations $0.063271 (starting $0.05896), median latency 5.75 s.**
+- Result: `optimize/results/development-prompt_change-gpt-4o-mini-20261023-091904.json`.
+
+| Case | Starting | prompt_change | Note |
+|---|---|---|---|
+| e-001 | 0/1 | 1/1 | escalated |
+| e-004 | 0/1 | 1/1 | escalated |
+| e-006 | 0/1 | 0/1 | asked for the order ID instead of using `list_my_orders`; single-turn case, so the conversation ended without escalation |
+| e-008 | 1/1 | 1/1 | regression case still passes |
+| e-009 | 1/1 | 1/1 | judge reason again says "no dispute raised" (the same noise as at the start) |
+| e-012 | 3/5 | 2/5 | write case, untouched by the change |
+| e-013 | 2/5 | 2/5 | write case, untouched |
+| e-014 | 2/5 | 5/5 | write case, untouched; this alone moves write_pass_5 from 0 to 1/3 |
+| e-015 | 0/1 | 1/1 | escalated |
+
+- Target mode: dispute cases went from 2/6 to 5/6.
+- The write-case changes (e-012 down by 1, e-014 up by 3) come from a change that doesn't mention cancellations or refunds, so they are most likely run-to-run noise. The write_pass_5 gain should not be credited to the prompt change.
