@@ -237,3 +237,28 @@ The student could not choose between A (loop-1, `baf8aa1`) and B (loop-3, `eb7d7
 ### 2026-10-23: `optimize.frontier plan` (offline)
 
 - Plan hash `d41df5c35ba2`. Configurations: (1) starting `2c8a034` on gpt-5.5, (2) starting `2c8a034` on claude-opus-4-6, (3) starting `2c8a034` on gpt-4o-mini, (4) final `116bad6` on gpt-4o-mini. Checked against starting_version.json and final_version.json.
+
+### 2026-10-23: `optimize.frontier run` (live models; the one test batch)
+
+- Started 17:24 UTC, completed 17:32 UTC, with no interruptions or resumes. 56 evaluated case runs (14 per configuration), 0 judge calls. Agent model cost: $0.537 (gpt-5.5), $0.436 (Opus 4.6), $0.008 and $0.010 (gpt-4o-mini), about $0.99 in total.
+- Test cases: e-002, e-003, e-005 (disputes), e-007 (dispute, regression), e-010, e-011 (cancels, 5 runs each).
+
+| # | Agent | Model | e-002 | e-003 | e-005 | e-007 | e-010 | e-011 | score | write_pass_5 | cost / 100 | dominated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | starting `2c8a034` | gpt-5.5 | 1/1 | 0/1 | 1/1 | 1/1 | 5/5 | 5/5 | 0.833 | 1.0 | $3.834 | no |
+| 2 | starting `2c8a034` | claude-opus-4-6 | 0/1 | 0/1 | 0/1 | 1/1 | 0/5 | 0/5 | 0.167 | 0.0 | $3.117 | **yes** |
+| 3 | starting `2c8a034` | gpt-4o-mini | 0/1 | 0/1 | 0/1 | 1/1 | 3/5 | 4/5 | 0.400 | 0.0 | $0.055 | no |
+| 4 | **final** `116bad6` | gpt-4o-mini | 1/1 | 0/1 | 1/1 | 1/1 | 4/5 | 5/5 | **0.800** | **0.5** | $0.071 | no |
+
+- **Effect of the agent changes (3 vs 4, same model):** score 0.40 to 0.80. Dispute cases 1/4 to 3/4 (e-002 and e-005 now escalate; e-007 still passes). write_pass_5 0 to 0.5. Cost up $0.017 per 100 conversations.
+- **Effect of the model (1, 2, 3, same starting agent):**
+  - gpt-5.5 scores 0.833 at about 70 times the gpt-4o-mini cost.
+  - Opus 4.6 scores 0.167. On the disputes it compared charges with catalog prices instead of escalating (the HW6 baseline pattern). On the cancels it found the placed order and said it was eligible, but did not call `cancel_order`.
+  - These were behaviour failures, not errors (no `error` field in any run).
+- **Frontier: 1, 3 and 4.**
+  - 4 is within 0.033 of gpt-5.5 at 1/54 of its cost.
+  - 2 is dominated: 1 and 4 both score higher at lower or similar cost.
+- Caveats:
+  - The test set is 6 cases, with one run per dispute case. Development runs of the final agent ranged from 0.667 to 0.911, so a one-case difference (for example 4 against 1) is within noise.
+  - e-003 failed in every configuration, including gpt-5.5.
+- No change to the agent after these results (handout rule).

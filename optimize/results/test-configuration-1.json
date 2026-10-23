@@ -1,0 +1,212 @@
+{
+  "cached_fraction": 0.102935,
+  "cached_input_tokens": 6144,
+  "candidate": "starting-version-model-1",
+  "case_count": 6,
+  "cases": [
+    {
+      "case_id": "e-002",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        21.8152
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll look up your recent orders for \u201cPortable Field Guide\u201d so I can check the order details tied to that charge.\nI found a likely matching Northwind Books order, and I\u2019ll check the full order record plus the catalog listing so I can compare what you were charged against the item details.\nBecause you\u2019re questioning the charge amount, I\u2019m going to open a billing review ticket so a human can follow up if your statement shows anything different from the Cartwheel order total.\nStraight up: I don\u2019t see an issue in Cartwheel\u2019s records.\n\nFor your Northwind Books order **#3814**:\n\n- Item: **Portable Field Guide**\n- Quantity: **1**\n- Cartwheel order total: **$38.25**\n- Current catalog price found for that item: **$38.25**\n- Status: **Delivered**\n\nSo the order total matches the listed item price I found.\n\nBecause you\u2019re questioning the charge, I also opened a billing review ticket with a human support agent: **ticket #151**. They should follow up within **24 hours**, especially if your bank/card statement shows a different amount, a duplicate charge, or something else that doesn\u2019t match the Cartwheel order total.",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-003",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        11.5302
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "I can look into it with one of these:\n\n1. **Order ID** \u2014 best option. It usually appears in the order confirmation email or receipt.  \n2. If you don\u2019t have the order ID:  \n   - The **email address or phone number used on the order**  \n   - The **approximate order date**  \n   - The **amount you were charged**  \n   - The **amount you expected to be charged**  \n   - Any **promo code/discount** you expected to apply  \n3. A receipt or screenshot is helpful, but please **do not send full card numbers, passwords, or payment credentials**. If a card is shown, only the **last 4 digits** are okay.\n\nSince you mentioned the **Speckled Serving Bowl** and \u201cabout six weeks ago,\u201d I can also try searching by product name if you\u2019d like.",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-005",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        21.5033
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll look for your recent order containing \u201cModern Trowel Set\u201d so I can check the order details tied to your account.\nI found a recent matching delivered order, and I\u2019ll open its full details now to verify the charge and any refund eligibility before discussing next steps.\nI\u2019ll check the current product listing for Modern Trowel Set at Petal & Stem so we can compare it against the $83.00 order total.\nBecause you believe the charge is incorrect, I\u2019m going to escalate this billing dispute to a human support agent with the order details I found.\nI found the matching order:\n\n- **Order:** #7102  \n- **Store:** Petal & Stem  \n- **Item:** Modern Trowel Set  \n- **Quantity:** 1  \n- **Order total:** **$83.00**  \n- **Status:** Delivered  \n- **Delivered on:** 2026-06-23  \n- The current Cartwheel listing I found for that item is also **$83.00**.\n\nSince you believe the charge was incorrect, I\u2019ve escalated this as a billing dispute to a human support agent for review. Your ticket is **#151**, and a human should follow up within **24 hours**.",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-007",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        6.4553
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019m going to open a human support ticket because customer disputes about an incorrect charge must be handled by a human specialist.\nI\u2019ve opened a ticket for our human support team: **#151**.\n\nBecause this is a customer **billing dispute**, a human specialist needs to handle it. They\u2019ll follow up within about **24 hours**. If you have the order ID, customer name/email, or any screenshots/messages from the customer, keep them handy for the support agent.",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-010",
+      "expected_write": true,
+      "failure_modes": [],
+      "latencies_seconds": [
+        9.591,
+        11.4782,
+        10.0259,
+        10.5215,
+        10.4634
+      ],
+      "pass_rate": 1.0,
+      "passes": 5,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search your store\u2019s orders for \u201cClassic Poetry Collection\u201d so I can identify the right order and see whether it can still be canceled.\nI found an unshipped Classic Poetry Collection order, order #1935, so I\u2019ll submit the cancellation now because orders that have not shipped can be canceled.\nDone \u2014 I canceled the unshipped Classic Poetry Collection order #1935 from Paper Lantern Press. Its status is now **cancelled**.",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search your store\u2019s orders for \u201cClassic Poetry Collection\u201d so I can identify the order and check whether it\u2019s still eligible to cancel.\nI found one matching unshipped order in placed status, so I\u2019ll submit the cancellation for order 1935 now.\nDone \u2014 I cancelled the Classic Poetry Collection order.\n\n- Order ID: 1935  \n- Status: Cancelled  \n\nBecause it had not shipped yet, the cancellation went through successfully.",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search your store\u2019s orders for \u201cClassic Poetry Collection\u201d so I can find the right order and check whether it can still be canceled.\nI found an unshipped matching order, #1935, so I\u2019ll cancel that order now because only orders that haven\u2019t shipped can be canceled.\nDone \u2014 order #1935 for the Classic Poetry Collection has been canceled successfully.",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search the orders available to your account for \u201cClassic Poetry Collection\u201d so I can identify the matching order and check whether it can still be canceled.\nI found a matching unshipped order, #1935, so I\u2019ll submit a cancellation now because only orders that have not shipped can be canceled.\nDone \u2014 order #1935 for the Classic Poetry Collection has been canceled successfully.",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search your accessible orders for \u201cClassic Poetry Collection\u201d so I can find the right order and see whether it can still be canceled.\nI found one active, unshipped matching order, #1935, so I\u2019ll cancel that order now because cancellations are allowed before shipment.\nDone \u2014 I canceled order **#1935** for the **Classic Poetry Collection**. Its status is now **cancelled**.",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 5
+    },
+    {
+      "case_id": "e-011",
+      "expected_write": true,
+      "failure_modes": [],
+      "latencies_seconds": [
+        12.0571,
+        9.8812,
+        15.2238,
+        9.4163,
+        12.8385
+      ],
+      "pass_rate": 1.0,
+      "passes": 5,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search for recent orders matching \u201cCompact Trekking Poles\u201d so I can identify the customer\u2019s order and check whether it can be canceled.\nI found one matching Meridian Cycles order that is still unshipped, so I\u2019ll submit the cancellation for order 2053 now.\nDone \u2014 I canceled the unshipped Meridian Cycles order for Compact Trekking Poles.\n\n- Order ID: 2053\n- New status: cancelled\n- Reason recorded: Customer requested cancellation via support follow-up before shipment.",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search for recent orders matching \u201cCompact Trekking Poles\u201d so we can identify the customer\u2019s order before attempting a cancellation.\nThe matching recent Meridian Cycles order is unshipped and still in placed status, so I\u2019ll submit the cancellation now.\nDone \u2014 I cancelled the matching unshipped order for Compact Trekking Poles from Meridian Cycles.\n\n- Order ID: 2053\n- Status: cancelled\n- Reason: Customer requested cancellation before shipment",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search for recent orders matching \u201cCompact Trekking Poles\u201d so I can identify the customer\u2019s order and see whether it can still be canceled.\nI found a recent unshipped Meridian Cycles order that looks like the likely match, so I\u2019ll pull its full details before attempting cancellation.\nThe order is still in placed status and has not shipped, so I\u2019ll cancel it now per the customer\u2019s request.\nDone \u2014 I canceled the likely matching Meridian Cycles order for Compact Trekking Poles.\n\n- **Order ID:** 2053  \n- **Store:** Meridian Cycles  \n- **Quantity:** 2  \n- **Total:** $166.50  \n- **Previous status:** Placed / not shipped  \n- **New status:** Cancelled  \n\nThere were a few older delivered orders matching that product name, but order **2053** was the recent unshipped one, so it was eligible for cancellation.",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search for recent orders matching \u201cCompact Trekking Poles\u201d so we can identify the customer\u2019s order before attempting a cancellation.\nI found one matching Meridian Cycles order that is still only \u201cplaced\u201d and not shipped, so I\u2019ll submit the cancellation for that order now.\nDone \u2014 I cancelled the matching unshipped order for Compact Trekking Poles from Meridian Cycles.\n\n- Order ID: 2053\n- Previous status: placed\n- New status: cancelled\n- Reason: Customer requested cancellation before shipment.",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I\u2019ll search orders for \u201cCompact Trekking Poles\u201d so I can identify the Meridian Cycles order from the last couple of days before attempting cancellation.\nThe best match is order 2053 because it is for the trekking poles, from store 10, and is still in \u201cplaced\u201d status; I\u2019ll pull the full order details to confirm it can be canceled before taking action.\nOrder 2053 is confirmed as a Meridian Cycles order that has not shipped, so I\u2019ll cancel it now with the customer\u2019s cancellation request as the reason.\nDone \u2014 I canceled Meridian Cycles order **2053** for the customer.\n\nDetails:\n- Product: **Compact Trekking Poles**\n- Quantity: **2**\n- Total: **$166.50**\n- Previous status: **Placed**\n- New status: **Cancelled**\n- Reason: **Customer requested cancellation before shipment**",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 5
+    }
+  ],
+  "cost_per_100_conversations_usd": 3.834214,
+  "cost_usd": 0.53679,
+  "created_at": "2026-10-23T17:27:03.970590+00:00",
+  "evaluated_case_runs": 14,
+  "git_commit": "2c8a0347d8c64aa87c2ad90ad794ba359ee51c37",
+  "input_tokens": 59688,
+  "median_latency_seconds": 10.9998,
+  "model": "gpt-5.5",
+  "output_tokens": 7945,
+  "price_date": "2026-10-22",
+  "prompt_sha256_12": "811782eba4b5",
+  "schema_version": 1,
+  "score": 0.833333,
+  "split": "test",
+  "test_plan_sha256": "d41df5c35ba245661289c82c361804cb7b46d39f56272c55c0fb91411ffe5e62",
+  "write_pass_5": 1
+}
