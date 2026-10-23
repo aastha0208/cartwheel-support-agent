@@ -119,3 +119,14 @@ Every paid HW8 run, in order. Models and prices: `optimize/config.json` (develop
 ### Part C summary
 
 The kept agent is commit `27425a6`: the prompt change plus the harness change, with the tool change reverted. The development score went from 0.378 to 0.778, and dispute cases from 2/6 to 5/6. Single runs per dispute case mean a one-case difference between candidates is within noise. The write cases moved by up to 3 of 5 runs between candidates with no related change.
+
+## Part D: improve loop (`.agents/skills/improve-loop/SKILL.md` with `optimize/program.md`)
+
+The student chose the improve loop. One method only, as the handout asks. The student approves every attempt before it runs.
+
+### 2026-10-23: loop-baseline (live model, **search budget 21**, used 21/150)
+
+- Commit `7ecc180` (agent identical to `27425a6`), prompt `e7558ab00320`, `gpt-4o-mini`. 21 evaluated case runs, 1 judge call.
+- **score 0.688889, write_pass_5 0.333333, cost per 100 conversations $0.067529.** The same agent scored 0.777778 in Part C, so two runs of an unchanged agent differ by about 0.09, roughly one case.
+- Failures: e-001 0/1, e-015 0/1, e-012 2/5, e-013 4/5. e-004, e-006, e-008, e-009 and e-014 passed (e-014 5/5).
+- **A shared pattern across both modes:** in every failed run the agent asks the user for the order ID ("Could you please provide me with the order ID…?") instead of searching with `find_order` or `list_my_orders`. This happened in e-001 and e-015 (disputes) and in 3 runs of e-012 and 1 run of e-013 (writes).
