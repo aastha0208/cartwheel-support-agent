@@ -393,15 +393,7 @@ def issue_refund(
 def escalate_to_human(
     wrapper: RunContextWrapper[AuthContext], summary: str, context: str
 ) -> dict[str, Any]:
-    """Open a ticket for a human support agent.
-
-    Call this for every dispute: a charge the user says is wrong, too high,
-    duplicated, or unrecognized; a wrong item received; or an order marked
-    delivered that never arrived. Also call it when a case is above your
-    authority. An order id is not required: put whatever order details you
-    have (or that the order is still unidentified) in `context`. Calling
-    this is the resolution; do not offer to escalate instead of calling it.
-    """
+    """Open a ticket for a human support agent when a case is above your authority."""
     return _call(wrapper, escalate_to_human_logic, summary, context)
 
 
