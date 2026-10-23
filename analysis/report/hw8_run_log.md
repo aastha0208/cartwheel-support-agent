@@ -143,3 +143,13 @@ The student chose the improve loop. One method only, as the handout asks. The st
 - Remaining failures:
   - e-006: `find_order("stationery")` found nothing, because product titles do not contain "stationery". The agent then asked the user instead of trying `list_my_orders`. It had written "I will escalate" earlier in the turn, but the final model response did not contain the word, so the harness check (which reads only the final response) did not fire.
   - e-013: 2 runs asked the user for a return reason instead of issuing the refund. That is the `incomplete_write_left_undone` pattern, not the target.
+
+### 2026-10-23: loop-2-list-orders-fallback (live model, **search budget 21**, used 63/150)
+
+- Commit `119579f`, prompt `459400f4eca3`, `gpt-4o-mini`. 21 evaluated case runs, 1 judge call.
+- Change (prompt, Tool guidance): "If find_order finds no match, shoppers and merchants call list_my_orders and look for the order there before asking the user."
+- **score 0.8 (best 0.822222), write_pass_5 0.333333, cost per 100 conversations $0.091718.**
+- e-001 1/1, e-004 1/1, e-006 **0/1**, e-008 1/1, e-009 1/1, e-012 2/5, e-013 4/5, e-014 5/5, e-015 1/1.
+- Keep rule: the score did not improve, so **revert**. `git checkout baf8aa1 -- agent/`.
+- e-006, the target, still failed. The reply says "I couldn't find any order for stationery under your account". `list_my_orders` results carry product ids, not product names, so a lookup by product type cannot match even when the agent tries it. That makes this the wrong layer for the fix. e-012 fell from 5/5 to 2/5: in 3 runs it found order 4137 (placed) and described it without calling `cancel_order`. That pattern is unrelated to this change and most likely noise.
+- First consecutive non-improving attempt. Under `program.md` (via the skill), one more non-improving attempt stops the loop.

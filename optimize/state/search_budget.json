@@ -10,7 +10,12 @@
       "calls": 21,
       "label": "loop-1-lookup-before-asking",
       "reserved_at": "2026-10-23T14:30:34.746923+00:00"
+    },
+    {
+      "calls": 21,
+      "label": "loop-2-list-orders-fallback",
+      "reserved_at": "2026-10-23T14:39:10.178664+00:00"
     }
   ],
-  "used_calls": 42
+  "used_calls": 63
 }
