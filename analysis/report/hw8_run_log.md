@@ -176,3 +176,40 @@ The student chose the improve loop. One method only, as the handout asks. The st
 - Budget used: 84 of 150. The loop's kept agent is `baf8aa1` (Part C agent plus the loop-1 prompt rule).
 - Remaining failures: write cases where the agent finds the order but does not complete the cancel or refund (`incomplete_write_left_undone`), and run-to-run variation of about one case.
 - loop-3 (`eb7d7ad`) is still a recorded candidate. The Part E choice of final candidate is the student's.
+
+### 2026-10-23: paired rerun of candidates A and B (live model, **search budget 42**, used 126/150)
+
+The student could not choose between A (loop-1, `baf8aa1`) and B (loop-3, `eb7d7ad`) from one run each. The skill says "rerun a promising change before keeping it", so each was rerun once with `--search`. **Reading rule fixed before the runs:**
+- B clearly ahead on disputes with write runs about equal → B.
+- About equal on disputes → A.
+- B clearly worse on write runs → A.
+
+- A rerun: commit `876f238` (agent identical to `baf8aa1`), `development-rerun-A-loop-1-gpt-4o-mini-20261023-140316.json`. **score 0.577778, write_pass_5 0.333333, $0.087051 per 100.**
+- B rerun: commit `f6038b0` (agent identical to `eb7d7ad`), `development-rerun-B-loop-3-gpt-4o-mini-20261023-140644.json`. **score 0.822222, write_pass_5 0.333333, $0.082559 per 100.**
+- gpt-4o-mini, 21 evaluated case runs and 1 judge call each.
+
+| Case | A run 1 | A run 2 | B run 1 | B run 2 |
+|---|---|---|---|---|
+| e-001 | 1/1 | 0/1 | 1/1 | 1/1 |
+| e-004 | 1/1 | 1/1 | 1/1 | 1/1 |
+| e-006 | 0/1 | 0/1 | 1/1 | 1/1 |
+| e-008 | 1/1 | 1/1 | 1/1 | 1/1 |
+| e-009 | 1/1 | 0/1* | 1/1 | 0/1* |
+| e-012 | 5/5 | 2/5 | 3/5 | 4/5 |
+| e-013 | 3/5 | 4/5 | 4/5 | 3/5 |
+| e-014 | 4/5 | 5/5 | 4/5 | 5/5 |
+| e-015 | 1/1 | 1/1 | 1/1 | 1/1 |
+| **disputes** | 5/6 | 3/6 | 6/6 | 5/6 |
+| **write runs** | 12/15 | 11/15 | 11/15 | 12/15 |
+| **score** | 0.822 | 0.578 | 0.911 | 0.822 |
+| **write_pass_5** | 0.333 | 0.333 | 0.000 | 0.333 |
+
+\* e-009 in both reruns: the judge's text ends "Result: Pass", but the word "failure" in its reasoning trips the parser's fallback (`replay/rollout.py`), so the case was recorded as a fail. This is the same artefact seen in tool_change. It is left uncorrected in the recorded scores.
+
+- **Totals over two runs:**
+  - Disputes: A 8/12, B 11/12. Excluding the two parser artefacts: A 8/11, B 11/11.
+  - e-006: A 0/2, B 2/2.
+  - Write runs: A 23/30, B 23/30. write_pass_5: A 0.333 and 0.333, B 0 and 0.333.
+  - Mean score: A 0.70, B 0.867.
+- Under the reading rule fixed in advance, B is clearly ahead on disputes and the write runs are equal, so the evidence favours B. The final choice is the student's (Part E).
+- The agent in `HEAD` is currently B's.
