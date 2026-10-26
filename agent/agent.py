@@ -566,12 +566,26 @@ def cancel_order(
     return _call(wrapper, hw_tools.cancel_order, order_id, reason)
 
 
+# Order fields find_order returns that the agent did not use in the HW3 traces
+# (HW9 Part B). Only the model-facing result is trimmed; tools.find_order keeps
+# the full HW1 contract.
+_FIND_ORDER_UNUSED_FIELDS = ("product_id", "shipped_at")
+
+
+def _find_order_for_model(ctx: AuthContext, query: str) -> dict[str, Any]:
+    result = hw_tools.find_order(ctx, query)
+    for order in result.get("orders", []):
+        for field in _FIND_ORDER_UNUSED_FIELDS:
+            order.pop(field, None)
+    return result
+
+
 @function_tool
 def find_order(
     wrapper: RunContextWrapper[AuthContext], query: str
 ) -> dict[str, Any]:
     """Search your orders by product name (fuzzy match)."""
-    return _call(wrapper, hw_tools.find_order, query)
+    return _call(wrapper, _find_order_for_model, query)
 
 
 # Progressive disclosure: a session exposes only the tools its role can use.
