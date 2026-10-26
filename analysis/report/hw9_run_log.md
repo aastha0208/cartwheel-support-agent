@@ -104,3 +104,16 @@ Offline look at the HW3 traces and the HW6 Harbor transcripts of the 9 developme
 - Why input tokens rose although each `find_order` result shrank: A1 removes about 2,000 tokens per 21 runs, but more runs completed their write or escalation (e-013 3/5 to 5/5, e-012 3/5 to 4/5, e-015 now escalates). Each extra tool call is one more model call that re-reads 3,000 to 4,000 tokens. Estimate only: per-case token counts are not saved, and run-to-run noise is about 4,000 input tokens.
 - Decision (student): **revert A1**, because the cost did not go down (cost and latency both rose; score and write_pass_5 rose, likely by chance). `agent/agent.py` restored to the HW8 final agent, commit `fc3c32c`.
 - Part B outcome: both single changes were reverted; the agent is the HW8 final agent.
+
+## Part C: prompt order for caching
+
+- Model `gpt-4o-mini` (OpenAI, caches automatically from a 1,024-token prefix; also the HW8 development model). Added `"cached_input": 0.075` to its prices in `optimize/config.json` (OpenAI's cached input price; student to confirm on the pricing page).
+- Starting order: tool definitions (~840 tokens), then the system prompt, whose `## Session context` block (role, user id, store id) sits after the two intro lines. Prefix shared across different users ≈ 880 tokens, under 1,024.
+
+### Run 4: cache-before (unchanged HW8 agent) (2026-10-26, live model)
+
+- Commit `6aee53c` (agent identical to `116bad6`, prompt `bb3e84972af0`). `gpt-4o-mini`, 21 evaluated case runs, 1 judge call.
+- Result: `optimize/results/development-cache-before-gpt-4o-mini-20261026-104758.json`.
+- **score 0.955556, write_pass_5 0.333333, input 105,204, cached 67,072 (cached_fraction 0.637542), output 5,275, cost $0.013915, $0.066263 per 100 conversations, median latency 6.82 s.**
+- Cases: all single-run cases passed (e-006 and e-015 for the first time in HW9; e-009 parsed as Pass); e-012 4/5, e-013 5/5, e-014 4/5.
+- The same agent scored 0.666667 in the HW8 final run: the run-to-run spread of the unchanged agent on these 9 cases is at least 0.29.
