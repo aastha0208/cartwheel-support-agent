@@ -117,3 +117,25 @@ Offline look at the HW3 traces and the HW6 Harbor transcripts of the 9 developme
 - **score 0.955556, write_pass_5 0.333333, input 105,204, cached 67,072 (cached_fraction 0.637542), output 5,275, cost $0.013915, $0.066263 per 100 conversations, median latency 6.82 s.**
 - Cases: all single-run cases passed (e-006 and e-015 for the first time in HW9; e-009 parsed as Pass); e-012 4/5, e-013 5/5, e-014 4/5.
 - The same agent scored 0.666667 in the HW8 final run: the run-to-run spread of the unchanged agent on these 9 cases is at least 0.29.
+
+### Run 5: cache-after (Session context moved to the end, no wording change) (2026-10-26, live model)
+
+- Commit `a73dd52`, prompt `e7aa81a7f464` (same lines as `bb3e84972af0`, reordered; checked offline). Offline tests: 154 passed, 2 failed (same known tests).
+- Offline estimate of the prefix shared by different users after the move: tool definitions (~938 tokens shopper/merchant, ~862 support) + static prompt (~603) ≈ 1,465 to 1,541 tokens, above OpenAI's 1,024 minimum. Before the move the shared part of the system prompt was ~36 tokens.
+- `gpt-4o-mini`, 21 evaluated case runs, 1 judge call.
+- Result: `optimize/results/development-cache-after-gpt-4o-mini-20261026-112248.json`.
+
+| | cache-before | cache-after |
+|---|---|---|
+| score | 0.955556 | 0.822222 |
+| write_pass_5 | 0.333333 | 0.333333 |
+| input tokens | 105,204 | 107,457 |
+| cached input tokens | 67,072 | 67,968 |
+| cached_fraction | 0.637542 | 0.632513 |
+| output tokens | 5,275 | 4,915 |
+| cost per 100 conversations | $0.066263 | $0.066524 |
+| median latency | 6.82 s | 6.47 s |
+
+- Cases: e-014 4/5 to 3/5, e-015 1/1 to 0/1; all others unchanged.
+- Why cached_fraction did not rise: most cached tokens already came from repeats of the same user (later calls in one conversation, and the five runs of each write case), which the move does not change. The move only helps the first call after the user changes, about 8 times in 21 runs (at most ~11,000 tokens, cached_fraction ~0.73); those calls were not cached either, likely because OpenAI caching is best effort and a small, low-traffic run rarely reaches the same cache server.
+- Decision (student): **revert** by the handout rule (score dropped, 0.955556 to 0.822222), and cached_fraction and cost did not improve. The drop is probably noise (the unchanged agent varied by 0.29). `agent/agent.py` restored to the HW8 final agent.
