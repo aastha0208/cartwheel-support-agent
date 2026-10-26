@@ -101,4 +101,6 @@ Offline look at the HW3 traces and the HW6 Harbor transcripts of the 9 developme
 | e-014 | 4/5 | 4/5 |
 | e-015 | 0/1 | 1/1 |
 
-- Decision: pending (student).
+- Why input tokens rose although each `find_order` result shrank: A1 removes about 2,000 tokens per 21 runs, but more runs completed their write or escalation (e-013 3/5 to 5/5, e-012 3/5 to 4/5, e-015 now escalates). Each extra tool call is one more model call that re-reads 3,000 to 4,000 tokens. Estimate only: per-case token counts are not saved, and run-to-run noise is about 4,000 input tokens.
+- Decision (student): **revert A1**, because the cost did not go down (cost and latency both rose; score and write_pass_5 rose, likely by chance). `agent/agent.py` restored to the HW8 final agent, commit `fc3c32c`.
+- Part B outcome: both single changes were reverted; the agent is the HW8 final agent.
