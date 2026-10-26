@@ -139,3 +139,61 @@ Offline look at the HW3 traces and the HW6 Harbor transcripts of the 9 developme
 - Cases: e-014 4/5 to 3/5, e-015 1/1 to 0/1; all others unchanged.
 - Why cached_fraction did not rise: most cached tokens already came from repeats of the same user (later calls in one conversation, and the five runs of each write case), which the move does not change. The move only helps the first call after the user changes, about 8 times in 21 runs (at most ~11,000 tokens, cached_fraction ~0.73); those calls were not cached either, likely because OpenAI caching is best effort and a small, low-traffic run rarely reaches the same cache server.
 - Decision (student): **revert** by the handout rule (score dropped, 0.955556 to 0.822222), and cached_fraction and cost did not improve. The drop is probably noise (the unchanged agent varied by 0.29). `agent/agent.py` restored to the HW8 final agent.
+
+## Part D: model cascade on one judge
+
+- Oracle: frozen HW5 `dispute_not_escalated-v0` (`gpt-4o-mini`, prompt `e9c84f22bf7b`). Its saved verdicts in `analysis/state/judges/` are used; the oracle is not rerun.
+- Proxy model choice: `gpt-4.1-nano` failed the one-request check (404 `model_not_found`, "has been deprecated"; no charge), and its price was removed from the config. `gpt-5.4-nano` is listed but costs more than the oracle ($0.20 / $1.25 per M vs $0.15 / $0.60). Chosen: **`gpt-5-nano`** ($0.05 input, $0.005 cached, $0.40 output per M, from OpenAI's model page); one-request CLI check passed with tool calls.
+- Proxy (`cascade/run_proxy.py`): the oracle's prompt, trace text, and wrapper, plus one confidence instruction (0 to 1), JSON answer, reasoning effort minimal. Saves verdict, confidence, oracle verdict, human label, and API token counts.
+- **Minimum agreement with the oracle, chosen by the student before any proxy result: 0.90** (at most 5 disagreements of 51 dev labels). For reference, the oracle disagreed with itself on about 2 of 51 dev verdicts between two runs in HW5.
+
+### Run 6: proxy on the 51 dev labels (2026-10-26, live model)
+
+- `uv run python cascade/run_proxy.py --split dev`: `gpt-5-nano`, 51 proxy calls, 0 agent runs, 0 oracle calls. Saved `cascade/results/proxy_dev.jsonl`.
+- Tokens from the API: 190,241 input (106,496 cached), 12,594 output. Cost $0.0098, about $0.19 per 1,000 verdicts.
+- 7 of 51 answers did not follow the answer format: valid JSON, but the result and confidence were written inside the critique text ("Result: Pass. Confidence: 0.66") or a key was missing. The script records them with no verdict or confidence.
+- 44 parsed answers: proxy alone agrees with the oracle on 40. All 4 disagreements are proxy Fail where the oracle and the human label say Pass (confidence 0.54, 0.62, 0.68, 0.74). The oracle agrees with the human labels on 51/51 dev traces.
+- Stated confidence ranges from 0.54 to 0.86; most answers say 0.62 to 0.78.
+- Next: student to decide how to treat the 7 unformatted answers before any threshold is calculated.
+- Student decision: both. Force the answer format with strict structured output (`result` Pass/Fail and `confidence` required, prompt wording unchanged), rerun dev, and send any answer that still cannot be used to the oracle. First run kept as `cascade/results/proxy_dev_format_free.jsonl`.
+
+### Run 7: proxy on the 51 dev labels, strict format (2026-10-26, live model)
+
+- Same command, `gpt-5-nano`, 51 proxy calls, 0 agent runs, 0 oracle calls. Saved `cascade/results/proxy_dev.jsonl` (used for the thresholds).
+- Tokens from the API: 192,689 input (111,872 cached), 12,036 output. Cost $0.0094, about $0.185 per 1,000 verdicts.
+- 0 unusable answers. Proxy alone agrees with the oracle on 50/51 (and with the human labels on 50/51). The one disagreement, `a804e18c`: proxy Fail at confidence 0.62, oracle and human Pass.
+- Stated confidence 0.58 to 0.78; 13 answers say 0.66.
+
+### Threshold table on dev (2026-10-26, offline, no model calls)
+
+- `uv run python cascade/thresholds.py` wrote `cascade/results/thresholds.csv` from `proxy_dev.jsonl`. Proxy cost from API token counts; oracle cost estimated with tiktoken (about $0.638 per 1,000 verdicts alone, a lower bound). Unusable proxy answers go to the oracle (none in this run).
+
+| threshold | agreement with oracle | agreement with human | proxy share | $ per 1,000 verdicts |
+|---|---|---|---|---|
+| 0.00 / 0.55 | 0.9804 (1 disagreement) | 0.9804 | 1.00 | 0.1846 |
+| 0.60 / 0.62 | 0.9804 (1) | 0.9804 | 0.9608 | 0.2076 |
+| 0.64 | 1.0 | 1.0 | 0.8039 | 0.3160 |
+| 0.66 | 1.0 | 1.0 | 0.7843 | 0.3322 |
+| 0.68 | 1.0 | 1.0 | 0.5098 | 0.4966 |
+| 0.70 | 1.0 | 1.0 | 0.4118 | 0.5628 |
+| 0.72 | 1.0 | 1.0 | 0.2745 | 0.6563 |
+| 0.74 | 1.0 | 1.0 | 0.1569 | 0.7305 |
+| 0.76 | 1.0 | 1.0 | 0.0980 | 0.7623 |
+| 0.78 | 1.0 | 1.0 | 0.0196 | 0.8125 |
+| 0.80 / 1.00 | 1.0 | 1.0 | 0.0 | 0.8223 |
+
+- Above about 0.72 the cascade costs more than the oracle alone ($0.638), because the proxy runs on every example first.
+- Threshold choice: pending (student).
+- **Threshold locked before the test check: 0.00** (student, from the 0.90 requirement and the handout rule "the lowest threshold that meets your agreement requirement"; dev agreement 0.9804). At 0.00 the proxy decides every example and the oracle is never called.
+
+### Run 8: threshold check on the 52 test labels (2026-10-26, live proxy, then offline)
+
+- `uv run python cascade/run_proxy.py --split test`: `gpt-5-nano`, 52 proxy calls, 0 agent runs, 0 oracle calls, 0 unusable answers. Tokens: 189,207 input (116,736 cached), 12,132 output; cost $0.0091.
+- `uv run python cascade/check.py` (offline) wrote `cascade/results/check.json` with the locked threshold 0.00.
+- **Agreement with the oracle 0.9231 (48/52, 4 disagreements); requirement 0.90 met.** Proxy share 1.0. Cost $0.1742 per 1,000 verdicts (oracle alone, estimated: about $0.64).
+- Agreement with the human labels: cascade 0.9423 (49/52); the oracle alone 47/52 (0.904) on the same test labels.
+- Disagreements (proxy, oracle, human; 1 = Pass): `0d759a5e` Pass 0.57 / Fail / Pass; `62c97365` Pass 0.62 / Fail / Pass; `f37973df` Pass 0.66 / Fail / Pass; `2445041f` Fail 0.74 / Pass / Pass. In three, the proxy matches the human label where the oracle did not.
+- The threshold was not changed after the result.
+- Review of the 4 disagreements (all four are refund requests, which the HW5 definition says are not disputes): in support-0139, support-0124, and support-0037 the proxy said Pass (no dispute raised) and the oracle said Fail; these three are on the HW5 list of the oracle's false Fails, and in support-0037 the oracle's own critique says "a failure condition is absent". In support-0138 the proxy called the refund request a dispute (Fail) and the oracle was right (Pass). Both the cascade and the oracle caught all 13 human Fail labels on test.
+- At threshold 0.00 the oracle never decides, so the cascade carries the proxy's mistakes, not the oracle's. Small numbers: 3 versus 1 can change between runs.
+- **Decision (student): accept the cascade.** Test agreement with the oracle 0.9231 met the 0.90 requirement; about $0.17 per 1,000 verdicts against about $0.64 for the oracle alone.

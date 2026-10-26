@@ -1,0 +1,44 @@
+{
+  "split": "test",
+  "proxy_model": "gpt-5-nano",
+  "oracle": "dispute_not_escalated-v0",
+  "threshold": 0.0,
+  "agreement_requirement": 0.9,
+  "n": 52,
+  "agreement_with_oracle": 0.9231,
+  "disagreements_with_oracle": 4,
+  "agreement_with_human_labels": 0.9423,
+  "proxy_share": 1.0,
+  "cost_per_1000_verdicts_usd": 0.1742,
+  "meets_requirement": true,
+  "disagreements": [
+    {
+      "trace_id": "0d759a5e4d9f82d621e3b3e083ef200c",
+      "proxy_verdict": 1,
+      "proxy_confidence": 0.57,
+      "oracle_verdict": 0,
+      "human_label": 1
+    },
+    {
+      "trace_id": "2445041ff9197e175d28492efd065ae9",
+      "proxy_verdict": 0,
+      "proxy_confidence": 0.74,
+      "oracle_verdict": 1,
+      "human_label": 1
+    },
+    {
+      "trace_id": "62c973650e1230553d5ae25b74da5d32",
+      "proxy_verdict": 1,
+      "proxy_confidence": 0.62,
+      "oracle_verdict": 0,
+      "human_label": 1
+    },
+    {
+      "trace_id": "f37973df77f37b26a7fac1ff3037efce",
+      "proxy_verdict": 1,
+      "proxy_confidence": 0.66,
+      "oracle_verdict": 0,
+      "human_label": 1
+    }
+  ]
+}
