@@ -197,3 +197,29 @@ Offline look at the HW3 traces and the HW6 Harbor transcripts of the 9 developme
 - Review of the 4 disagreements (all four are refund requests, which the HW5 definition says are not disputes): in support-0139, support-0124, and support-0037 the proxy said Pass (no dispute raised) and the oracle said Fail; these three are on the HW5 list of the oracle's false Fails, and in support-0037 the oracle's own critique says "a failure condition is absent". In support-0138 the proxy called the refund request a dispute (Fail) and the oracle was right (Pass). Both the cascade and the oracle caught all 13 human Fail labels on test.
 - At threshold 0.00 the oracle never decides, so the cascade carries the proxy's mistakes, not the oracle's. Small numbers: 3 versus 1 can change between runs.
 - **Decision (student): accept the cascade.** Test agreement with the oracle 0.9231 met the 0.90 requirement; about $0.17 per 1,000 verdicts against about $0.64 for the oracle alone.
+
+## Part E: frontier (2026-10-26, offline, no model calls)
+
+- `uv run python profile/scripts/build_frontier.py` wrote `profile/results/frontier.csv` and `profile/results/frontier.svg`: the HW8 final run and the five development runs of this homework, all `gpt-4o-mini`, 21 evaluated case runs each.
+- Every cost is recomputed from the saved token counts with the current price table (cached input at $0.075 per M). The HW8 final and Part B runs had been billed without a cached price, so their saved costs are not comparable as they are (HW8 final: $0.0791 saved, $0.0590 repriced: (91,212 - 56,192) x $0.15 + 56,192 x $0.075 + 4,882 x $0.60 = $0.012397 per 21 runs).
+
+| candidate | score | write_pass_5 | $ per 100 (repriced) | median latency | status |
+|---|---|---|---|---|---|
+| final (HW8) | 0.666667 | 0 | 0.059031 | 5.32 s | frontier |
+| fewer-tokens | 0.466667 | 0 | 0.056358 | 5.85 s | frontier |
+| fewer-tokens-rerun | 0.555556 | 0 | 0.059345 | 6.19 s | dominated |
+| fewer-tokens-a1 | 0.733333 | 0.333333 | 0.065561 | 6.67 s | frontier |
+| cache-before | 0.955556 | 0.333333 | 0.066263 | 6.82 s | frontier |
+| cache-after | 0.822222 | 0.333333 | 0.066524 | 6.47 s | dominated |
+
+- `final` and `cache-before` are the same agent and land at two different frontier points (0.667 and 0.956). The development set cannot separate these configurations: the differences in score and cost are within run-to-run variation.
+- **Configuration the student would use: the HW8 final agent on `gpt-4o-mini`, with the `gpt-5-nano` judge cascade at threshold 0.00.** None of the agent changes beat run-to-run noise, so the student keeps the version already trusted; the cascade met the 0.90 requirement on test at about a quarter of the judge's cost.
+
+## Checks: offline and live
+
+- Offline (no model calls): Part A cost table, tool-result size measurements, test suite runs, offline token counts, the threshold table, the test check calculation, and the frontier.
+- Live model: six `optimize.runner` development runs (`gpt-4o-mini`, 21 evaluated case runs and 1 judge call each), two one-request model checks (`gpt-4.1-nano` failed, `gpt-5-nano` passed), the model listing, and three proxy runs (`gpt-5-nano`, 51 + 51 + 52 calls).
+
+## Pending
+
+- Student: the video.
