@@ -476,18 +476,6 @@ def escalate_to_human_logic(
 # ---------------------------------------------------------------------------
 
 
-class _CompactResult(dict):
-    """A tool result the model reads as compact JSON.
-
-    The SDK sends a dict tool result to the model as ``str(result)``, Python's
-    spaced repr. Compact JSON carries the same fields in fewer tokens (HW9
-    Part B). It is still a dict, so tracing and the replay checks are unchanged.
-    """
-
-    def __str__(self) -> str:
-        return json.dumps(self, separators=(",", ":"), ensure_ascii=False, default=str)
-
-
 def _call(
     wrapper: RunContextWrapper[AuthContext], fn: Any, /, *args: Any
 ) -> dict[str, Any]:
@@ -496,7 +484,7 @@ def _call(
     except NotImplementedError as exc:
         result = {"ok": False, "error": "not_implemented", "reason": str(exc)}
     record_tool_result(wrapper.context, result)
-    return _CompactResult(result)
+    return result
 
 
 @function_tool
@@ -561,7 +549,7 @@ def search_products(
     except NotImplementedError as exc:
         result = {"ok": False, "error": "not_implemented", "reason": str(exc)}
     record_tool_result(ctx, result)
-    return _CompactResult(result)
+    return result
 
 
 @function_tool
