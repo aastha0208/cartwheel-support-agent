@@ -20,6 +20,9 @@ That last part is the product problem. A support agent that is helpful but wrong
 | Build realistic test conditions | Generated 250 support scenarios across customer roles and situations, plus pilot rounds, and documented a defect I found in the scenario generator. | `scenarios/`, [`KNOWN_ISSUES`](scenarios/support_scenarios.KNOWN_ISSUES.md) |
 | Systematic error analysis | Reviewed 108 conversations in four deliberately designed batches and built a taxonomy of 9 confirmed failure modes, each tied to the kind of fix it needs. | [`review_summary.md`](analysis/report/review_summary.md) |
 | Better review tooling | Built a review interface that reassembles multi-turn conversations and shows what each tool call actually returned, after the stock tracing UI made review slow. | `analysis/review_app/`, [`interface_comparison.md`](analysis/report/interface_comparison.md) |
+| Automate the judgement call | Wrote a precise failure definition for missed dispute escalations, built an LLM judge for it, and validated it against my own labels on a held-out test set before trusting it. | [`hw5_failure_definition.md`](analysis/report/hw5_failure_definition.md), [`hw5_run_log.md`](analysis/report/hw5_run_log.md) |
+| Gate releases on evidence | Turned confirmed failures into 15 eval cases with code-based checks, ran each case 5 times to separate reliable behaviour from luck (pass@k), and wired them into a CI quality gate on every pull request. | `eval_cases/`, [`.github/workflows/evals.yml`](.github/workflows/evals.yml), [`hw6_run_log.md`](analysis/report/hw6_run_log.md) |
+| Watch for drift | Built a monitor that samples conversations, scores them with the judge, corrects the raw rate for the judge's known error, and alerts above a threshold. Reviewed every flag by hand. | [`monitoring/`](monitoring/README.md), [`hw7_run_log.md`](analysis/report/hw7_run_log.md) |
 
 ## What I found
 
@@ -33,6 +36,14 @@ That last part is the product problem. A support agent that is helpful but wrong
 
 Counts are from a deliberately stratified sample, so they show what exists, not how often it happens in production.
 
+## What the evaluation system showed
+
+- **The gate works.** I deliberately shipped a one-line prompt change telling the agent not to escalate merchant-reported disputes. CI blocked it: the two regression cases dropped from 5/5 to zero passes. After the revert, both returned to 5/5 and the gate passed.
+- **The judge is trustworthy for flagging, not for final calls.** On 52 held-out conversations it caught all 13 real failures, but wrongly failed 5 of 39 good ones (all refund requests where the agent offered escalation). So it flags conversations for a person to review; it doesn't decide alone.
+- **Explicit disputes escalate; hedged ones don't.** "My customer has a dispute" escalated 5/5. "I think I was charged wrong" escalated 0/5 across five cases: the agent checked the price, declared the charge correct and moved on. That gap was invisible in the original handful of test conversations.
+- **One passing run proves little.** A cancellation case that passed once in review passed only 8 of 15 runs. I now classify every case from repeated runs, and it took 10 runs before the pass rate stabilised.
+- **A monitor alert isn't a finding until someone reads it.** The monitor crossed its 15% threshold in the second period. Reading the three flagged conversations showed two judge false alarms and the same one real failure as before, so the agent hadn't regressed. The custom risk group I added caught a real failure the random sample missed, which became a new eval case.
+
 ## The product judgements behind it
 
 - **Classify failures by the fix, not the symptom.** The single most frequent failure wasn't a prompt problem: the order-search tool capped its results and silently dropped the customer's order. A "just improve the prompt" reflex would have missed the largest issue.
@@ -45,16 +56,20 @@ Counts are from a deliberately stratified sample, so they show what exists, not 
 
 ## Status and roadmap
 
-This is a working project; the evaluation system is being built in stages.
+The evaluation loop is built end to end for the highest-severity failure mode, missed dispute escalation, with a second mode (write actions left incomplete) covered in the eval suite.
 
-- [x] **Error analysis:** failure modes identified, confirmed and tied to the fix each needs
-- [x] **First fixes:** dispute and account-change escalation corrected and verified
-- [ ] **Automated evaluators:** code-based checks for failure modes that can be detected deterministically, such as a missing escalation or a missing tool call
-- [ ] **LLM-as-judge:** model-based graders for the judgement-heavy modes, each validated against my human labels before it's trusted
-- [ ] **CI/CD quality gate:** run the evaluators on every change to the agent and block changes that bring back known failures, the same release-gate idea as my [Prompt Eval Gate](https://github.com/aastha0208/prompt-eval-gate)
-- [ ] **Production monitoring:** sample live conversations, score them automatically, and watch failure rates over time to catch drift
+- [x] **Error analysis:** 9 failure modes identified, confirmed and tied to the fix each needs
+- [x] **First fixes:** dispute and account-change escalation corrected for the conversations reviewed
+- [x] **Automated evaluators:** 15 eval cases with code-based checks (was the escalation tool called, were any write tools used), each classified from repeated runs as a regression or capability case
+- [x] **LLM-as-judge:** a judge for missed dispute escalations, validated against my human labels on a held-out test set ([results](analysis/report/hw5_run_log.md))
+- [x] **CI/CD quality gate:** offline checks on every push and the full eval suite on every pull request, blocking changes that break regression cases, the same release-gate idea as my [Prompt Eval Gate](https://github.com/aastha0208/prompt-eval-gate)
+- [x] **Monitoring:** sampling, judge scoring, error-corrected failure rates, a threshold alert and a dashboard, run across two periods of simulated traffic ([results](monitoring/README.md))
 
-The fix priority stays with the evidence: correct the order-search cap and expose the missing order details first, since together they account for the largest share of failures in the sample.
+**Next**
+
+- Close the hedged-dispute gap: the agent should escalate "I think I was charged wrong" as reliably as an explicit dispute. The capability cases (0–2 of 5 passing today) measure the fix.
+- Fix the order-search cap and expose the missing order details, which together account for the largest share of failures in the error analysis.
+- Extend evaluators to the remaining failure modes, starting with the retrieval issue.
 
 ## Running it
 
