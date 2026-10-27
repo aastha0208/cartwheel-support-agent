@@ -8,10 +8,14 @@ name: Monitor dispute_not_escalated
 # a self-hosted runner there. The repository is public, so the job only runs
 # on a schedule or a manual dispatch (never on pull requests), and it targets
 # a dedicated runner label that no other workflow uses.
+#
+# The daily schedule is paused while the self-hosted runner is offline;
+# otherwise each run waits 24 hours for a runner and is cancelled. To resume,
+# start the runner and restore:
+#   schedule:
+#     - cron: "0 13 * * *"   # daily at 13:00 UTC
 
 on:
-  schedule:
-    - cron: "0 13 * * *"   # daily at 13:00 UTC
   workflow_dispatch:
 
 permissions:
