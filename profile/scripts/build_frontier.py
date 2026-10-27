@@ -35,6 +35,8 @@ RUNS = [
     ("cache-before", "development-cache-before-gpt-4o-mini-20261026-104758.json", "C: HW8 final agent, rerun"),
     ("cache-after", "development-cache-after-gpt-4o-mini-20261026-112248.json", "C: Session context last (reverted)"),
 ]
+# Two runs of the same, unchanged HW8 agent; their score gap is run-to-run spread.
+SAME_AGENT = ("final", "cache-before")
 COLUMNS = [
     "candidate",
     "model",
@@ -103,6 +105,7 @@ def write_csv(rows: list[dict]) -> Path:
 WIDTH, HEIGHT = 820, 520
 LEFT, RIGHT, TOP, BOTTOM = 76, 40, 92, 64
 SURFACE, INK, INK_2, MUTED, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#8a8984", "#e6e5e1"
+BAND = "#efe9de"
 FRONTIER, OTHER = "#eb6834", "#2a78d6"
 
 
@@ -125,6 +128,14 @@ def write_svg(rows: list[dict]) -> Path:
         "Higher and further left is better. All costs repriced with the same table (cached input at half price). "
         "Dashed line: the frontier.</text>",
     ]
+    # Run-to-run spread of the unchanged HW8 agent, drawn under the grid.
+    same = [r for r in rows if r["candidate"] in SAME_AGENT]
+    low, high = min(r["score"] for r in same), max(r["score"] for r in same)
+    out.append(f'<rect x="{LEFT}" y="{y_pos(high):.1f}" width="{WIDTH - LEFT - RIGHT}" '
+               f'height="{y_pos(low) - y_pos(high):.1f}" fill="{BAND}"/>')
+    # Caption in the empty top-left of the band, away from every point label.
+    out.append(f'<text x="{LEFT + 10}" y="{y_pos(high) + 40:.1f}" font-size="12" fill="{INK_2}" text-anchor="start">'
+               f'Shaded: the same HW8 agent, two runs, scored {low:.2f} to {high:.2f} (run-to-run spread)</text>')
     for score in (0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0):
         y = y_pos(score)
         out.append(f'<line x1="{LEFT}" x2="{WIDTH - RIGHT}" y1="{y:.1f}" y2="{y:.1f}" stroke="{GRID}"/>')
@@ -149,7 +160,8 @@ def write_svg(rows: list[dict]) -> Path:
                    f'<circle cx="{x:.1f}" cy="{y:.1f}" r="7" fill="{color if on else SURFACE}" stroke="{color}" stroke-width="2.5"/></g>')
         dx, anchor = (12, "start") if x < WIDTH - 340 else (-12, "end")
         out.append(f'<text x="{x + dx:.1f}" y="{y - 4:.1f}" font-size="13" fill="{INK}" text-anchor="{anchor}">'
-                   f'<tspan font-weight="600">{escape(r["candidate"])}</tspan></text>')
+                   f'<tspan font-weight="600">{escape(r["candidate"])}</tspan>'
+                   + (" · HW8 agent" if r["candidate"] in SAME_AGENT else "") + "</text>")
         out.append(f'<text x="{x + dx:.1f}" y="{y + 12:.1f}" font-size="12" fill="{INK_2}" text-anchor="{anchor}">'
                    f'score {r["score"]:.2f} · ${r["cost"]:.4f} · {r["status"]}</text>')
     lx, ly = WIDTH - RIGHT - 220, 80

@@ -4,6 +4,8 @@
 <rect width="820" height="520" fill="#fcfcfb"/>
 <text x="76" y="34" font-size="19" font-weight="600" fill="#0b0b0b">Score against cost on the development cases (gpt-4o-mini, 21 runs each)</text>
 <text x="76" y="58" font-size="13" fill="#52514e">Higher and further left is better. All costs repriced with the same table (cached input at half price). Dashed line: the frontier.</text>
+<rect x="76" y="119.0" width="704" height="175.3" fill="#efe9de"/>
+<text x="86" y="159.0" font-size="12" fill="#52514e" text-anchor="start">Shaded: the same HW8 agent, two runs, scored 0.67 to 0.96 (run-to-run spread)</text>
 <line x1="76" x2="780" y1="456.0" y2="456.0" stroke="#e6e5e1"/>
 <text x="66" y="460.0" font-size="12" fill="#8a8984" text-anchor="end">0.4</text>
 <line x1="76" x2="780" y1="395.3" y2="395.3" stroke="#e6e5e1"/>
@@ -32,7 +34,7 @@
 <text transform="translate(20 274.0) rotate(-90)" font-size="13" fill="#52514e" text-anchor="middle">Development score (mean pass rate)</text>
 <polyline points="123.8,415.6 217.9,294.2 447.7,253.8 472.5,119.0" fill="none" stroke="#8a8984" stroke-width="2" stroke-dasharray="6 5"/>
 <g><title>final: HW8 final agent</title><circle cx="217.9" cy="294.2" r="9" fill="#fcfcfb"/><circle cx="217.9" cy="294.2" r="7" fill="#eb6834" stroke="#eb6834" stroke-width="2.5"/></g>
-<text x="229.9" y="290.2" font-size="13" fill="#0b0b0b" text-anchor="start"><tspan font-weight="600">final</tspan></text>
+<text x="229.9" y="290.2" font-size="13" fill="#0b0b0b" text-anchor="start"><tspan font-weight="600">final</tspan> · HW8 agent</text>
 <text x="229.9" y="306.2" font-size="12" fill="#52514e" text-anchor="start">score 0.67 · $0.0590 · frontier</text>
 <g><title>fewer-tokens: B: compact JSON tool results (reverted)</title><circle cx="123.8" cy="415.6" r="9" fill="#fcfcfb"/><circle cx="123.8" cy="415.6" r="7" fill="#eb6834" stroke="#eb6834" stroke-width="2.5"/></g>
 <text x="135.8" y="411.6" font-size="13" fill="#0b0b0b" text-anchor="start"><tspan font-weight="600">fewer-tokens</tspan></text>
@@ -44,7 +46,7 @@
 <text x="459.7" y="249.8" font-size="13" fill="#0b0b0b" text-anchor="start"><tspan font-weight="600">fewer-tokens-a1</tspan></text>
 <text x="459.7" y="265.8" font-size="12" fill="#52514e" text-anchor="start">score 0.73 · $0.0656 · frontier</text>
 <g><title>cache-before: C: HW8 final agent, rerun</title><circle cx="472.5" cy="119.0" r="9" fill="#fcfcfb"/><circle cx="472.5" cy="119.0" r="7" fill="#eb6834" stroke="#eb6834" stroke-width="2.5"/></g>
-<text x="484.5" y="115.0" font-size="13" fill="#0b0b0b" text-anchor="start"><tspan font-weight="600">cache-before</tspan></text>
+<text x="484.5" y="115.0" font-size="13" fill="#0b0b0b" text-anchor="start"><tspan font-weight="600">cache-before</tspan> · HW8 agent</text>
 <text x="484.5" y="131.0" font-size="12" fill="#52514e" text-anchor="start">score 0.96 · $0.0663 · frontier</text>
 <g><title>cache-after: C: Session context last (reverted)</title><circle cx="481.6" cy="199.9" r="9" fill="#fcfcfb"/><circle cx="481.6" cy="199.9" r="7" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2.5"/></g>
 <text x="469.6" y="195.9" font-size="13" fill="#0b0b0b" text-anchor="end"><tspan font-weight="600">cache-after</tspan></text>
