@@ -1,0 +1,12 @@
+cost_category,call_site,purpose,model,calls,input_tokens,output_tokens,cost_usd
+customer_conversation,server/app.py:215,HW3 scenario run (250 scenarios); tokens and cost from Langfuse,claude-opus-4-6,682,1692613,139953,11.961890
+customer_conversation,harbor_adapter (Harbor trial; agent loop in replay/rollout.py:210),"HW6 Harbor runs (baselines, 2 CI runs, e-014 x15, e-015); API token totals recorded in hw6_run_log.md; cost from optimize/config.json prices",claude-opus-4-6,575,1390670,128835,10.174225
+customer_conversation,server/app.py:215,HW5 targeted trace generation (2 rounds); tokens and cost from Langfuse,claude-opus-4-6,122,350934,30714,2.522520
+customer_conversation,server/app.py:215,"HW7 after-period scenario run (50 scenarios, 61 traces); cost recorded by Langfuse in hw7_run_log.md; calls and tokens not exported (blank)",claude-opus-4-6,,,,2.430000
+customer_conversation,replay/rollout.py:210,HW8 optimize.runner runs; tokens from saved results; calls = conversations (model calls per conversation not saved),gpt-5.5,14,59688,7945,0.536790
+customer_conversation,replay/rollout.py:210,HW8 optimize.runner runs; tokens from saved results; calls = conversations (model calls per conversation not saved),claude-opus-4-6,14,59823,5488,0.436315
+customer_conversation,replay/rollout.py:210,HW8 optimize.runner runs; tokens from saved results; calls = conversations (model calls per conversation not saved),gpt-4o-mini,259,1103371,56018,0.199117
+judge,analysis/helpers/scale.py:201,"HW5 dispute_not_escalated judge, 4 runs (v0 dev, v1 dev, v0 stability, v0 test); ESTIMATED tokens (tiktoken), glitch retries not counted",gpt-4o-mini,205,754869,29805,0.131113
+judge,monitoring/run_judges.py:80,"HW7 monitoring with the HW5 v0 judge (3 real runs, call counts from hw7_run_log.md); ESTIMATED tokens = HW5 average per call (texts not saved)",gpt-4o-mini,88,324041,12794,0.056283
+judge,"harbor_adapter (Harbor verifier, dispute_not_escalated on e-009)",HW6 judge calls on e-009 (count from hw6_run_log.md); ESTIMATED tokens = HW8 replay judge average per call,gpt-4o-mini,15,39637,1574,0.006890
+judge,replay/rollout.py:426,"HW8 replay judge (dispute_not_escalated) on case e-009; ESTIMATED tokens (tiktoken, policy documents in the judge input not counted)",gpt-4o-mini,11,29067,1154,0.005052

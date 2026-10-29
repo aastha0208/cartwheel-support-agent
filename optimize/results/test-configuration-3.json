@@ -1,0 +1,235 @@
+{
+  "cached_fraction": 0.240133,
+  "cached_input_tokens": 10240,
+  "candidate": "starting-version-model-3",
+  "case_count": 6,
+  "cases": [
+    {
+      "case_id": "e-002",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        4.6068
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "To check if there's an issue with your charge for the Portable Field Guide, I'll need to look up your order details first. This will help me verify the amount charged and check for any refund eligibility if needed. \n\nI'll look up your recent orders to find the one related to the Portable Field Guide. Please hold on a moment.\nI found an order for the Portable Field Guide with order ID 3814. You were charged $38.25, and it appears the order has been delivered. \n\nSince your order is eligible for a refund, we can proceed with that if there is indeed a discrepancy on your end. Would you like to continue to request a refund? If so, please share the reason for the refund.",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-003",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        2.0114
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "To assist you with your concern about the charge for the Speckled Serving Bowl, I'll need to look up your order details. Please provide me with the order ID related to this purchase so I can check its information and see if anything needs to be adjusted.",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-005",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        3.6135
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "I can help you with that! First, I'll need to look up your order for the Modern Trowel Set to check the details and see if there's a mistake with the charge. I'll find your order information now.\nI found your order for the Modern Trowel Set. Here are the details:\n\n- **Order ID:** 7102\n- **Store:** Petal & Stem\n- **Total Charged:** $83.00\n- **Status:** Delivered\n- **Refund Eligibility:** Yes\n\nSince you believe you were charged incorrectly, let's first confirm what you expected to be charged versus what was charged. Could you please provide more details on how you think this charge is incorrect?",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-007",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        3.9246
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I can't handle disputes directly, but I can help escalate this issue to a human support agent who will be able to assist you further. Let me summarize the situation in the escalation request. \n\nI'll proceed with that now.\nI've successfully escalated the issue to a human support agent. They will follow up with you within 24 hours regarding the dispute about the handmade garden gloves. If you have any other questions or need further assistance, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-010",
+      "expected_write": true,
+      "failure_modes": [
+        "order #1935 not placed",
+        "tool cancel_order called"
+      ],
+      "latencies_seconds": [
+        5.1007,
+        6.1985,
+        3.1724,
+        2.8324,
+        5.3252
+      ],
+      "pass_rate": 0.6,
+      "passes": 3,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I need to look up your order details first to confirm that it hasn't shipped yet and check the cancellation eligibility. I'll find your recent orders.\nI found your recent orders, but I need to confirm which one corresponds to the Classic Poetry Collection from Paper Lantern Press. It appears that the order with ID 1935, with a total of $418.00, has not shipped yet. \n\nLet's confirm the cancellation of this order. I'll proceed to cancel it.\nYour order for the Classic Poetry Collection has been successfully cancelled. If you have any other questions or need further assistance, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I'll help you check the order status and see if it can be canceled. I need to look up your recent orders to find the one related to the \"Classic Poetry Collection\" from Paper Lantern Press.\nI found your order for the \"Classic Poetry Collection\" with an order ID of 1935. The order status is currently \"placed,\" which means it hasn't shipped yet, and it is eligible for cancellation. \n\nI will proceed with the cancellation process. Please hold on for a moment.\nYour order for the \"Classic Poetry Collection\" has been successfully canceled. If you need any further assistance or have more questions, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #1935 not placed"
+          ],
+          "final_reply": "I'll first need to look up your recent orders to find the Classic Poetry Collection order from Paper Lantern Press. Once I locate it, I can provide the details and help you with the cancellation. Please hold on for a moment.\nI found your recent orders, but I don't see an order for the Classic Poetry Collection from Paper Lantern Press listed there. It seems that you may have referred to an order that isn\u2019t visible in your history.\n\nIf you believe there has been an error or if you need assistance with something else, please let me know!",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #1935 not placed"
+          ],
+          "final_reply": "I'll first need to check the status of your Classic Poetry Collection order to see if it can be canceled. Please hold on for a moment while I retrieve that information.\nIt looks like your Classic Poetry Collection order isn't in the list of orders. However, I found several other orders with the status \"placed.\" Could you confirm which order you'd like to cancel by providing me with the order ID or more details about it?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I can help you with that! I need to first check the details of your Classic Poetry Collection order to ensure it hasn't shipped yet. I'll look it up now.\nI found your order for the Classic Poetry Collection, which is currently in the \"placed\" status and has not yet shipped. I can go ahead and cancel this order for you.\n\nPlease hold on a moment while I process the cancellation.\nYour order for the Classic Poetry Collection has been successfully cancelled. If you need any further assistance or have more questions, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 5
+    },
+    {
+      "case_id": "e-011",
+      "expected_write": true,
+      "failure_modes": [
+        "order #2053 not placed",
+        "tool cancel_order called"
+      ],
+      "latencies_seconds": [
+        5.3439,
+        5.5249,
+        6.1233,
+        5.6527,
+        5.8015
+      ],
+      "pass_rate": 0.8,
+      "passes": 4,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #2053 not placed"
+          ],
+          "final_reply": "I will first look up the order details for the Compact Trekking Poles from Meridian Cycles to check if it can be canceled. Once I have that information, I'll take the next steps accordingly.\nI found an order for the Compact Trekking Poles (Order ID: 2053) that is currently in the \"placed\" status, meaning it has not yet shipped. Since it has not shipped, I can proceed with canceling the order.\n\nCould you please provide the reason for the cancellation?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I'll first check the order details for the Compact Trekking Poles from Meridian Cycles to confirm its status and determine if it can be canceled. One moment, please.\nI've found an order for the Compact Trekking Poles with order ID 2053, and its current status is \"placed.\" Since this order has not yet shipped, it qualifies for cancellation.\n\nI'll go ahead and cancel the order now. Please hold on for a moment.\nThe order for the Compact Trekking Poles has been successfully canceled. If the customer has any other questions or needs further assistance, feel free to let me know!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I will first look up the order details for the Compact Trekking Poles to confirm its status and to see if it can be canceled. Please hold on for a moment while I do that.\nI found the order for the Compact Trekking Poles, which has the order ID 2053. The order is currently in \"placed\" status and has not yet shipped, so it should be eligible for cancellation.\n\nI will go ahead and cancel this order now. Please hold on for a moment.\nThe order for the Compact Trekking Poles has been successfully canceled. If there are any further questions or additional assistance needed, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I can help with that. First, I'll need to find the order details for the Compact Trekking Poles from Meridian Cycles so I can check if it can be canceled. \n\nLet me do that now.\nI found an order for the Compact Trekking Poles with the order ID 2053, and it is currently in the \"placed\" status, which means it can still be canceled.\n\nI'll go ahead and cancel that order now.\nThe order for the Compact Trekking Poles has been successfully canceled. If the customer has any further questions or needs assistance with anything else, feel free to let me know!",
+          "judge_reasons": {},
+          "passed": true
+        },
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I'll need to look up the customer's order details to see if it's eligible for cancellation. Once I have that information, I can proceed with the cancellation request. \n\nI'll search for the order using the product name \"Compact Trekking Poles.\"\nI found an order for \"Compact Trekking Poles\" (Order ID: 2053) that is currently in a \"placed\" status and is eligible for cancellation. \n\nI will proceed to cancel this order now. Please hold on a moment.\nThe order for \"Compact Trekking Poles\" has been successfully canceled. If you or the customer have any further questions or need assistance, feel free to ask!",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 5
+    }
+  ],
+  "cost_per_100_conversations_usd": 0.05462,
+  "cost_usd": 0.007647,
+  "created_at": "2026-10-23T17:31:04.216482+00:00",
+  "evaluated_case_runs": 14,
+  "git_commit": "2c8a0347d8c64aa87c2ad90ad794ba359ee51c37",
+  "input_tokens": 42643,
+  "median_latency_seconds": 5.2129,
+  "model": "gpt-4o-mini",
+  "output_tokens": 2084,
+  "price_date": "2026-10-22",
+  "prompt_sha256_12": "811782eba4b5",
+  "schema_version": 1,
+  "score": 0.4,
+  "split": "test",
+  "test_plan_sha256": "d41df5c35ba245661289c82c361804cb7b46d39f56272c55c0fb91411ffe5e62",
+  "write_pass_5": 0
+}

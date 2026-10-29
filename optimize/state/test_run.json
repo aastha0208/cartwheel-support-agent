@@ -1,0 +1,12 @@
+{
+  "completed_at": "2026-10-23T17:32:29.277613+00:00",
+  "completed_configurations": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "frontier_csv": "C:\\Users\\AasthaSingh\\cartwheel-support-agent\\optimize\\results\\frontier.csv",
+  "plan_sha256": "d41df5c35ba245661289c82c361804cb7b46d39f56272c55c0fb91411ffe5e62",
+  "started_at": "2026-10-23T17:24:07.026341+00:00"
+}

@@ -1,0 +1,62 @@
+{
+  "changed_layers": [
+    "prompt",
+    "harness"
+  ],
+  "comparison_models": [
+    "gpt-5.5",
+    "claude-opus-4-6",
+    "gpt-4o-mini"
+  ],
+  "created_at": "2026-10-23T17:19:09.675832+00:00",
+  "development_model": "gpt-4o-mini",
+  "development_result": "C:\\Users\\AasthaSingh\\cartwheel-support-agent\\optimize\\results\\latest-development.json",
+  "development_score": 0.666667,
+  "git_commit": "116bad6a6a3e3b0f97d7335a1beae576a58edcc8",
+  "grader_sha256": "16c79d0e23da6adb2a036e5f633c632aafcdd30a291d0dbbdec1f53ee214c530",
+  "kind": "final",
+  "method": [
+    "manual",
+    "improve-loop"
+  ],
+  "model_selection_sha256": "30cedcf1389aae9d83b4fea72f943053b10cf982bc27efa49583a3e4c0614838",
+  "prompt_sha256_12": "bb3e84972af0",
+  "search_budget": {
+    "maximum_calls": 150,
+    "reservations": [
+      {
+        "calls": 21,
+        "label": "loop-baseline",
+        "reserved_at": "2026-10-23T13:46:32.488500+00:00"
+      },
+      {
+        "calls": 21,
+        "label": "loop-1-lookup-before-asking",
+        "reserved_at": "2026-10-23T14:30:34.746923+00:00"
+      },
+      {
+        "calls": 21,
+        "label": "loop-2-list-orders-fallback",
+        "reserved_at": "2026-10-23T14:39:10.178664+00:00"
+      },
+      {
+        "calls": 21,
+        "label": "loop-3-turn-wide-check",
+        "reserved_at": "2026-10-23T14:46:35.758433+00:00"
+      },
+      {
+        "calls": 21,
+        "label": "rerun-A-loop-1",
+        "reserved_at": "2026-10-23T17:03:16.610093+00:00"
+      },
+      {
+        "calls": 21,
+        "label": "rerun-B-loop-3",
+        "reserved_at": "2026-10-23T17:06:44.694711+00:00"
+      }
+    ],
+    "used_calls": 126
+  },
+  "split_membership_sha256": "c291837e5d3973a4ad03785dfc0662df83eea19128dabee2ca6d12e9c36e20f3",
+  "write_pass_5": 0
+}

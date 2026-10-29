@@ -1,0 +1,256 @@
+{
+  "cached_fraction": 0.0,
+  "cached_input_tokens": 0,
+  "candidate": "starting-version-model-2",
+  "case_count": 6,
+  "cases": [
+    {
+      "case_id": "e-002",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        17.033
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "Sure, let me look up your order for that Field Guide and also check the current product listing so we can compare. One moment!\n\nI'll search your orders for the product and search the Northwind Books catalog at the same time.\nGreat news \u2014 I found your order and the current listing. Here's the breakdown:\n\n| | Details |\n|---|---|\n| **Order** | #3814 |\n| **Product** | Portable Field Guide (Northwind Books) |\n| **Quantity** | 1 |\n| **You were charged** | $38.25 |\n| **Current listed price** | $38.25 |\n| **Status** | Delivered (June 6) |\n\nEverything lines up \u2014 you were charged **$38.25**, which matches the current catalog price exactly. So from what I can see, there's no discrepancy between what you paid and what the item costs.\n\nThat said, if you believe there's a different issue \u2014 for example, you saw a different price at checkout, were double-charged on your payment method, or something else feels off \u2014 let me know the details and I can dig deeper or escalate it to a human agent for a closer look!",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-003",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        21.0017
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "I'd be happy to help you look into that! Let me search for the order related to a Speckled Serving Bowl so we can review the details.\n\nLet me pull that up now.\nI found a few orders for Speckled Serving Bowls in your store. Based on your \"about six weeks ago\" timeframe, it's likely one of these:\n\n| Order ID | Date Ordered | Qty | Total | Status |\n|----------|-------------|-----|-------|--------|\n| **3364** | June 1, 2026 | 1 | $89.00 | Delivered |\n| **2501** | May 17, 2026 | 2 | $178.00 | Delivered |\n| **8380** | May 1, 2026 | 1 | $89.00 | Delivered |\n\nCould you let me know which order looks like the one you're referring to? And can you share a bit more about what seems incorrect with the charge \u2014 for example, were you expecting a different price, or was there a duplicate charge? That will help me figure out the best next step for you.",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-005",
+      "expected_write": false,
+      "failure_modes": [
+        "tool escalate_to_human called"
+      ],
+      "latencies_seconds": [
+        13.9095
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool escalate_to_human called"
+          ],
+          "final_reply": "Of course! Let me pull up your order for the Modern Trowel Set and also check the current product listing so we can compare. I'll search both at the same time.\nHere's what I found:\n\n- **Your order (#7102):** Modern Trowel Set from Petal & Stem \u2014 charged **$83.00**, ordered on June 16 and delivered June 23.\n- **Current listing price:** The Modern Trowel Set at Petal & Stem is listed at **$83.00**.\n\nThe amount you were charged matches the current product listing price. Could you let me know what price you were expecting, or what makes you think the charge was incorrect? For example, did you see a different price advertised, or does the charge on your payment statement show a different amount? That way I can dig deeper for you!",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-007",
+      "expected_write": false,
+      "failure_modes": [],
+      "latencies_seconds": [
+        10.9108
+      ],
+      "pass_rate": 1.0,
+      "passes": 1,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [],
+          "final_reply": "I understand you're dealing with a customer dispute about incorrect charges on handmade garden gloves from your store, Petal & Stem. \n\nPer our policy, **disputes must always be handled by a human support agent** \u2014 I'm not able to resolve or triage them on my end. Let me escalate this for you right away.\nI've opened **ticket #151** for you. A human support agent will review the dispute and follow up within **24 hours**. \n\nTo help speed things along, you may want to have the order ID and any relevant charge details handy when they reach out. Is there anything else I can help with in the meantime?",
+          "judge_reasons": {},
+          "passed": true
+        }
+      ],
+      "runs": 1
+    },
+    {
+      "case_id": "e-010",
+      "expected_write": true,
+      "failure_modes": [
+        "order #1935 not placed",
+        "tool cancel_order called"
+      ],
+      "latencies_seconds": [
+        8.6771,
+        9.9203,
+        8.937,
+        9.0094,
+        10.6328
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #1935 not placed"
+          ],
+          "final_reply": "Let me look up your order for the Classic Poetry Collection so I can check its status and whether it can be cancelled.\nI found order **#1935** \u2014 2\u00d7 Classic Poetry Collection, totaling $418.00, placed on July 1. It's still in **placed** status and hasn't shipped yet, so it's eligible for cancellation.\n\nWould you like me to go ahead and cancel this order? If so, could you share the reason for the cancellation?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #1935 not placed"
+          ],
+          "final_reply": "Let me find that order for you first.\nI found it! Order **#1935** looks like the one \u2014 it was placed on July 1, has a total of $418.00 (qty 2), and its status is **placed** (not yet shipped), so it's eligible for cancellation.\n\nWould you like me to go ahead and cancel this order? Just confirming before I proceed.",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #1935 not placed"
+          ],
+          "final_reply": "Let me look up your order for the Classic Poetry Collection so I can check its status.\nI found your order. **Order #1935** is for 2\u00d7 Classic Poetry Collection, totaling $418.00, placed on July 1. It's still in \"placed\" status and hasn't shipped yet, so it's eligible for cancellation.\n\nShall I go ahead and cancel it? If so, could you let me know the reason for the cancellation?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #1935 not placed"
+          ],
+          "final_reply": "Let me look up your order for the Classic Poetry Collection so I can check its status and whether it can be cancelled.\nI found your order. **Order #1935** was placed on July 1 for 2\u00d7 Classic Poetry Collection, totaling $418.00. It's currently in **placed** status and hasn't shipped yet, so it should be eligible for cancellation.\n\nShall I go ahead and cancel this order for you? Just confirming before I proceed.",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #1935 not placed"
+          ],
+          "final_reply": "Let me look up your order for the Classic Poetry Collection so I can check its status.\nI found it! Order **#1935** was placed on July 1 for 2\u00d7 Classic Poetry Collection, totaling $418.00. It's still in **placed** status and hasn't shipped yet, so it's eligible for cancellation.\n\nShall I go ahead and cancel this order for you? If so, could you let me know the reason for the cancellation?",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 5
+    },
+    {
+      "case_id": "e-011",
+      "expected_write": true,
+      "failure_modes": [
+        "order #2053 not placed",
+        "tool cancel_order called"
+      ],
+      "latencies_seconds": [
+        11.5268,
+        10.2969,
+        11.0629,
+        10.6378,
+        11.1538
+      ],
+      "pass_rate": 0.0,
+      "passes": 0,
+      "run_details": [
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #2053 not placed"
+          ],
+          "final_reply": "Let me look up that order first so I can check its status and whether it's eligible for cancellation.\nI found a likely match: **Order #2053** \u2014 2\u00d7 Compact Trekking Poles from Meridian Cycles, placed on June 29, totaling $166.50. It currently has a status of **placed** and hasn't shipped yet, so it should be eligible for cancellation.\n\nCan you confirm that **Order #2053** is the one the customer wants to cancel? I want to make sure before I proceed.",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #2053 not placed"
+          ],
+          "final_reply": "Let me look up that order first so we can check its status and eligibility for cancellation.\nI found a likely match. **Order #2053** is from Meridian Cycles (store 10), placed on June 29 for 2\u00d7 Compact Trekking Poles ($166.50 total), and its status is **\"placed\"** \u2014 meaning it hasn't shipped yet, so it should be eligible for cancellation.\n\nCan you confirm that **Order #2053** is the correct one before I go ahead and cancel it?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #2053 not placed"
+          ],
+          "final_reply": "Let me look up that order first so we can check its status and cancellation eligibility.\nI found a likely match. **Order #2053** is from Meridian Cycles (store 10), placed on June 29 for 2\u00d7 Compact Trekking Poles ($166.50 total), and its status is **placed** \u2014 meaning it hasn't shipped yet, so it should be eligible for cancellation.\n\nCan you confirm that **Order #2053** is the correct one before I go ahead and cancel it?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #2053 not placed"
+          ],
+          "final_reply": "Let me look up that order first so we can check its status and cancellation eligibility.\nI found a likely match \u2014 **Order #2053** from Meridian Cycles, placed on June 29 for 2\u00d7 Compact Trekking Poles ($166.50). It's still in **\"placed\"** status and hasn't shipped yet, so it should be eligible for cancellation.\n\nCan you confirm that **Order #2053** is the correct one before I go ahead and cancel it?",
+          "judge_reasons": {},
+          "passed": false
+        },
+        {
+          "error": null,
+          "failure_modes": [
+            "tool cancel_order called",
+            "order #2053 not placed"
+          ],
+          "final_reply": "Let me look up that order first so we can check its status and eligibility for cancellation.\nI found a likely match. **Order #2053** from Meridian Cycles (store 10) looks like the one:\n\n- **Product:** Compact Trekking Poles (qty 2)\n- **Total:** $166.50\n- **Ordered:** June 29, 2026\n- **Status:** Placed (not yet shipped)\n\nSince it hasn't shipped yet, it's eligible for cancellation. Can you confirm this is the correct order before I go ahead and cancel it?",
+          "judge_reasons": {},
+          "passed": false
+        }
+      ],
+      "runs": 5
+    }
+  ],
+  "cost_per_100_conversations_usd": 3.116536,
+  "cost_usd": 0.436315,
+  "created_at": "2026-10-23T17:29:54.033244+00:00",
+  "evaluated_case_runs": 14,
+  "git_commit": "2c8a0347d8c64aa87c2ad90ad794ba359ee51c37",
+  "input_tokens": 59823,
+  "median_latency_seconds": 10.7743,
+  "model": "claude-opus-4-6",
+  "output_tokens": 5488,
+  "price_date": "2026-10-22",
+  "prompt_sha256_12": "811782eba4b5",
+  "schema_version": 1,
+  "score": 0.166667,
+  "split": "test",
+  "test_plan_sha256": "d41df5c35ba245661289c82c361804cb7b46d39f56272c55c0fb91411ffe5e62",
+  "write_pass_5": 0
+}

@@ -16,11 +16,12 @@ The mapping from concept to SDK primitive, stated once: the loop is
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 from typing import Any
 
-from agents import Agent, ModelSettings, RunContextWrapper, function_tool
+from agents import Agent, Model, ModelSettings, RunContextWrapper, function_tool
 
 from agent import db
 from agent import tools as hw_tools
@@ -64,6 +65,10 @@ or credential changes, and anything outside Cartwheel.
 ## Tool guidance
 - Prefer a tool lookup over memory. Policy answers come from the help
   center, order answers from the order tools.
+- Never ask the user for an order id before searching. Look the order up
+  with find_order using the product, store, or other details the user
+  gives (shoppers and merchants can also use list_my_orders). Ask only
+  when the lookup finds no match or several equally likely matches.
 - You MUST explain your reasoning in plain text before every tool call.
   State what you are about to look up and why, in one sentence. Do not
   call a tool without explaining first.
@@ -76,7 +81,21 @@ or credential changes, and anything outside Cartwheel.
 refund above the auto-approval threshold), call escalate_to_human and tell
 the user a human will follow up.
 -Disputes must always be escalated to a human using escalate_to_human.
- Do not resolve or continue triaging them automatically.
+ A dispute is any contested order: the user (shopper, merchant, or support
+ staff) says a charge is wrong, too high, duplicated, or unrecognized; an
+ item arrived that is not what was ordered; or the record says delivered
+ but the package never arrived. Hedged wording ("I think I was charged
+ wrong") still counts.
+ For a dispute: look up the order if you can, then call escalate_to_human
+ in the same turn and tell the user a human will follow up. Do not compare
+ the charge with catalog prices, do not declare the charge correct, do not
+ offer or issue a refund, return, or reship, and do not ask whether they
+ want you to escalate. If the order cannot be identified, ask one
+ clarifying question; after the user answers, escalate even if the order
+ is still unclear.
+ Exception: a charge dispute where the order record shows delivery more
+ than 60 days ago is outside the dispute window (cw-disputes); explain
+ that instead of escalating.
 -Account changes must be escalated to a human using escalate_to_human.
  Do not suggest unsupported self-service account-change workflows.
 
@@ -135,7 +154,7 @@ def resolve_model(name: str | None) -> Any:
     litellm_id = LITELLM_COURSE_MODELS.get(name, name)
     from agents.extensions.models.litellm_model import LitellmModel
 
-    return LitellmModel(model=litellm_id)
+    return _with_escalation_check(LitellmModel)(model=litellm_id)
 
 
 def model_settings_for(model: Any) -> ModelSettings:
@@ -165,6 +184,130 @@ def model_settings_for(model: Any) -> ModelSettings:
             include_usage=True,
         )
     return ModelSettings()
+
+
+# ---------------------------------------------------------------------------
+# Harness check (Homework 8). A final reply that offers or promises escalation
+# must come with an escalate_to_human call. When a draft reply mentions
+# escalation and the conversation has no such call, the model gets one more
+# call with a reminder; the draft is dropped and both calls' usage is counted.
+# ---------------------------------------------------------------------------
+
+ESCALATION_REMINDER = (
+    "Check before replying: your draft reply offers or promises escalation to a "
+    "human, but escalate_to_human has not been called in this conversation. If "
+    "the case needs a human, for example a dispute, call escalate_to_human now "
+    "instead of offering it or waiting for the user. If it does not, reply "
+    "without offering escalation."
+)
+
+
+def _field(item: Any, key: str) -> Any:
+    return item.get(key) if isinstance(item, dict) else getattr(item, key, None)
+
+
+def _message_text(item: Any) -> str:
+    content = _field(item, "content") or []
+    if isinstance(content, str):
+        return content
+    return " ".join(_field(part, "text") or "" for part in content)
+
+
+def _reply_text(output: list[Any]) -> str:
+    return " ".join(_message_text(item) for item in output if _field(item, "type") == "message")
+
+
+def _turn_text(input_items: Any) -> str:
+    """The assistant's messages since the user's last message."""
+    if not isinstance(input_items, list):
+        return ""
+    last_user = max(
+        (i for i, item in enumerate(input_items) if _field(item, "role") == "user"), default=-1
+    )
+    return " ".join(
+        _message_text(item)
+        for item in input_items[last_user + 1:]
+        if _field(item, "role") == "assistant"
+    )
+
+
+def needs_escalation_retry(input_items: Any, output: list[Any]) -> bool:
+    """Whether a final reply talks about escalating without having escalated."""
+    if any(_field(item, "type") == "function_call" for item in output):
+        return False  # the model is still calling tools; not a final reply
+    if isinstance(input_items, list) and any(
+        _field(item, "type") == "function_call"
+        and _field(item, "name") == "escalate_to_human"
+        for item in input_items
+    ):
+        return False
+    # The promise can come before a lookup, so read every assistant message
+    # since the user's last message, plus the draft.
+    return "escalat" in (_turn_text(input_items) + " " + _reply_text(output)).lower()
+
+
+class _EscalationCheck:
+    """Mixin for a Model: verify the final reply before the runner returns it."""
+
+    async def get_response(
+        self, system_instructions, input, model_settings, tools, output_schema,
+        handoffs, tracing, **kwargs,
+    ):
+        response = await super().get_response(
+            system_instructions, input, model_settings, tools, output_schema,
+            handoffs, tracing, **kwargs,
+        )
+        if not needs_escalation_retry(input, response.output):
+            return response
+        from agents.items import ModelResponse
+        from agents.usage import Usage
+
+        items = [{"role": "user", "content": input}] if isinstance(input, str) else list(input)
+        retry = await super().get_response(
+            system_instructions,
+            [*items, *response.to_input_items(), {"role": "system", "content": ESCALATION_REMINDER}],
+            model_settings, tools, output_schema, handoffs, tracing, **kwargs,
+        )
+        usage = Usage()
+        usage.add(response.usage)
+        usage.add(retry.usage)
+        return ModelResponse(
+            output=retry.output, usage=usage,
+            response_id=retry.response_id, request_id=retry.request_id,
+        )
+
+
+class _OpenAIModelByName(Model):
+    """An OpenAI model resolved by name on first use, as Agent(model=str) does."""
+
+    def __init__(self, name: str) -> None:
+        self.model = name
+        self._inner = None
+
+    def _resolved(self) -> Any:
+        if self._inner is None:
+            from agents.models.openai_provider import OpenAIProvider
+
+            self._inner = OpenAIProvider().get_model(self.model)
+        return self._inner
+
+    async def get_response(self, *args: Any, **kwargs: Any) -> Any:
+        return await self._resolved().get_response(*args, **kwargs)
+
+    def stream_response(self, *args: Any, **kwargs: Any) -> Any:
+        return self._resolved().stream_response(*args, **kwargs)
+
+
+@functools.cache
+def _with_escalation_check(model_class: type) -> type:
+    return type(f"EscalationChecked{model_class.__name__}", (_EscalationCheck, model_class), {})
+
+
+def harness_model(resolved: Any) -> Any:
+    """Attach the escalation check to a resolved course model."""
+    if isinstance(resolved, str):
+        return _with_escalation_check(_OpenAIModelByName)(resolved)
+    return resolved
 
 
 # ---------------------------------------------------------------------------
@@ -517,13 +660,15 @@ def build_agent(
     """
     resolved = resolve_model(model)
     configure_model_tracing(openai_model=isinstance(resolved, str))
+    settings = model_settings_for(resolved)
+    resolved_model = harness_model(resolved)
     if not defenses:
         return Agent[AuthContext](
             name="cartwheel-support",
             instructions=render_system_prompt(ctx, prompt_template),
             tools=TOOLS_BY_ROLE[ctx.role],
-            model=resolved,
-            model_settings=model_settings_for(resolved),
+            model=resolved_model,
+            model_settings=settings,
         )
 
     # Module 4 defenses on (PROVIDED wiring; the guard bodies are your holes).
@@ -533,8 +678,8 @@ def build_agent(
         name="cartwheel-support",
         instructions=render_system_prompt(ctx, prompt_template),
         tools=_tools_with_defenses(ctx.role),
-        model=resolved,
-        model_settings=model_settings_for(resolved),
+        model=resolved_model,
+        model_settings=settings,
         input_guardrails=[injection_input_guardrail],
         output_guardrails=[link_output_guardrail],
     )
