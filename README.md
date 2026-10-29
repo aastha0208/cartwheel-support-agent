@@ -23,6 +23,8 @@ That last part is the product problem. A support agent that is helpful but wrong
 | Automate the judgement call | Wrote a precise failure definition for missed dispute escalations, built an LLM judge for it, and validated it against my own labels on a held-out test set before trusting it. | [`hw5_failure_definition.md`](analysis/report/hw5_failure_definition.md), [`hw5_run_log.md`](analysis/report/hw5_run_log.md) |
 | Gate releases on evidence | Turned confirmed failures into 15 eval cases with code-based checks, ran each case 5 times to separate reliable behaviour from luck (pass@k), and wired them into a CI quality gate on every pull request. | `eval_cases/`, [`.github/workflows/evals.yml`](.github/workflows/evals.yml), [`hw6_run_log.md`](analysis/report/hw6_run_log.md) |
 | Watch for drift | Built a monitor that samples conversations, scores them with the judge, corrects the raw rate for the judge's known error, and alerts above a threshold. Reviewed every flag by hand. | [`monitoring/`](monitoring/README.md), [`hw7_run_log.md`](analysis/report/hw7_run_log.md) |
+| Improve the weakest behaviour | Made targeted changes for missed dispute escalations (a prompt rule, and a check that retries a reply that promises escalation without making it), kept or reverted each on development cases, then tested the final agent once on held-out cases against two larger models. | [`optimize/`](optimize/), [`hw8_run_log.md`](analysis/report/hw8_run_log.md) |
+| Cut cost without cutting quality | Profiled spend by call site, tested token trimming and prompt caching (reverted when neither beat run-to-run noise), and put a cheaper model in front of the judge, checked once against a pass bar set in advance. | [`profile/`](profile/), [`cascade/`](cascade/), [`hw9_run_log.md`](analysis/report/hw9_run_log.md) |
 
 ## What I found
 
@@ -43,6 +45,9 @@ Counts are from a deliberately stratified sample, so they show what exists, not 
 - **Explicit disputes escalate; hedged ones don't.** "My customer has a dispute" escalated 5/5. "I think I was charged wrong" escalated 0/5 across five cases: the agent checked the price, declared the charge correct and moved on. That gap was invisible in the original handful of test conversations.
 - **One passing run proves little.** A cancellation case that passed once in review passed only 8 of 15 runs. I now classify every case from repeated runs, and it took 10 runs before the pass rate stabilised.
 - **A monitor alert isn't a finding until someone reads it.** The monitor crossed its 15% threshold in the second period. Reading the three flagged conversations showed two judge false alarms and the same one real failure as before, so the agent hadn't regressed. The custom risk group I added caught a real failure the random sample missed, which became a new eval case.
+- **Targeted fixes beat a bigger model on cost.** On 6 held-out cases, my changes took gpt-4o-mini from 0.40 to 0.80, close to gpt-5.5's 0.83 at about 1/50 of the cost ($0.071 against $3.83 per 100 conversations). Claude Opus 4.6 scored 0.17 on the same cases.
+- **The model choice is the cost; small tweaks are noise.** Over 99% of my spend was the agent's own conversations, mostly on Opus (about $28, against $0.20 for every judge run). Trimming tool output and reordering the prompt for caching moved cost by about a cent per 100 conversations, less than the unchanged agent varies between runs (it scored 0.67 one day and 0.96 another), so I reverted both.
+- **A cheaper judge can be more right than the one it replaces.** gpt-5-nano in front of my judge agreed with it on 92% of 52 held-out conversations, above my pre-set 90% bar, at about 17 cents per 1,000 verdicts against an estimated 64. Three of its four disagreements were the original judge's known false alarms.
 
 ## The product judgements behind it
 
@@ -52,6 +57,7 @@ Counts are from a deliberately stratified sample, so they show what exists, not 
 - **Hold an evidence bar.** A mode is confirmed only with 3 or more instances. Six further patterns stay documented as hypotheses, and one possible hallucination is recorded as a watch-item rather than promoted on a single example.
 - **Don't let a target shape the answer.** The guidance suggested 5–8 modes. I tested every plausible merge against the rule "would one fix correct both?" and none qualified, so 9 is the honest count.
 - **Check the raw evidence, not the summary.** I nearly downgraded one mode based on how a note was worded. Re-reading the actual conversation and its ground truth reversed that decision.
+- **Set the bar before you see the result.** I fixed each keep-or-revert rule, the cascade's 90% agreement requirement and its threshold before running the check, and used each held-out test set once. When a later rerun looked tempting, I applied the rule I had written rather than a new one.
 - **Know what your search tools can't see.** Similarity search found 1 useful example out of 25. Failures defined by something *missing*, like a tool call that never happened, leave no words to match on, so they have to be found by review rather than search.
 
 ## Status and roadmap
@@ -64,10 +70,13 @@ The evaluation loop is built end to end for the highest-severity failure mode, m
 - [x] **LLM-as-judge:** a judge for missed dispute escalations, validated against my human labels on a held-out test set ([results](analysis/report/hw5_run_log.md))
 - [x] **CI/CD quality gate:** offline checks on every push and the full eval suite on every pull request, blocking changes that break regression cases, the same release-gate idea as my [Prompt Eval Gate](https://github.com/aastha0208/prompt-eval-gate)
 - [x] **Monitoring:** sampling, judge scoring, error-corrected failure rates, a threshold alert and a dashboard, run across two periods of simulated traffic ([results](monitoring/README.md))
+- [x] **Improvement loop:** targeted prompt and harness changes for missed dispute escalations, each kept or reverted on development cases, with the final agent compared against larger models on a score-against-cost frontier ([results](analysis/report/hw8_run_log.md))
+- [x] **Cost:** a cost profile by call site, token and prompt-caching experiments, and a judge cascade with a cheaper proxy model ([results](analysis/report/hw9_run_log.md))
 
 **Next**
 
-- Close the hedged-dispute gap: the agent should escalate "I think I was charged wrong" as reliably as an explicit dispute. The capability cases (0–2 of 5 passing today) measure the fix.
+- Close the rest of the hedged-dispute gap: after my changes, 3 of 4 held-out dispute cases escalate (from 1 of 4), but "I think I was charged wrong" is still not handled as reliably as an explicit dispute.
+- Measure small changes with more cases or repeated runs: one run each of 9 development cases can't separate them from luck.
 - Fix the order-search cap and expose the missing order details, which together account for the largest share of failures in the error analysis.
 - Extend evaluators to the remaining failure modes, starting with the retrieval issue.
 
